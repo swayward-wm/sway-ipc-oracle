@@ -22,3 +22,59 @@ reason = "Adapters and i3-derived replay map fake-N to HEADLESS-(count-N) and th
 [[pending]]
 path = "sway-ipc/results/swayward-ec03e0af-i3-derived.toml"
 reason = "Adapters and i3-derived replay map fake-N to HEADLESS-(count-N) and the sway shim reads the focused workspace from GET_WORKSPACES; regenerate in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/i3-4.25-command-fuzz.toml"
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/i3-4.25-events.toml"
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/i3-4.25-wire-fuzz.toml"
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/i3-4.25.toml"
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/sway-1.12-command-fuzz.toml"
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/sway-1.12-events.toml"
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/sway-1.12-random.toml"
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/sway-1.12-wire-fuzz.toml"
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/sway-1.12.toml"
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/swayward-ec03e0af-command-fuzz.toml"
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/swayward-ec03e0af-events.toml"
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/swayward-ec03e0af-random.toml"
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/swayward-ec03e0af-wire-fuzz.toml"
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/swayward-ec03e0af.toml"
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container."

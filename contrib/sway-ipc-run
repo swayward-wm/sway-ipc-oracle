@@ -481,12 +481,25 @@ def tree_field_rules(rules, field, action=None):
             if rule["field"] == field and (action is None or rule["action"] == action)]
 
 
-def rule_matches(rule, value, under_floating=False):
-    return all(
-        under_floating == expected if key == "under_floating"
-        else value.get(key) == expected
-        for key, expected in rule.get("selector", {}).items()
-    )
+def rule_matches(rule, value, under_floating=False, under_hidden=False):
+    def matches(key, expected):
+        if key == "under_floating":
+            return under_floating == expected
+        if key == "under_hidden_scratchpad":
+            return under_hidden == expected
+        return value.get(key) == expected
+    return all(matches(key, expected) for key, expected in rule.get("selector", {}).items())
+
+
+def tree_context(value, under_floating, under_hidden, in_scratch):
+    """Context flags for `value`'s children: below a floating root, and below a
+    floating root that sits in sway's synthetic `__i3_scratch` workspace."""
+    in_scratch = in_scratch or (value.get("type") == "workspace"
+                                and value.get("name") == "__i3_scratch")
+    floating_root = value.get("type") == "floating_con"
+    return (under_floating or floating_root,
+            under_hidden or (floating_root and in_scratch),
+            in_scratch)
 
 
 def difference_path(difference):
@@ -558,17 +571,19 @@ def command_observation(text, reply):
     return {"command": text, "reply": reply}
 
 
-def normalize(value, rules, path="$", is_output=False, under_floating=False):
+def normalize(value, rules, path="$", is_output=False, under_floating=False,
+              under_hidden=False, in_scratch=False):
     if isinstance(value, dict):
         output = value.get("type") == "output"
-        child_under_floating = under_floating or value.get("type") == "floating_con"
+        child_under_floating, child_under_hidden, child_in_scratch = tree_context(
+            value, under_floating, under_hidden, in_scratch)
         ignored = {key for rule in rules["ignore_key"] for key in rule["keys"]}
         output_ignored = {key for rule in rules["ignore_output_key"] for key in rule["keys"]}
         suffixes = tuple(suffix for rule in rules["ignore_path"] for suffix in rule["suffixes"])
         shape_paths = {item for rule in rules["shape_path"] for item in rule["paths"]}
         conditional_ignores = [rule for rule in rules["tree_field_rule"]
                                if rule["action"] == "ignore"
-                               and rule_matches(rule, value, under_floating)]
+                               and rule_matches(rule, value, under_floating, under_hidden)]
         for key, child in value.items():
             child_path = f"{path}.{key}"
             if child_path in shape_paths:
@@ -578,10 +593,12 @@ def normalize(value, rules, path="$", is_output=False, under_floating=False):
                     or any(rule["field"] == key for rule in conditional_ignores)):
                 value[key] = NORMAL
             else:
-                normalize(child, rules, child_path, output, child_under_floating)
+                normalize(child, rules, child_path, output, child_under_floating,
+                          child_under_hidden, child_in_scratch)
     elif isinstance(value, list):
         for index, child in enumerate(value):
-            normalize(child, rules, f"{path}[{index}]", is_output, under_floating)
+            normalize(child, rules, f"{path}[{index}]", is_output, under_floating,
+                      under_hidden, in_scratch)
 
 
 def diff_values(expected, actual, path, differences, ignored_array_suffixes, numeric_tolerances):
@@ -608,12 +625,13 @@ def diff_values(expected, actual, path, differences, ignored_array_suffixes, num
             differences.append(f"{path}: {expected!r} != {actual!r}")
 
 
-def tree_pairs(expected, actual, path="$tree", under_floating=False):
-    yield expected, actual, path, under_floating
-    under_floating = under_floating or expected.get("type") == "floating_con"
+def tree_pairs(expected, actual, path="$tree", under_floating=False, under_hidden=False,
+               in_scratch=False):
+    yield expected, actual, path, under_floating, under_hidden
+    child_context = tree_context(expected, under_floating, under_hidden, in_scratch)
     for key in ("nodes", "floating_nodes"):
         for index, pair in enumerate(zip(expected.get(key, []), actual.get(key, []))):
-            yield from tree_pairs(*pair, f"{path}.{key}[{index}]", under_floating)
+            yield from tree_pairs(*pair, f"{path}.{key}[{index}]", *child_context)
 
 
 def semantic_tree_diffs(expected, actual, rules):
@@ -624,8 +642,10 @@ def semantic_tree_diffs(expected, actual, rules):
     percent_ignores = tree_field_rules(rules, "percent", "ignore")
     tolerance = rect_rule["tolerance"]
     epsilon = percent_rule["tolerance"]
-    for left, right, path, under_floating in tree_pairs(expected, actual):
-        if not any(rule_matches(rule, left, under_floating) for rule in rect_ignores):
+    for left, right, path, under_floating, under_hidden in tree_pairs(expected, actual):
+        rect_ignored = any(rule_matches(rule, left, under_floating, under_hidden)
+                           for rule in rect_ignores)
+        if not rect_ignored:
             for key in ("x", "y", "width", "height"):
                 if abs(left["rect"][key] - right["rect"][key]) > tolerance:
                     differences.append(f"{path}.rect.{key}: outside {tolerance}px tolerance")
@@ -637,14 +657,19 @@ def semantic_tree_diffs(expected, actual, rules):
         actual_focus = [item for item in right.get("focus", []) if item in actual_ids]
         if mapped_focus != actual_focus:
             differences.append(f"{path}.focus: child-position order differs")
-        if not any(rule_matches(rule, left, under_floating) for rule in percent_ignores):
+        if not any(rule_matches(rule, left, under_floating, under_hidden)
+                   for rule in percent_ignores):
             lp, rp = left.get("percent"), right.get("percent")
             if ((lp is None) != (rp is None)
                     or (lp is not None and (not isinstance(lp, (int, float))
                         or not isinstance(rp, (int, float)) or abs(lp - rp) >= epsilon))):
                 differences.append(f"{path}.percent: differs")
         if left.get("type") == "con" and not left.get("nodes"):
+            # The relationship compares a role with the outer rect, so it is
+            # meaningless where the rect itself is exempt.
             for role in ("window_rect", "deco_rect", "geometry"):
+                if rect_ignored:
+                    break
                 if (left.get(role) == left.get("rect")) != (right.get(role) == right.get("rect")):
                     differences.append(f"{path}.{role}: outer-rect relationship differs")
             if (left["deco_rect"]["height"] > 0) != (right["deco_rect"]["height"] > 0):
