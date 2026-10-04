@@ -193,7 +193,7 @@ names = pins["snapshot"]
 for oracle in ("i3", "sway-ipc"):
     for path in sorted(Path(oracle, "results").glob("*.toml")):
         stem = path.stem
-        for suffix in ("-i3-derived", "-events", "-command-fuzz", "-wire-fuzz", "-random"):
+        for suffix in ("-i3-derived", "-events", "-command-fuzz", "-wire-fuzz", "-random-v2", "-random"):
             stem = stem.removesuffix(suffix)
         compositor = next((c for c, n in names.items() if n == stem), None)
         if compositor is None:
@@ -489,9 +489,16 @@ entries = census["command"]
 keys = [(row["table"], row["name"]) for row in entries]
 if len(keys) != len(set(keys)):
     raise SystemExit("duplicate command census entry")
+import json
+generated = {family["name"] for family in json.load(open("sway-ipc/random-v2/vocabulary.json"))["families"]}
 for row in entries:
-    if bool(row.get("scenarios")) == bool(row.get("reason")):
-        raise SystemExit(f"command census {row['name']}: set exactly one of scenarios or reason")
+    exercised = bool(row.get("scenarios") or row.get("generators"))
+    if exercised == bool(row.get("reason")):
+        raise SystemExit(f"command census {row['name']}: set scenarios or generators, or a reason")
+    if row.get("generators", ["random-v2"]) != ["random-v2"]:
+        raise SystemExit(f"command census {row['name']}: unknown generators {row['generators']}")
+    if ("random-v2" in row.get("generators", [])) != (row["name"] in generated):
+        raise SystemExit(f"command census {row['name']}: generators disagrees with sway-ipc/random-v2/vocabulary.json")
 scenarios = {row["name"] for row in tomllib.load(open("sway-ipc/scenarios.toml", "rb"))["scenario"]}
 for row in entries:
     unknown = set(row.get("scenarios", [])) - scenarios
@@ -517,21 +524,41 @@ for row in manifest["scenarios"]:
     capture = json.loads((root / f"{row['name']}.json").read_text())
     assert set(capture) == requests
 
-random_root = Path("sway-ipc/random")
-random_manifest = json.loads((random_root / "sequences.json").read_text())
-assert random_manifest["sway_commit"] == tomllib.load(open("pins.toml", "rb"))["sway"]
-assert len(random_manifest["sequences"]) == random_manifest["seeds"]
-used = set()
-for sequence in random_manifest["sequences"]:
-    assert len(sequence["commands"]) == random_manifest["steps"]
-    assert len(sequence["observations"]) == random_manifest["steps"]
-    used.update(sequence["observations"])
-objects = {path.stem for path in (random_root / "objects").glob("*.json")}
-assert used == objects
-for digest in objects:
-    value = json.loads((random_root / "objects" / f"{digest}.json").read_text())
-    encoded = json.dumps(value, sort_keys=True, separators=(",", ":"))
-    assert hashlib.sha256(encoded.encode()).hexdigest()[:16] == digest
+for random_root in (Path("sway-ipc/random"), Path("sway-ipc/random-v2")):
+    random_manifest = json.loads((random_root / "sequences.json").read_text())
+    assert random_manifest["sway_commit"] == tomllib.load(open("pins.toml", "rb"))["sway"]
+    assert len(random_manifest["sequences"]) == random_manifest["seeds"]
+    used = set()
+    for sequence in random_manifest["sequences"]:
+        assert len(sequence["commands"]) == random_manifest["steps"]
+        assert len(sequence["observations"]) == random_manifest["steps"]
+        used.update(sequence["observations"])
+    objects = {path.stem for path in (random_root / "objects").glob("*.json")}
+    assert used == objects
+    for digest in objects:
+        value = json.loads((random_root / "objects" / f"{digest}.json").read_text())
+        encoded = json.dumps(value, sort_keys=True, separators=(",", ":"))
+        assert hashlib.sha256(encoded.encode()).hexdigest()[:16] == digest
+
+# random-v2 sequences are exactly what the committed generator produces, so a
+# vocabulary edit without a recapture fails here.
+import importlib.machinery
+runner = importlib.machinery.SourceFileLoader("sway_ipc_run", "contrib/sway-ipc-run").load_module()
+v2 = json.loads(Path("sway-ipc/random-v2/sequences.json").read_text())
+assert v2["generator"] == "v2"
+for sequence in v2["sequences"]:
+    if sequence["commands"] != runner.generate_commands_v2(sequence["seed"], v2["steps"]):
+        raise SystemExit(f"sway-ipc/random-v2 seed {sequence['seed']}: commands differ from the v2 generator")
+seeds = {sequence["seed"] for sequence in v2["sequences"]}
+for row in v2["unstable"]:
+    if row.get("seed") not in seeds or not row.get("reason"):
+        raise SystemExit(f"sway-ipc/random-v2 unstable entry needs a captured seed and a reason: {row}")
+vocabulary = json.loads(Path("sway-ipc/random-v2/vocabulary.json").read_text())
+assert vocabulary["sway_commit"] == tomllib.load(open("pins.toml", "rb"))["sway"]
+names = [family["name"] for family in vocabulary["families"]]
+assert len(names) == len(set(names)) and vocabulary["window_family"] in names
+for family in vocabulary["families"]:
+    assert family["commands"] and family["source"].startswith("sway/commands.c:"), family["name"]
 PY
 PYTHONPYCACHEPREFIX="${TMPDIR:-/tmp}/sway-ipc-oracle-pycache" ./contrib/tests/sway-ipc-applicability
 ./contrib/tests/sway-ipc-i3-derived
@@ -563,3 +590,16 @@ fi
 git clone --quiet --filter=blob:none --no-checkout https://github.com/swaywm/sway.git "$work/sway"
 git -C "$work/sway" checkout --quiet "$(python3 -c 'import json; print(json.load(open("sway-ipc/fixtures/schema-version.json"))["commit"])')"
 ./contrib/check-sway-fixture-schema "$work/sway"
+# Every random-v2 family cites the handler-table line that dispatches it.
+python3 - "$work/sway" <<'PY'
+import json, re, sys
+from pathlib import Path
+lines = (Path(sys.argv[1]) / "sway/commands.c").read_text().splitlines()
+for family in json.loads(Path("sway-ipc/random-v2/vocabulary.json").read_text())["families"]:
+    number = int(family["source"].rsplit(":", 1)[1])
+    line = lines[number - 1] if 0 < number <= len(lines) else ""
+    expected = (r"criteria_parse\(head" if family["table"] == "execute_command"
+                else r'\{ "' + re.escape(family["name"]) + r'", ')
+    if not re.search(expected, line):
+        raise SystemExit(f"random-v2 family {family['name']}: {family['source']} is {line.strip()!r}")
+PY

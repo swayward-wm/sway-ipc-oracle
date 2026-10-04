@@ -26,7 +26,8 @@ Rules:
   pinned sway's result when the block has a `xwm_kill_client_fallback` row; an
   asymmetry figure also reads the other compositor's partition.
 - Prose counts (test files, assertions, i3-derived states, event scenarios
-  and captures, event families, census commands, random seeds and steps)
+  and captures, event families, census commands, random and random-v2 seeds
+  and steps)
   equal the committed data they describe.
 """
 import functools
@@ -137,6 +138,7 @@ def corpus_rows(compositor, name, pending):
         ("events", "-events", ("match", mismatch, "not_applicable")),
         ("i3-derived", "-i3-derived", ("match", mismatch, "unstable", "not_applicable")),
         ("random", "-random", ("match", mismatch, "unstable", "not_applicable")),
+        ("random-v2", "-random-v2", ("match", mismatch, "unstable", "not_applicable")),
         ("command fuzz", "-command-fuzz", ("match", mismatch, "not_applicable", "crash", "hang")),
         ("wire fuzz", "-wire-fuzz", ("match", mismatch, "not_applicable", "crash", "hang")),
     ):
@@ -223,6 +225,7 @@ def prose_counts():
     derived = json.loads((ROOT / "sway-ipc/i3-derived/scenarios.json").read_text())["scenarios"]
     census = tomllib.load(open(ROOT / "sway-ipc/command-coverage.toml", "rb"))["command"]
     random = json.loads((ROOT / "sway-ipc/random/sequences.json").read_text())
+    random_v2 = json.loads((ROOT / "sway-ipc/random-v2/sequences.json").read_text())
     source = (ROOT / "contrib/sway-ipc-run").read_text()
     families = len(re.search(r"^EVENTS = \((.*)\)$", source, re.M).group(1).split(","))
     words = {9: "nine", 10: "ten"}
@@ -240,8 +243,10 @@ def prose_counts():
         (r"scenarios \((\S+) captures\)", count(captures)),
         (r"all\s+(\S+) sway event\s+families", words.get(families, str(families))),
         (r"sway 1\.12's (\S+) top-level\s+commands", count(len(census))),
-        (r"replays (\S+) captured", count(random["seeds"])),
-        (r"captured (\S+)-step sequences", count(random["steps"])),
+        (r"\*\*Random\*\* replays (\S+) captured", count(random["seeds"])),
+        (r"\*\*Random\*\* replays \S+ captured (\S+)-step", count(random["steps"])),
+        (r"\*\*Random v2\*\* replays (\S+) captured", count(random_v2["seeds"])),
+        (r"\*\*Random v2\*\* replays \S+ captured (\S+)-step", count(random_v2["steps"])),
     ]
 
 

@@ -13,6 +13,9 @@ random = ROOT / "sway-ipc/results/sway-1.12-random.toml"
 assert "i3/adapters/sway" in provenance.dependencies(i3, "sway")
 assert "i3/adapters/sway" not in provenance.dependencies(random, "sway")
 assert "sway-ipc/random" in provenance.dependencies(random, "sway")
+random_v2 = ROOT / "sway-ipc/results/sway-1.12-random-v2.toml"
+assert provenance.dependencies(random_v2, "sway") == ["sway-ipc/normalize.toml", "sway-ipc/random-v2"]
+assert "sway-ipc/random-v2" not in provenance.dependencies(random, "sway")
 
 # Stable, content-derived, and specific to the compositor's adapter.
 assert provenance.inputs_hash(i3, "sway") == provenance.inputs_hash(i3, "sway")

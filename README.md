@@ -67,11 +67,15 @@ inventory below.
 - **Events** replays 36 scenarios (45 captures) with a subscription to all
   nine sway event families and compares the ordered event stream.
   `sway-ipc/command-coverage.toml` records which of sway 1.12's 90 top-level
-  commands the scenarios exercise, and why the rest cannot run headless.
+  commands the scenarios or the `random-v2` generator exercise, and why the
+  rest cannot run headless.
 - **i3-derived** replays 418 distinct states reached by i3's unchanged test
   suite. A mismatch that changes on an immediate fresh retry is unstable rather
   than a compositor verdict.
 - **Random** replays 500 captured 20-step sequences, one verdict per seed.
+- **Random v2** replays 1,000 captured 20-step sequences drawn from a wider
+  command vocabulary (`sway-ipc/random-v2/vocabulary.json`), one verdict per
+  seed. Random v1 is unchanged, so its figures stay comparable.
 - **Command fuzz** (malformed commands) and **wire fuzz** (broken IPC framing)
   replay sway 1.12 captures at the fixed CI budget. Crash and hang record
   compositor health, separately from mismatch.
@@ -129,6 +133,7 @@ classification file, and `contrib/validate` checks the line.
 | events | 1 match / 41 differs / 30 not applicable† | [events](sway-ipc/results/i3-4.25-events.toml) |
 | i3-derived | 1,096 match / 2,248 differs / 0 unstable / 2,227 not applicable† | [i3-derived](sway-ipc/results/i3-4.25-i3-derived.toml) |
 | random | not yet measured | — |
+| random-v2 | not yet measured | — |
 | command fuzz | 33 match / 159 differs / 3 not applicable / 0 crash / 0 hang† | [command fuzz](sway-ipc/results/i3-4.25-command-fuzz.toml) |
 | wire fuzz | 3 match / 7 differs / 0 not applicable / 0 crash / 0 hang† | [wire fuzz](sway-ipc/results/i3-4.25-wire-fuzz.toml) |
 
@@ -160,6 +165,7 @@ a measure of sway compatibility.
 | events | 45 match / 0 mismatch / 0 not applicable† | [events](sway-ipc/results/sway-1.12-events.toml) |
 | i3-derived | 4,180 match / 0 mismatch / 0 unstable / 0 not applicable† | [i3-derived](sway-ipc/results/sway-1.12-i3-derived.toml) |
 | random | 500 match / 0 mismatch / 0 unstable / 0 not applicable† | [random](sway-ipc/results/sway-1.12-random.toml) |
+| random-v2 | not yet measured | — |
 | command fuzz | 195 match / 0 mismatch / 0 not applicable / 0 crash / 0 hang† | [command fuzz](sway-ipc/results/sway-1.12-command-fuzz.toml) |
 | wire fuzz | 10 match / 0 mismatch / 0 not applicable / 0 crash / 0 hang† | [wire fuzz](sway-ipc/results/sway-1.12-wire-fuzz.toml) |
 
@@ -200,6 +206,7 @@ each names its test file.
 | events | 44 match / 1 mismatch / 0 not applicable† | [events](sway-ipc/results/swayward-ec03e0af-events.toml) |
 | i3-derived | 4,118 match / 62 mismatch / 0 unstable / 0 not applicable† | [i3-derived](sway-ipc/results/swayward-ec03e0af-i3-derived.toml) |
 | random | 329 match / 171 mismatch / 0 unstable / 0 not applicable† | [random](sway-ipc/results/swayward-ec03e0af-random.toml) |
+| random-v2 | not yet measured | — |
 | command fuzz | 195 match / 0 mismatch / 0 not applicable / 0 crash / 0 hang† | [command fuzz](sway-ipc/results/swayward-ec03e0af-command-fuzz.toml) |
 | wire fuzz | 6 match / 4 mismatch / 0 not applicable / 0 crash / 0 hang† | [wire fuzz](sway-ipc/results/swayward-ec03e0af-wire-fuzz.toml) |
 

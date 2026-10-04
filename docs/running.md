@@ -112,3 +112,34 @@ output replies for one distinct normalized shape. Commands tied to X11 window
 IDs, compositor process lifecycle, or spawned programs are stopped and listed
 with a reason rather than translated silently. Capture remains restricted to
 real sway.
+
+## Random sequence corpora
+
+`random` replays seeded command sequences captured from sway and compares the
+command reply, `get_tree` and `get_workspaces` after every step. Each seed runs
+on a fresh compositor. A mismatch that changes on an immediate fresh retry is
+reported as unstable.
+
+There are two corpora. Results of one are never compared with results of the
+other.
+
+- `random` (`--generator v1`, the default): 500 seeds of 20 steps from 31
+  commands. Results are `sway-ipc/results/<snapshot>-random.toml`.
+- `random-v2` (`--generator v2`): 1,000 seeds of 20 steps from
+  `sway-ipc/random-v2/vocabulary.json`. Each family in the vocabulary cites the
+  line of sway's `commands.c` handler table that dispatches it, and `validate`
+  checks that line against the pinned sway source. Results are
+  `sway-ipc/results/<snapshot>-random-v2.toml`. Seeds listed under `unstable`
+  in `sway-ipc/random-v2/sequences.json` disagreed between repeated sway
+  replays and are always reported as unstable.
+
+```sh
+./contrib/sway-ipc-run random --generator v2 --compositor swayward \
+  --binary /path/to/swayward --out target/random-v2.toml
+# Capture (sway only): replaces the captured sequences, keeps the vocabulary.
+./contrib/sway-ipc-run random --generator v2 --capture --compositor sway \
+  --binary /path/to/sway --seeds 1000 --steps 20
+```
+
+`differential --generator v2` drives two compositors with the same generator
+and delta-debugs each divergence; pass `--out` outside the repository.

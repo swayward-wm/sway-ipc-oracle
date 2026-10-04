@@ -33,6 +33,8 @@ def dependencies(result: Path, compositor: str) -> list[str]:
     stem = result.stem
     if stem.endswith("-i3-derived"):
         return paths + ["contrib/sway-ipc-run", "sway-ipc/i3-derived", "sway-ipc/applicability.toml"]
+    if stem.endswith("-random-v2"):
+        return paths + ["sway-ipc/random-v2"]
     if stem.endswith("-random"):
         return paths + ["sway-ipc/random"]
     if stem.endswith("-command-fuzz"):
