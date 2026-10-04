@@ -1,0 +1,108 @@
+[
+  {
+    "command": "allow_tearing no",
+    "reply": [
+      {
+        "error": "Tearing can only be allowed on views",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "max_render_time 5",
+    "reply": [
+      {
+        "error": "Only views can have a max_render_time",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "max_render_time off",
+    "reply": [
+      {
+        "error": "Only views can have a max_render_time",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "shortcuts_inhibitor disable",
+    "reply": [
+      {
+        "error": "Only views can have shortcuts inhibitors",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "inhibit_idle none",
+    "reply": [
+      {
+        "error": "Only views can have idle inhibitors",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "opacity minus 0.2",
+    "reply": [
+      {
+        "error": "No current container",
+        "parse_error": false,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-1 --title=fixture-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "shortcuts_inhibitor enable",
+    "reply": [
+      {
+        "error": "Only views can have shortcuts inhibitors",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "inhibit_idle visible",
+    "reply": [
+      {
+        "error": "Only views can have idle inhibitors",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "opacity minus 0.2",
+    "reply": [
+      {
+        "error": "No current container",
+        "parse_error": false,
+        "success": false
+      }
+    ]
+  }
+]

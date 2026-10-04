@@ -323,3 +323,8 @@ actions = ["command:set $oracle value", "window:fixture-1", "capture:runtime_set
 name = "empty_workspace_move_to_output_or_mark"
 corpora = ["state"]
 actions = ["command:move container to output right", "command:move container to output HEADLESS-9", "command:move container to mark oracle", "capture:empty_workspace_move_to_output_or_mark"]
+
+[[scenario]]
+name = "view_commands_without_view"
+corpora = ["state"]
+actions = ["command:allow_tearing no", "command:max_render_time 5", "command:max_render_time off", "command:shortcuts_inhibitor disable", "command:inhibit_idle none", "command:opacity minus 0.2", "window:fixture-1", "command:focus parent", "command:shortcuts_inhibitor enable", "command:inhibit_idle visible", "command:opacity minus 0.2", "capture:view_commands_without_view"]
