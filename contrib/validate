@@ -369,6 +369,67 @@ for compositor, name in names.items():
     if sum(figures) != run["seeds"]:
         raise SystemExit(f"{path}: verdict counts do not sum to its seeds")
 PY
+python3 - <<'PY'
+# Abort-cause evidence: focused reruns that verify why unreached rows stopped.
+import hashlib, re, tomllib
+from pathlib import Path
+
+pins = tomllib.load(open("pins.toml", "rb"))
+for path in sorted(Path("i3/abort-causes").glob("*.toml")):
+    doc = tomllib.load(path.open("rb"))
+    run = doc.get("run", {})
+    compositor = run.get("compositor")
+    if compositor not in pins["snapshot"] or path.stem != pins["snapshot"][compositor] \
+            or run.get("snapshot") != path.stem:
+        raise SystemExit(f"{path}: name and [run] snapshot must be the pinned {compositor} snapshot")
+    if run.get("commit") != pins[compositor]:
+        raise SystemExit(f"{path}: [run] commit is not the pinned {compositor} commit")
+    for key in ("oracle", "image", "date", "command"):
+        if not run.get(key):
+            raise SystemExit(f"{path}: [run] has no {key}")
+    result = tomllib.load(open(f"i3/results/{path.stem}.toml", "rb"))["files"]
+    unverified = {
+        (row["file"], row["assertion"])
+        for row in tomllib.load(open(f"i3/classifications/{path.stem}.toml", "rb"))["classification"]
+        if not row["reason_verified"]
+    }
+    allowed = {"file", "rows", "first_unreached", "rerun_first_unreached", "last_tap_assertion",
+               "runner_exit", "last_sway_command", "blocked_in", "cause", "excerpt", "excerpt_sha256"}
+    seen = set()
+    for row in doc.get("file", []):
+        name = row.get("file")
+        where = f"{path}: {name}"
+        if name in seen or name not in result:
+            raise SystemExit(f"{where}: duplicate entry or not a result file")
+        seen.add(name)
+        if set(row) - allowed:
+            raise SystemExit(f"{where}: unknown keys {sorted(set(row) - allowed)}")
+        unreached = result[name].get("unreached_assertions", [])
+        if not unreached or row.get("first_unreached") != unreached[0]:
+            raise SystemExit(f"{where}: first_unreached does not match the committed result")
+        rows = sum((name, a) in unverified for a in unreached)
+        if row.get("rows") != rows or rows == 0:
+            raise SystemExit(f"{where}: rows must count the {rows} unverified unreached rows")
+        cause = row.get("cause")
+        if cause not in ("kill", "xtest", "other"):
+            raise SystemExit(f"{where}: cause must be kill, xtest or other")
+        if cause != "other":
+            if row.get("rerun_first_unreached") != row["first_unreached"] \
+                    or row.get("last_tap_assertion") != row["first_unreached"] - 1:
+                raise SystemExit(f"{where}: a verified cause needs the rerun to stop at first_unreached")
+            if cause == "kill" and (row.get("runner_exit") != 255 or row.get("last_sway_command") != "kill"):
+                raise SystemExit(f"{where}: kill needs runner_exit 255 and last_sway_command kill")
+            if cause == "xtest" and (row.get("runner_exit") != 124 or not re.fullmatch(
+                    rf"xtest_sync_with_i3 at i3/t/{re.escape(name)}:\d+", row.get("blocked_in", ""))):
+                raise SystemExit(f"{where}: xtest needs runner_exit 124 and blocked_in xtest_sync_with_i3")
+        excerpt = Path(row.get("excerpt", ""))
+        if excerpt.parent != path.with_suffix("") or not excerpt.is_file() \
+                or hashlib.sha256(excerpt.read_bytes()).hexdigest() != row.get("excerpt_sha256"):
+            raise SystemExit(f"{where}: excerpt is missing or does not match excerpt_sha256")
+    extra = {p.name for p in path.with_suffix("").iterdir()} - {f"{n}.txt" for n in seen}
+    if extra:
+        raise SystemExit(f"{path}: excerpts without an entry: {sorted(extra)}")
+PY
 PYTHONPYCACHEPREFIX="${TMPDIR:-/tmp}/sway-ipc-oracle-pycache" python3 -m py_compile contrib/sway-ipc-run
 if grep -En 'endswith\("\.(percent|rect)"\)|get\("floating"\) *==' contrib/sway-ipc-run; then
     echo "comparator field exemptions must be declared in sway-ipc/normalize.toml" >&2

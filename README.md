@@ -90,7 +90,8 @@ classifications in `i3/classifications/`:
 - **N-x11-sway**: X11 metadata that swayward cannot receive through
   xwayland-satellite, while sway's in-process XWM sees it.
 - **N-harness**: a measurement artefact: flaky files, unstable assertions, and
-  unreached assertions whose abort cause the source does not show.
+  unreached assertions whose abort cause neither the source nor a focused
+  rerun (`i3/abort-causes/`) shows.
 - **N-gap**: a comparable non-pass: reviewed findings, unreviewed fails, and
   declared deviations.
 
@@ -149,7 +150,7 @@ a measure of sway compatibility.
 
 | P | S | N-i3 | N-x11-all | N-x11-sway | N-harness | N-gap |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1,461† | 20† | 360† | 276† | 0† | 848† (539 inferred X11 cause, unverified) | 790† (233 not yet reviewed) |
+| 1,461† | 20† | 360† | 815† (539 abort causes verified by focused reruns) | 0† | 309† | 790† (233 not yet reviewed) |
 
 i3-suite review: 2,137 non-pass rows; 915 verified, 1,222 unverified, 587 of them unclassified.†
 

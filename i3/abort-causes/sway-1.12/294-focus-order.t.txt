@@ -1,0 +1,19 @@
+# 294-focus-order.t: pinned sway 1.12 focused rerun; runner exit 255
+# TAP tail (SIGCHLD noise dropped)
+ok 1 - tabbed: window 0 focused
+Could not get reply for: xcb_intern_atom_reply at /usr/local/lib64/perl5/5.42/X11/XCB/Atom.pm line 23.
+# Tests were run but no plan was declared and done_testing() was not seen.
+# Looks like your test exited with 255 just after 1.
+# sway-log-0 from the last handled command (max 12 lines)
+00:00:09.819 [INFO] [sway/commands.c:261] Handling command 'kill'
+00:00:09.820 [DEBUG] [sway/tree/arrange.c:274] Usable area for ws: 1024x768@0,0
+00:00:09.820 [DEBUG] [sway/tree/arrange.c:308] Arranging workspace '/tmp/2s62xqVaq9' at 0.000000, 0.000000
+00:00:09.820 [DEBUG] [sway/tree/arrange.c:76] Arranging 0x7fff541fb3d0 horizontally
+00:00:09.820 [DEBUG] [sway/desktop/transaction.c:821] Transaction 0xda00840 committing with 8 instructions
+00:00:09.820 [DEBUG] [sway/desktop/transaction.c:717] Applying transaction 0xda00840
+00:00:09.820 [DEBUG] [sway/tree/arrange.c:274] Usable area for ws: 1024x768@0,0
+00:00:09.820 [DEBUG] [sway/tree/arrange.c:308] Arranging workspace '/tmp/2s62xqVaq9' at 0.000000, 0.000000
+00:00:09.820 [DEBUG] [sway/tree/arrange.c:76] Arranging 0x7fff541fb3d0 horizontally
+00:00:09.820 [DEBUG] [sway/desktop/transaction.c:821] Transaction 0xda00d60 committing with 7 instructions
+00:00:09.820 [DEBUG] [sway/desktop/transaction.c:717] Applying transaction 0xda00d60
+00:00:09.821 [DEBUG] [sway/tree/arrange.c:274] Usable area for ws: 1024x768@0,0

@@ -1,0 +1,22 @@
+# 320-mouse-bindings.t: pinned sway 1.12 focused rerun; runner exit 124
+# TAP tail (SIGCHLD noise dropped)
+ok 1 - Connect to X11, verify XKB and XTEST are present (via Inline::C)
+ok 2 - sanity check
+ok 3 - sanity check, other window
+# sway-log-0 from the last handled command (max 12 lines)
+00:00:06.618 [DEBUG] [sway/ipc-server.c:196] New client: fd 18
+00:00:06.619 [INFO] [sway/ipc-server.c:570] IPC Client 18 disconnected
+00:00:06.920 [DEBUG] [sway/ipc-server.c:196] New client: fd 18
+00:00:06.920 [INFO] [sway/ipc-server.c:570] IPC Client 18 disconnected
+00:00:06.971 [DEBUG] [sway/ipc-server.c:196] New client: fd 18
+00:00:06.971 [INFO] [sway/ipc-server.c:570] IPC Client 18 disconnected
+00:00:07.022 [DEBUG] [sway/ipc-server.c:196] New client: fd 18
+00:00:07.022 [INFO] [sway/ipc-server.c:570] IPC Client 18 disconnected
+[xwayland ei] Setup failed: No such file or directory
+[xwayland ei] EI setup failed
+00:00:07.224 [DEBUG] [sway/desktop/xwayland.c:885] New xwayland unmanaged surface
+00:00:07.224 [DEBUG] [wlr] [xwayland/xwm.c:1878] unhandled x11 client message 314 (I3_SYNC)
+# diagnostic rerun with an XTEST call tracer (60 s timeout): last trace lines
+R3PROBE enter xtest_button_release from line 44
+R3PROBE leave xtest_button_release from line 44
+R3PROBE enter xtest_sync_with_i3 from line 45

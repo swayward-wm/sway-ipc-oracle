@@ -23,6 +23,19 @@ A result file has a `[files]` entry for every vendored `.t` file. Each entry rec
 
 Each result is `i3/results/<snapshot>.toml`, named in `pins.toml` `[snapshot]`; for example, `i3/results/sway-1.12.toml` is the i3 suite run on sway 1.12. The exact commit is in the file's `[run]` section. The counts must cover the full plan. Run `contrib/coverage-report i3/results/<snapshot>.toml --check` to validate a file.
 
+## Abort-cause evidence
+
+`abort-causes/<snapshot>.toml` records why unreached assertions stopped, for
+rows whose classification is unverified. Each `[[file]]` entry is one focused
+rerun of that test file on the pinned compositor in the pinned container. It
+records the committed first unreached assertion, where the rerun stopped, the
+runner exit code, the verified `cause` (`kill`, `xtest`, or `other`), and an
+excerpt of the TAP and compositor log at the abort with its SHA-256. The file
+header defines each cause's signature. `contrib/validate` checks the entries
+against the committed result and classification. Bucket rules move a file's
+unverified unreached rows to N-x11-all only for a `kill` or `xtest` cause; any
+other row stays N-harness. Evidence never edits results or classifications.
+
 ## Skip policy
 
 A skip is a measured difference, not a hidden failure. Each skip names the assertion, gives a reason, and cites the relevant i3 or sway source line. Use a skip only when the compositor cannot or deliberately does not satisfy the test's premise. Keep a failed or unreached assertion as `fail` or `unreached` until the reason has been checked.

@@ -1,0 +1,22 @@
+# 257-keypress-group1-fallback.t: pinned sway 1.12 focused rerun; runner exit 124
+# TAP tail (SIGCHLD noise dropped)
+ok 1 - Connect to X11, verify XKB and XTEST are present (via Inline::C)
+WARNING: Running setxkbmap against an Xwayland server
+WARNING: Running setxkbmap against an Xwayland server
+# sway-log-0 from the last handled command (max 12 lines)
+00:00:00.918 [DEBUG] [wlr] [xwayland/selection/selection.c:148] not handling selection events: no seat assigned to xwayland
+00:00:00.918 [DEBUG] [sway/ipc-server.c:196] New client: fd 18
+00:00:00.919 [xwayland ei] Setup failed: No such file or directory
+[DEBUG] [wlr] [xwayland/selection/selection.c:148] not handling selection events: no seat assigned to xwayland[xwayland ei] EI setup failed
+
+00:00:00.919 [DEBUG] [sway/desktop/xwayland.c:885] New xwayland unmanaged surface
+00:00:00.919 [DEBUG] [wlr] [xwayland/selection/selection.c:148] not handling selection events: no seat assigned to xwayland
+00:00:00.919 [DEBUG] [wlr] [xwayland/xwm.c:1987] unhandled X11 event: MappingNotify (34)
+00:00:00.919 [DEBUG] [wlr] [xwayland/selection/selection.c:148] not handling selection events: no seat assigned to xwayland
+00:00:00.919 [DEBUG] [wlr] [xwayland/xwm.c:1987] unhandled X11 event: MappingNotify (34)
+00:00:00.919 [DEBUG] [wlr] [xwayland/selection/selection.c:148] not handling selection events: no seat assigned to xwayland
+00:00:00.919 [DEBUG] [wlr] [xwayland/xwm.c:1878] unhandled x11 client message 314 (I3_SYNC)
+# diagnostic rerun with an XTEST call tracer (60 s timeout): last trace lines
+R3PROBE enter xtest_key_release from line 43
+R3PROBE leave xtest_key_release from line 43
+R3PROBE enter xtest_sync_with_i3 from line 44

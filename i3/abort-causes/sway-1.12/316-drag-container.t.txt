@@ -1,0 +1,22 @@
+# 316-drag-container.t: pinned sway 1.12 focused rerun; runner exit 124
+# TAP tail (SIGCHLD noise dropped)
+ok 1 - Connect to X11, verify XKB and XTEST are present (via Inline::C)
+Use of uninitialized value $workspace in concatenation (.) or string at /run/oracle-runtime/i3-suite-tgui5gck/lib/i3test.pm line 478.
+Use of uninitialized value $workspace in concatenation (.) or string at /run/oracle-runtime/i3-suite-tgui5gck/lib/i3test.pm line 478.
+# sway-log-0 from the last handled command (max 12 lines)
+00:00:01.280 [INFO] [sway/commands.c:261] Handling command 'workspace /tmp/oikLA0Ss8G'
+00:00:01.281 [DEBUG] [sway/tree/workspace.c:185] Adding workspace /tmp/oikLA0Ss8G for output HEADLESS-2
+00:00:01.281 [DEBUG] [sway/tree/workspace.c:734] Switching to workspace 0x95ac080:/tmp/oikLA0Ss8G
+00:00:01.281 [DEBUG] [sway/tree/workspace.c:300] Destroying workspace '/tmp/cVGnK71DMG'
+00:00:01.281 [DEBUG] [sway/tree/arrange.c:274] Usable area for ws: 1000x500@0,0
+00:00:01.281 [DEBUG] [sway/tree/arrange.c:308] Arranging workspace '/tmp/oikLA0Ss8G' at 0.000000, 0.000000
+00:00:01.281 [DEBUG] [sway/desktop/transaction.c:821] Transaction 0x95bfb60 committing with 3 instructions
+00:00:01.281 [DEBUG] [sway/desktop/transaction.c:717] Applying transaction 0x95bfb60
+00:00:01.381 [DEBUG] [sway/ipc-server.c:196] New client: fd 39
+00:00:01.381 [INFO] [sway/ipc-server.c:570] IPC Client 39 disconnected
+00:00:01.432 [DEBUG] [sway/ipc-server.c:196] New client: fd 39
+00:00:01.432 [INFO] [sway/ipc-server.c:570] IPC Client 39 disconnected
+# diagnostic rerun with an XTEST call tracer (60 s timeout): last trace lines
+R3PROBE enter xtest_button_press from line 46
+R3PROBE leave xtest_button_press from line 46
+R3PROBE enter xtest_sync_with_i3 from line 47

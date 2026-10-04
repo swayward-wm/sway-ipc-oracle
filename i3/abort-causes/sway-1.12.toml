@@ -1,0 +1,301 @@
+# Verified abort causes for unreached sway 1.12 i3-suite rows whose committed
+# classification is unverified (the "no TAP plan" label). Each file entry is
+# one focused rerun of that test file on pinned sway in the pinned oracle
+# container (4 GiB, zero swap, one file at a time). It records where the
+# rerun stopped and why. Committed results and classifications are unchanged;
+# bucket rules read this file to move rows from N-harness to N-x11-all.
+#
+# Causes:
+#   kill  - runner exit 255; the last TAP assertion is first_unreached - 1;
+#           the TAP tail has "Could not get reply for: xcb_intern_atom_reply"
+#           (the test's X connection is gone); sway's last handled command is
+#           `kill`, and wlroots logs xcb errors on the killed windows after it.
+#           i3test windows set no WM_DELETE_WINDOW, so wlroots falls back to
+#           xcb_kill_client (wlroots/xwayland/xwm.c:2194-2213 at c1d38536).
+#   xtest - the file timeout kills the run (runner exit 124); the last TAP
+#           assertion is first_unreached - 1; a second rerun that traces
+#           i3test::XTEST calls ends inside xtest_sync_with_i3 (blocked_in).
+#           That call waits for an I3_SYNC reply from the window manager
+#           (i3/testcases/lib/i3test/XTEST.pm:122-178). wlroots does not handle
+#           I3_SYNC ("unhandled x11 client message ... (I3_SYNC)",
+#           xwayland/xwm.c:1875-1880), and the swaycal shim replaces only
+#           i3test::sync_with_i3, so the call blocks until the file timeout.
+#   other - neither signature; the rows stay N-harness.
+# Excerpts are under i3/abort-causes/sway-1.12/; excerpt_sha256 is the SHA-256
+# of the excerpt file. contrib/validate checks this file against the
+# committed sway result.
+
+[run]
+compositor = "sway"
+snapshot = "sway-1.12"
+commit = "88869399f421d9180dd8b6ed0b5a1f4a3585d252"
+wlroots = "c1d38536c926134698ff2615843e0d4103e84ac4"
+oracle = "915e2eab91561c95fe3064c271d4e3a6a31dd55b"
+image = "sha256:f05ab730eac44150e4417f72c88b22c7c4455a6e214c1b287b6d4010012e929c"
+date = "2026-10-04"
+command = "./contrib/i3-suite-run --compositor sway --binary $SWAY_BINARY --parallel 1 --files FILE"
+
+[[file]]
+file = "100-fullscreen.t"
+rows = 45
+first_unreached = 24
+rerun_first_unreached = 24
+last_tap_assertion = 23
+runner_exit = 255
+last_sway_command = "kill"
+cause = "kill"
+excerpt = "i3/abort-causes/sway-1.12/100-fullscreen.t.txt"
+excerpt_sha256 = "d3a8c3fb01439e82e68848801a8d180b035c8b904190de2cffc9e07ba8e831b9"
+
+[[file]]
+file = "119-match.t"
+rows = 23
+first_unreached = 5
+rerun_first_unreached = 5
+last_tap_assertion = 4
+runner_exit = 255
+last_sway_command = "kill"
+cause = "kill"
+excerpt = "i3/abort-causes/sway-1.12/119-match.t.txt"
+excerpt_sha256 = "40693c804a9f52ed5227db7cfbeb6a4f8dcfaf32b5981b3cfb4294151179a136"
+
+[[file]]
+file = "129-focus-after-close.t"
+rows = 3
+first_unreached = 13
+rerun_first_unreached = 13
+last_tap_assertion = 12
+runner_exit = 255
+last_sway_command = "kill"
+cause = "kill"
+excerpt = "i3/abort-causes/sway-1.12/129-focus-after-close.t.txt"
+excerpt_sha256 = "11f6f976a928baa01a29805189010d179473481f0baf33a797cfdd568a7e7966"
+
+[[file]]
+file = "144-regress-floating-resize.t"
+rows = 1
+first_unreached = 1
+rerun_first_unreached = 1
+last_tap_assertion = 0
+runner_exit = 255
+last_sway_command = "kill"
+cause = "kill"
+excerpt = "i3/abort-causes/sway-1.12/144-regress-floating-resize.t.txt"
+excerpt_sha256 = "132bbaf858674e274e365821e1d48d145469aa774406da2c269b98b21539820a"
+
+[[file]]
+file = "164-kill-win-vs-client.t"
+rows = 9
+first_unreached = 4
+rerun_first_unreached = 4
+last_tap_assertion = 3
+runner_exit = 255
+last_sway_command = "kill"
+cause = "kill"
+excerpt = "i3/abort-causes/sway-1.12/164-kill-win-vs-client.t.txt"
+excerpt_sha256 = "2169dc9c198e0fd9deafc80b45d27f4e012f08d1e0a599f85a44f2d78776ced9"
+
+[[file]]
+file = "165-for_window.t"
+rows = 60
+first_unreached = 20
+rerun_first_unreached = 20
+last_tap_assertion = 19
+runner_exit = 255
+last_sway_command = "kill"
+cause = "kill"
+excerpt = "i3/abort-causes/sway-1.12/165-for_window.t.txt"
+excerpt_sha256 = "352dd1de57e02d97c6098c157d9be201733b562ef7968dcc0248195debf19ab3"
+
+[[file]]
+file = "176-workspace-baf.t"
+rows = 3
+first_unreached = 24
+rerun_first_unreached = 24
+last_tap_assertion = 23
+runner_exit = 255
+last_sway_command = "kill"
+cause = "kill"
+excerpt = "i3/abort-causes/sway-1.12/176-workspace-baf.t.txt"
+excerpt_sha256 = "25ddc3d8a77fc9223576d5fa3c050d6328f7d6e1cc14c2249750542252ef56f4"
+
+[[file]]
+file = "206-fullscreen-scratchpad.t"
+rows = 4
+first_unreached = 5
+rerun_first_unreached = 5
+last_tap_assertion = 4
+runner_exit = 255
+last_sway_command = "kill"
+cause = "kill"
+excerpt = "i3/abort-causes/sway-1.12/206-fullscreen-scratchpad.t.txt"
+excerpt_sha256 = "951949685d84987393e8f576b6faf754aec15ea3ed99298ea768349d9976da65"
+
+[[file]]
+file = "256-no-auto-back-and-forth.t"
+rows = 2
+first_unreached = 9
+rerun_first_unreached = 9
+last_tap_assertion = 8
+runner_exit = 255
+last_sway_command = "kill"
+cause = "kill"
+excerpt = "i3/abort-causes/sway-1.12/256-no-auto-back-and-forth.t.txt"
+excerpt_sha256 = "d12bba86f86352bf4eaa70f5dfec62aacce2115fe1aa454623553c58e5fb9274"
+
+[[file]]
+file = "257-keypress-group1-fallback.t"
+rows = 16
+first_unreached = 2
+rerun_first_unreached = 2
+last_tap_assertion = 1
+runner_exit = 124
+blocked_in = "xtest_sync_with_i3 at i3/t/257-keypress-group1-fallback.t:44"
+cause = "xtest"
+excerpt = "i3/abort-causes/sway-1.12/257-keypress-group1-fallback.t.txt"
+excerpt_sha256 = "dd2074516bdd54e77d0637ef50c4ed3d71d27f326c7729429356c72ba774ddfd"
+
+[[file]]
+file = "258-keypress-release.t"
+rows = 48
+first_unreached = 2
+rerun_first_unreached = 2
+last_tap_assertion = 1
+runner_exit = 124
+blocked_in = "xtest_sync_with_i3 at i3/t/258-keypress-release.t:57"
+cause = "xtest"
+excerpt = "i3/abort-causes/sway-1.12/258-keypress-release.t.txt"
+excerpt_sha256 = "190cce715e02c591b31059ff5a6f935a41b3eb79cb710967d1269476c99f7864"
+
+[[file]]
+file = "285-sticky.t"
+rows = 9
+first_unreached = 3
+rerun_first_unreached = 3
+last_tap_assertion = 2
+runner_exit = 255
+last_sway_command = "kill"
+cause = "kill"
+excerpt = "i3/abort-causes/sway-1.12/285-sticky.t.txt"
+excerpt_sha256 = "af10a92277fd2a13cac4e3027a13825356fb606e04ed3b948ed359253ff27045"
+
+[[file]]
+file = "291-swap.t"
+rows = 147
+first_unreached = 2
+rerun_first_unreached = 2
+last_tap_assertion = 1
+runner_exit = 255
+last_sway_command = "kill"
+cause = "kill"
+excerpt = "i3/abort-causes/sway-1.12/291-swap.t.txt"
+excerpt_sha256 = "f538f16c4adb62a6856ca441316130ee49c536a0d6d4283c1a65d210c355ea62"
+
+[[file]]
+file = "294-focus-order.t"
+rows = 60
+first_unreached = 2
+rerun_first_unreached = 2
+last_tap_assertion = 1
+runner_exit = 255
+last_sway_command = "kill"
+cause = "kill"
+excerpt = "i3/abort-causes/sway-1.12/294-focus-order.t.txt"
+excerpt_sha256 = "b7ad9e407136affd2ae7c9d138ebb3a26bf0728c5a7767da7b76a27340f07594"
+
+[[file]]
+file = "295-net-wm-state-focused.t"
+rows = 2
+first_unreached = 4
+rerun_first_unreached = 4
+last_tap_assertion = 3
+runner_exit = 255
+last_sway_command = "kill"
+cause = "kill"
+excerpt = "i3/abort-causes/sway-1.12/295-net-wm-state-focused.t.txt"
+excerpt_sha256 = "e7f50625992ed08485d5663406fc677e990d4640ee69733d7aac4b0324d959c6"
+
+[[file]]
+file = "297-scroll-tabbed.t"
+rows = 15
+first_unreached = 2
+rerun_first_unreached = 2
+last_tap_assertion = 1
+runner_exit = 124
+blocked_in = "xtest_sync_with_i3 at i3/t/297-scroll-tabbed.t:30"
+cause = "xtest"
+excerpt = "i3/abort-causes/sway-1.12/297-scroll-tabbed.t.txt"
+excerpt_sha256 = "2b23a4d8fad8b6582a9b6e537614cfd8c8622e8ad9b88e96444e7b6665f6a359"
+
+[[file]]
+file = "315-all-criterion.t"
+rows = 16
+first_unreached = 3
+rerun_first_unreached = 3
+last_tap_assertion = 2
+runner_exit = 255
+last_sway_command = "kill"
+cause = "kill"
+excerpt = "i3/abort-causes/sway-1.12/315-all-criterion.t.txt"
+excerpt_sha256 = "7372de97fc7aea3e2ac722e7f6dfce26f7eca8449c3cd567fa329b12e4cbfc4d"
+
+[[file]]
+file = "316-drag-container.t"
+rows = 17
+first_unreached = 2
+rerun_first_unreached = 2
+last_tap_assertion = 1
+runner_exit = 124
+blocked_in = "xtest_sync_with_i3 at i3/t/316-drag-container.t:47"
+cause = "xtest"
+excerpt = "i3/abort-causes/sway-1.12/316-drag-container.t.txt"
+excerpt_sha256 = "2922a88725c409369c7de01db740cfb5f46d684758aaa33076419bdfbe25a37a"
+
+[[file]]
+file = "320-mouse-bindings.t"
+rows = 11
+first_unreached = 4
+rerun_first_unreached = 4
+last_tap_assertion = 3
+runner_exit = 124
+blocked_in = "xtest_sync_with_i3 at i3/t/320-mouse-bindings.t:45"
+cause = "xtest"
+excerpt = "i3/abort-causes/sway-1.12/320-mouse-bindings.t.txt"
+excerpt_sha256 = "4a2fb27bed9f34f87a0a910ab47b4aaca5542256453a34a90696ec9062133862"
+
+[[file]]
+file = "505-scratchpad-resolution.t"
+rows = 45
+first_unreached = 46
+rerun_first_unreached = 46
+last_tap_assertion = 45
+runner_exit = 255
+last_sway_command = "kill"
+cause = "kill"
+excerpt = "i3/abort-causes/sway-1.12/505-scratchpad-resolution.t.txt"
+excerpt_sha256 = "713eff124e0ad2add097c3be9db186891aa5ea7ea0ffb35029ca787c095a6f68"
+
+[[file]]
+file = "516-move.t"
+rows = 2
+first_unreached = 13
+rerun_first_unreached = 13
+last_tap_assertion = 12
+runner_exit = 255
+last_sway_command = "kill"
+cause = "kill"
+excerpt = "i3/abort-causes/sway-1.12/516-move.t.txt"
+excerpt_sha256 = "8171dfc9d6d37efaa76b8278d502fad1e8124a19f1d61d3b356b70cf160f9a92"
+
+[[file]]
+file = "527-focus-fallback.t"
+rows = 1
+first_unreached = 2
+rerun_first_unreached = 2
+last_tap_assertion = 1
+runner_exit = 255
+last_sway_command = "kill"
+cause = "kill"
+excerpt = "i3/abort-causes/sway-1.12/527-focus-fallback.t.txt"
+excerpt_sha256 = "97de640a3b87e28922a4147d8c78844d8607d64bd3618bcc4e55dfd309d84d91"
+
