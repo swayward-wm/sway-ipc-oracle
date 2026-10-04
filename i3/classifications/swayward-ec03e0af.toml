@@ -14884,22 +14884,28 @@ citation = "i3/testcases/lib/i3test/XTEST.pm:55-67; i3/testcases/lib/i3test/XTES
 file = "321-crash-criteria-scratchpad.t"
 assertion = 1
 outcome = "fail"
-reason = "swayward_command_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "i3/t/321-crash-criteria-scratchpad.t:12 ([id=\"<X11 window id>\"] criteria); sway/sway/criteria.c:347-353 (id matches view_get_x11_window_id); xwayland-satellite 0.8.2 src/server/mod.rs:932-956,1493-1501 (forwards only title and WM_CLASS as app_id, no X11 window id); swayward-ipc/src/criteria.rs:174 (id rejected as X11-only)"
+note = "focused rerun 2026-10-04, oracle 95db8b31 with a scratch pin of swayward 1e4f9e80: rows 1-3 command succeeded got 0; a nested run answers [id=4194305] nop with parse_error 'X11-only criterion id is unsupported'. Pinned sway 88869399 passes rows 1-3 in the same run. The in-process suite, which selects with con_id, passes rows 1-3 (swayward tests/i3/coverage.toml pass = 4)."
 
 [[classification]]
 file = "321-crash-criteria-scratchpad.t"
 assertion = 2
 outcome = "fail"
-reason = "swayward_command_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "i3/t/321-crash-criteria-scratchpad.t:12 ([id=\"<X11 window id>\"] criteria); sway/sway/criteria.c:347-353 (id matches view_get_x11_window_id); xwayland-satellite 0.8.2 src/server/mod.rs:932-956,1493-1501 (forwards only title and WM_CLASS as app_id, no X11 window id); swayward-ipc/src/criteria.rs:174 (id rejected as X11-only)"
+note = "focused rerun 2026-10-04, oracle 95db8b31 with a scratch pin of swayward 1e4f9e80: rows 1-3 command succeeded got 0; a nested run answers [id=4194305] nop with parse_error 'X11-only criterion id is unsupported'. Pinned sway 88869399 passes rows 1-3 in the same run. The in-process suite, which selects with con_id, passes rows 1-3 (swayward tests/i3/coverage.toml pass = 4)."
 
 [[classification]]
 file = "321-crash-criteria-scratchpad.t"
 assertion = 3
 outcome = "fail"
-reason = "swayward_command_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "i3/t/321-crash-criteria-scratchpad.t:12 ([id=\"<X11 window id>\"] criteria); sway/sway/criteria.c:347-353 (id matches view_get_x11_window_id); xwayland-satellite 0.8.2 src/server/mod.rs:932-956,1493-1501 (forwards only title and WM_CLASS as app_id, no X11 window id); swayward-ipc/src/criteria.rs:174 (id rejected as X11-only)"
+note = "focused rerun 2026-10-04, oracle 95db8b31 with a scratch pin of swayward 1e4f9e80: rows 1-3 command succeeded got 0; a nested run answers [id=4194305] nop with parse_error 'X11-only criterion id is unsupported'. Pinned sway 88869399 passes rows 1-3 in the same run. The in-process suite, which selects with con_id, passes rows 1-3 (swayward tests/i3/coverage.toml pass = 4)."
 
 [[classification]]
 file = "321-crash-criteria-scratchpad.t"
