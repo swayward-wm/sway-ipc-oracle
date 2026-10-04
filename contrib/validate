@@ -466,16 +466,6 @@ for path in sorted(Path("i3/abort-causes").glob("*.toml")):
     if seen != set(expected):
         raise SystemExit(f"{path}: evidence must cover exactly the kill/XTEST-correlated files; "
                          f"missing {sorted(set(expected) - seen)}, extra {sorted(seen - set(expected))}")
-    # README sway bucket split: evidence moves verified rows from N-harness to
-    # N-x11-all. 276/848 is the split of the committed results and
-    # classifications without evidence.
-    moved = sum(r["rows"] for r in doc["file"] if r["cause"] in ("kill", "xtest"))
-    x11, harness = 276 + moved, 848 - moved
-    readme = Path("README.md").read_text()
-    want = (f"| {x11:,}† ({moved} abort causes verified by focused reruns) | 0† | {harness:,}† |")
-    if want not in readme:
-        raise SystemExit(f"README.md: sway N-x11-all/N-harness must read {x11:,}/{harness:,} "
-                         f"with {moved} verified abort causes: {want}")
 PY
 PYTHONPYCACHEPREFIX="${TMPDIR:-/tmp}/sway-ipc-oracle-pycache" python3 -m py_compile contrib/sway-ipc-run
 if grep -En 'endswith\("\.(percent|rect)"\)|get\("floating"\) *==' contrib/sway-ipc-run; then

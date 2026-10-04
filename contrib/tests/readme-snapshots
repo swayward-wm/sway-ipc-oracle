@@ -16,18 +16,25 @@ Rules:
 - Each block's corpus rows quote the [run] counts of its result files and link
   them; a figure from a result listed in pending.toml ends in †, and no other
   figure does.
-- Each block's bucket row starts with the i3-suite pass and skip counts and
-  sums to the i3-suite assertion total.
-- Each block states the review status of its i3-suite classifications
-  (verified, unverified, unclassified) as counted from
-  i3/classifications/<snapshot>.toml, with † when the i3 result is pending.
+- Each block holds exactly one generated i3-suite region, equal to
+  contrib/i3_buckets.py's rendering from the committed results: both
+  partitions of the 3,755 assertions (buckets and raw outcome), the review
+  line, the comparable view and its asymmetries, † on every figure from a
+  pending i3 result.
+- Prose counts (test files, assertions, i3-derived states, event scenarios
+  and captures, event families, census commands, random seeds and steps)
+  equal the committed data they describe.
 """
+import json
 import re
 import sys
 import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(ROOT / "contrib"))
+import i3_buckets  # noqa: E402
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 
@@ -145,43 +152,58 @@ def corpus_rows(compositor, name, pending):
     return expected, counts, total, i3 in pending
 
 
-def review_line(name, stale):
-    rows = tomllib.load(open(ROOT / f"i3/classifications/{name}.toml", "rb")).get("classification", [])
-    verified = sum(row.get("reason_verified") is True for row in rows)
-    unclassified = sum(row.get("reason") == "unclassified" for row in rows)
-    noun = "row" if len(rows) == 1 else "rows"
-    return (f"i3-suite review: {len(rows):,} non-pass {noun}; {verified:,} verified, "
-            f"{len(rows) - verified:,} unverified, {unclassified:,} of them "
-            f"unclassified.{'†' if stale else ''}")
-
-
-def check_block(compositor, name, body, pending):
-    expected, counts, total, stale = corpus_rows(compositor, name, pending)
-    line = review_line(name, stale)
-    if line not in body.splitlines():
-        fail(f"README block for {name} needs the line: {line}")
+def check_block(compositor, name, body, pending, generated):
+    expected = corpus_rows(compositor, name, pending)[0]
     rows = [row for table in tables(body) for _, row in table]
     for row in expected:
         if row not in rows:
             fail(f"README block for {name} needs the row: | {' | '.join(row)} |")
-    bucket_tables = [t for t in tables(body) if t[0][1][:2] == ["P", "S"] and t[0][1][2] == "N-i3"]
-    if len(bucket_tables) != 1 or len(bucket_tables[0]) != 3:
-        fail(f"README block for {name} needs one bucket table (P | S | N-i3 | ...) with one row")
-    view_tables = [t for t in tables(body) if t[0][1][:3] == ["P", "S", "N-x11-sway"]]
-    if len(view_tables) != 1 or len(view_tables[0]) != 3:
-        fail(f"README block for {name} needs one comparable-view table with one row")
-    if "Asymmetries:" not in body:
-        fail(f"README block for {name} needs its view's Asymmetries: note")
-    for table in bucket_tables + view_tables:
-        cells = table[2][1]
-        for cell in cells:
-            if stale != ("†" in cell):
-                fail(f"README block for {name}: bucket cell {cell!r} must "
-                     f"{'carry' if stale else 'not carry'} † (i3 result pending: {stale})")
-    buckets = [int(re.match(r"[\d,]+", c).group().replace(",", "")) for c in bucket_tables[0][2][1]]
-    if buckets[:2] != counts[:2] or sum(buckets) != total:
-        fail(f"README block for {name}: buckets must start with pass {counts[0]} and skip "
-             f"{counts[1]} and sum to {total}")
+    found = i3_buckets.regions(body)
+    if found != [generated]:
+        fail(f"README block for {name}: the generated i3-suite region (buckets, review line, "
+             "comparable view, asymmetries) differs from the committed results; run "
+             "contrib/i3_buckets.py --write README.md")
+
+
+def prose_counts():
+    """(pattern, value) pairs: README prose figures and the data that fixes them."""
+    files = tomllib.load(open(ROOT / "i3/results/i3-4.25.toml", "rb"))["files"]
+    scenarios = tomllib.load(open(ROOT / "sway-ipc/scenarios.toml", "rb"))["scenario"]
+    events = [s for s in scenarios if "events" in s.get("corpora", ["state", "events"])]
+    captures = sum(a.startswith("capture:") for s in events for a in s["actions"])
+    derived = json.loads((ROOT / "sway-ipc/i3-derived/scenarios.json").read_text())["scenarios"]
+    census = tomllib.load(open(ROOT / "sway-ipc/command-coverage.toml", "rb"))["command"]
+    random = json.loads((ROOT / "sway-ipc/random/sequences.json").read_text())
+    source = (ROOT / "contrib/sway-ipc-run").read_text()
+    families = len(re.search(r"^EVENTS = \((.*)\)$", source, re.M).group(1).split(","))
+    words = {9: "nine", 10: "ten"}
+    count = lambda n: f"{n:,}"
+    return [
+        (r"i3's (\S+) unchanged test files", count(len(files))),
+        (r"`i3/t/` holds (\S+) test files", count(len(files))),
+        (r"assertions in the (\S+) test files", count(len(files))),
+        (r"the same (\S+)\s+assertions", count(sum(e["assertions"] for e in files.values()))),
+        (r"Every one of the (\S+) assertions", count(sum(e["assertions"] for e in files.values()))),
+        (r"the same (\S+) i3-suite\s+assertions", count(sum(e["assertions"] for e in files.values()))),
+        (r"including (\S+) tree states", count(len(derived))),
+        (r"replays (\S+) distinct states", count(len(derived))),
+        (r"\*\*Events\*\* replays (\S+) scenarios", count(len(events))),
+        (r"scenarios \((\S+) captures\)", count(captures)),
+        (r"all\s+(\S+) sway event\s+families", words.get(families, str(families))),
+        (r"sway 1\.12's (\S+) top-level\s+commands", count(len(census))),
+        (r"replays (\S+) captured", count(random["seeds"])),
+        (r"captured (\S+)-step sequences", count(random["steps"])),
+    ]
+
+
+def check_prose(text, where):
+    for pattern, value in prose_counts():
+        found = re.findall(pattern, text)
+        if not found:
+            fail(f"{where}: README prose no longer states /{pattern}/; update readme-snapshots")
+        for got in found:
+            if got != value:
+                fail(f"{where}: README prose /{pattern}/ reads {got}, the committed data gives {value}")
 
 
 def check(path):
@@ -189,8 +211,11 @@ def check(path):
     pending = {row["path"] for row in tomllib.load(open(ROOT / "pending.toml", "rb")).get("pending", [])}
     text = Path(path).read_text()
     check_combined(text, pins, path)
+    check_prose(text, path)
+    _, snaps = i3_buckets.snapshots()
     for compositor, body in blocks(text, pins).items():
-        check_block(compositor, pins["snapshot"][compositor], body, pending)
+        generated = i3_buckets.render_region(compositor, pins, snaps)
+        check_block(compositor, pins["snapshot"][compositor], body, pending, generated)
 
 
 if sys.argv[1:] == ["--self-test"]:
@@ -202,5 +227,25 @@ if sys.argv[1:] == ["--self-test"]:
                 fail(f"{fixture.name}: rejected for the wrong reason: {error}")
         else:
             fail(f"{fixture.name}: combined results table was accepted")
+    # A hand edit to any generated cell or checked prose count must fail.
+    import tempfile
+    readme = (ROOT / "README.md").read_text()
+    edits = [("| 815† (539 abort causes", "| 816† (539 abort causes"),
+             ("| 1,453† | 11† | 349† | 661† | 1,453†", "| 1,453† | 11† | 349† | 662† | 1,453†"),
+             ("- 86† N-x11-all", "- 85† N-x11-all"),
+             ("| 3,754 | 1 | 0 | 0 | 0 | 0 | 0 |", "| 3,754 | 1 | 0 | 0 | 0 | 0 | 0† |"),
+             ("including 418 tree states", "including 401 tree states"),
+             ("replays 36 scenarios", "replays 38 scenarios")]
+    with tempfile.TemporaryDirectory() as work:
+        for old, new in edits:
+            if readme.count(old) != 1:
+                fail(f"self-test edit target is not unique in README.md: {old!r}")
+            edited = Path(work, "README.md")
+            edited.write_text(readme.replace(old, new))
+            try:
+                check(edited)
+            except SystemExit:
+                continue
+            fail(f"hand edit {old!r} -> {new!r} was accepted")
 else:
     check(sys.argv[1] if len(sys.argv) > 1 else ROOT / "README.md")
