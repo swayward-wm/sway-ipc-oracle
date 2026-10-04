@@ -202,6 +202,17 @@ Compositors that speak i3/sway IPC, and whether they have a snapshot.
 i3-gaps was merged into i3 in 4.22, so the i3 snapshot covers it. A project gets
 a snapshot only after its maintainers have had a courtesy note.
 
+[hy3](https://github.com/outfoxxed/hy3) gives Hyprland an i3/sway-like manual
+tiling layout, but the oracle cannot run against it. The runners speak i3/sway
+IPC: they connect to `$SWAYSOCK` or `$I3SOCK`, send `RUN_COMMAND` with sway
+command syntax and read `GET_TREE` in the i3 tree schema. hy3 is a Hyprland
+plugin. It is driven through Hyprland's own IPC (`hyprctl dispatch hy3:…`, or
+`hl.plugin.hy3` from a Lua config) and opens no i3/sway IPC socket. The same
+holds for [hy3-lua](https://github.com/aarobc/hy3-lua), a separate Lua layout
+registered as `lua:hy3` (Hyprland 0.50 or later). Supporting either would need
+a layer that translates sway commands and the i3 tree onto Hyprland dispatchers
+and JSON. That layer would then be the thing under test, not the layout.
+
 ## Contributing
 
 Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before changing a runner, an adapter
