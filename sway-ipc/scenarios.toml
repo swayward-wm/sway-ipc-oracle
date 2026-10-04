@@ -338,3 +338,8 @@ actions = ["probe:criteria_no_match_border_empty:[floating] border pixel 4", "wi
 name = "urgent_view_marks_its_split_urgent"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:layout stacking", "window:fixture-2", "command:splitv", "window:fixture-3", "command:[app_id=\"^fixture-1$\"] urgent enable", "command:[app_id=\"^fixture-3$\"] urgent enable", "command:[app_id=\"^fixture-3$\"] urgent disable", "window:fixture-4", "command:[app_id=\"^fixture-3$\"] urgent enable", "capture:urgent_view_marks_its_split_urgent"]
+
+[[scenario]]
+name = "chained_command_focus"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus parent; allow_tearing yes", "command:focus parent; opacity bogus", "command:focus parent; border pixel 3", "command:focus child; border pixel 3", "command:focus parent; focus child; opacity bogus", "command:focus parent; shortcuts_inhibitor enable", "command:focus child; shortcuts_inhibitor bogus", "command:focus parent; opacity bogus; focus child", "capture:chained_command_focus"]

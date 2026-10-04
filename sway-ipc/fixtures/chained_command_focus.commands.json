@@ -1,0 +1,118 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-1 --title=fixture-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent; allow_tearing yes",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "error": "Tearing can only be allowed on views",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "focus parent; opacity bogus",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "error": "No current container",
+        "parse_error": false,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "focus parent; border pixel 3",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "error": "Only views can have borders",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "focus child; border pixel 3",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent; focus child; opacity bogus",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "success": true
+      },
+      {
+        "error": "opacity float invalid",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "focus parent; shortcuts_inhibitor enable",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "error": "Only views can have shortcuts inhibitors",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "focus child; shortcuts_inhibitor bogus",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "error": "Expected `shortcuts_inhibitor enable|disable`",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "focus parent; opacity bogus; focus child",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "error": "No current container",
+        "parse_error": false,
+        "success": false
+      },
+      {
+        "success": true
+      }
+    ]
+  }
+]
