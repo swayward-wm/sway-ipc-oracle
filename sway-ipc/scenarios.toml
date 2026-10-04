@@ -313,3 +313,8 @@ requires = ["wlr-foreign-toplevel-management"]
 not_applicable = true
 reason = "i3 does not implement wlr-foreign-toplevel-management; X11 taskbars use EWMH _NET_WM_STATE_HIDDEN, a different protocol path."
 actions = ["window:fixture-1", "window:fixture-2", "foreign_toplevel:fixture-2|set_minimized", "capture:foreign_toplevel_set_minimized", "foreign_toplevel:fixture-2|set_maximized", "capture:foreign_toplevel_set_maximized"]
+
+[[scenario]]
+name = "runtime_set_then_exec"
+corpora = ["state"]
+actions = ["command:set $oracle value", "window:fixture-1", "capture:runtime_set_then_exec"]
