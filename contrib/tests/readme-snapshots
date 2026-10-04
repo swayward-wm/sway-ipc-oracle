@@ -7,7 +7,9 @@ Usage: readme-snapshots [README]   (default README.md; exit 1 on a violation)
 Rules:
 - No results table (a table with any digit in a cell) names more than one
   compositor. A compositor is named by its snapshot name, its block heading
-  name, or a cell that is exactly the compositor key. Checked first, so a
+  name, its pinned commit (7+ hex digits of it), or a cell that is exactly the
+  compositor key. Names match case-insensitively, with any run of spaces, `-`
+  or `_` as one separator and an optional `v` before the version. Checked first, so a
   fixture holding only such a table fails for that reason.
 - Each pinned compositor has exactly one block, `### <name> (`<commit>`)`,
   under `## Snapshots`.
@@ -45,19 +47,28 @@ def tables(text):
             block = []
 
 
+def norm(text):
+    text = re.sub(r"[\s_-]+", " ", text.lower().strip("`*† "))
+    return re.sub(r"(?<![a-z0-9])v(?=\d)", "", text)
+
+
+def named_in(cell, compositor, name, commit):
+    cell = norm(cell)
+    if cell in {compositor, norm(display(compositor, name, commit))}:
+        return True
+    for label in {norm(name), norm(display(compositor, name, commit))} - {compositor}:
+        if re.search(rf"(?<![\w.]){re.escape(label)}(?![\w.])", cell):
+            return True
+    return any(commit.startswith(sha) for sha in re.findall(r"(?<![0-9a-f])[0-9a-f]{7,40}(?![0-9a-f])", cell))
+
+
 def check_combined(text, pins, where):
     names = pins["snapshot"]
-    labels = {c: {c, display(c, n, pins[c])} for c, n in names.items()}
     for table in tables(text):
         cells = [cell for _, row in table for cell in row]
         if not any(re.search(r"\d", cell) for cell in cells):
             continue
-        named = {
-            c for c, n in names.items()
-            for cell in cells
-            if re.search(rf"(?<![\w.-]){re.escape(n)}(?![\w.])", cell)
-            or cell.strip("`*† ") in labels[c]
-        }
+        named = {c for c, n in names.items() for cell in cells if named_in(cell, c, n, pins[c])}
         if len(named) > 1:
             fail(
                 f"{where}:{table[0][0]}: results table names {len(named)} compositors "
