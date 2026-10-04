@@ -4,8 +4,8 @@
 
 [run]
 compositor = "swayward"
-version = "swayward beta0-dev (54c5acd9)"
-commit = "54c5acd981bac7d82b7306e851a20e04b9a03e6a"
+version = "swayward beta0-dev (ec03e0af)"
+commit = "ec03e0af1075e15cd97341602c84005533eea4f5"
 inputs = "5a9f39d4f8310815589d5791c30b90f08e3663b3614c9be8455155ea641ad120"
 date = "2026-10-02"
 normalization = "sway-ipc/normalize.toml"

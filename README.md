@@ -37,7 +37,7 @@ inventory below.
 | --- | --- | --- | --- | --- | --- |
 | `i3-4.25` | 3,754/1/0 | 0 | 242/246/540 | 1/41/30 | `9be3249a` |
 | `sway-1.12` | 1,461/20/2,117 | 142 | 740/0/40 | 45/0/0 | `88869399` |
-| `swayward-54c5acd9` | 1,453/11/2,269 | 12 | 749/31/0 | 44/1/0 | `54c5acd9` |
+| `swayward-ec03e0af` | 1,453/11/2,269 | 12 | 749/31/0 | 44/1/0 | `ec03e0af` |
 | SwayFX | not yet measured | — | — | — | — |
 | scroll | not yet measured | — | — | — | — |
 | swirl | not yet measured | — | — | — | — |
@@ -68,7 +68,7 @@ verdict.
 | --- | ---: | ---: | ---: | ---: |
 | `i3-4.25` | 1,096 | 2,248 | 0 | 2,227 |
 | `sway-1.12` | 4,180 | 0 | 0 | 0 |
-| `swayward-54c5acd9` | 4,118 | 62 | 0 | 0 |
+| `swayward-ec03e0af` | 4,118 | 62 | 0 | 0 |
 
 ### Random sequence corpus
 
@@ -80,7 +80,7 @@ replay is pending.
 | Snapshot | match/mismatch/unstable/n.a. | Commit |
 | --- | --- | --- |
 | `sway-1.12-random` | 500/0/0/0 | `88869399` |
-| `swayward-54c5acd9-random` | 329/171/0/0 | `54c5acd9` |
+| `swayward-ec03e0af-random` | 329/171/0/0 | `ec03e0af` |
 
 ### Fuzz corpora
 
@@ -98,8 +98,8 @@ measured mismatch and includes its triage, finding, reason, and source.
 | `i3-4.25-wire-fuzz` | 3/7/0/0/0 | `9be3249a` |
 | `sway-1.12-command-fuzz` | 195/0/0/0/0 | `88869399` |
 | `sway-1.12-wire-fuzz` | 10/0/0/0/0 | `88869399` |
-| `swayward-54c5acd9-command-fuzz` | 195/0/0/0/0 | `54c5acd9` |
-| `swayward-54c5acd9-wire-fuzz` | 6/4/0/0/0 | `54c5acd9` |
+| `swayward-ec03e0af-command-fuzz` | 195/0/0/0/0 | `ec03e0af` |
+| `swayward-ec03e0af-wire-fuzz` | 6/4/0/0/0 | `ec03e0af` |
 
 ## Try it
 

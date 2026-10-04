@@ -546,6 +546,20 @@ PYTHONPYCACHEPREFIX="${TMPDIR:-/tmp}/sway-ipc-oracle-pycache" ./contrib/tests/sw
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
+# The container clones swayward main and checks out the pin, so the pin must be
+# reachable from main, not only present in some local clone.
+swayward_url=https://github.com/swayward-wm/swayward.git
+swayward_pin=$(python3 -c 'import tomllib; print(tomllib.load(open("pins.toml", "rb"))["swayward"])')
+if git ls-remote --exit-code --heads "$swayward_url" main >/dev/null 2>&1; then
+    git clone --quiet --filter=blob:none --no-checkout --single-branch --branch main \
+        "$swayward_url" "$work/swayward"
+    git -C "$work/swayward" merge-base --is-ancestor "$swayward_pin" origin/main 2>/dev/null || {
+        echo "pins.toml swayward $swayward_pin is not reachable from $swayward_url main" >&2
+        exit 1
+    }
+else
+    echo "skipping swayward pin reachability check: cannot reach $swayward_url (offline?)" >&2
+fi
 git clone --quiet --filter=blob:none --no-checkout https://github.com/swaywm/sway.git "$work/sway"
 git -C "$work/sway" checkout --quiet "$(python3 -c 'import json; print(json.load(open("sway-ipc/fixtures/schema-version.json"))["commit"])')"
 ./contrib/check-sway-fixture-schema "$work/sway"

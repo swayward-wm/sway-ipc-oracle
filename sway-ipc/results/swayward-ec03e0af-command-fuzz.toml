@@ -4,8 +4,8 @@
 
 [run]
 compositor = "swayward"
-version = "swayward beta0-dev (54c5acd9)"
-commit = "54c5acd981bac7d82b7306e851a20e04b9a03e6a"
+version = "swayward beta0-dev (ec03e0af)"
+commit = "ec03e0af1075e15cd97341602c84005533eea4f5"
 inputs = "480a0458f2d1249c981ad4b6bff1f8dceeb931330e035eca4756209365e7dddc"
 date = "2026-10-02"
 corpus = "command-fuzz"
