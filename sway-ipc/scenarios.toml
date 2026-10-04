@@ -318,3 +318,8 @@ actions = ["window:fixture-1", "window:fixture-2", "foreign_toplevel:fixture-2|s
 name = "runtime_set_then_exec"
 corpora = ["state"]
 actions = ["command:set $oracle value", "window:fixture-1", "capture:runtime_set_then_exec"]
+
+[[scenario]]
+name = "empty_workspace_move_to_output_or_mark"
+corpora = ["state"]
+actions = ["command:move container to output right", "command:move container to output HEADLESS-9", "command:move container to mark oracle", "capture:empty_workspace_move_to_output_or_mark"]
