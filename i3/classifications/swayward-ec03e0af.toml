@@ -33,22 +33,28 @@ swayward_adapter_finding = "Focused black-box reruns expose a swayward adapter o
 file = "005-floating.t"
 assertion = 5
 outcome = "fail"
-reason = "swayward_geometry_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY); xwayland-satellite 0.8.2 src/server/event.rs:301-303 (X window x/y = configure offset 0 + output offset; xdg_toplevel carries no position)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: line 30 x/y both 0. open_floating_window sets UTILITY, which the satellite drops, so the window tiles at 0,0; the satellite also reports every X window at the output origin."
 
 [[classification]]
 file = "005-floating.t"
 assertion = 7
 outcome = "fail"
-reason = "swayward_geometry_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: line 40 got 1280 expected 80. open_floating_window's UTILITY type is dropped, so the window tiles at full width."
 
 [[classification]]
 file = "005-floating.t"
 assertion = 8
 outcome = "fail"
-reason = "swayward_geometry_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: line 41 got 800 expected 90. Same UTILITY loss as row 7."
 
 [[classification]]
 file = "005-floating.t"
@@ -70,6 +76,8 @@ assertion = 12
 outcome = "fail"
 reason = "swayward_geometry_finding"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/server/event.rs:304-313 (a 0x0 configure keeps the X window's own size); sway/sway/desktop/xdg_shell.c:297-302,481-482; sway/sway/tree/container.c:832-846; swayward src/layout/workspace.rs:1024-1055 (initial configure sends a tile size)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: line 61 got 1280 expected 80. Plain open_window, then `floating enable`: sway floats at the view's natural size; swayward's initial configure imposes the tile size, so the 80x90 natural size the satellite would forward is lost. Real swayward finding (same family as gap F1b, task parity-f1b-floating-natural-size)."
 
 [[classification]]
 file = "005-floating.t"
@@ -77,6 +85,8 @@ assertion = 13
 outcome = "fail"
 reason = "swayward_geometry_finding"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/server/event.rs:304-313 (a 0x0 configure keeps the X window's own size); sway/sway/desktop/xdg_shell.c:297-302,481-482; sway/sway/tree/container.c:832-846; swayward src/layout/workspace.rs:1024-1055 (initial configure sends a tile size)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: line 62 got 800 expected 90. Same natural-size finding as row 12."
 
 [[classification]]
 file = "100-fullscreen.t"
@@ -3078,8 +3088,10 @@ citation = "sway/sway/desktop/xwayland.c:310-339; sway/sway/tree/view.c:433-455;
 file = "135-floating-focus.t"
 assertion = 4
 outcome = "fail"
-reason = "swayward_geometry_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "sway/sway/criteria.c:677 (T_ID matches the Xwayland window id); swayward src/tests/ipc/tree_commands/criteria.rs:497-502 (no X11 id on a satellite xdg_toplevel)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: line 52 got 4194308 expected 4194307. `[id=<XID>] focus` cannot match: the satellite gives swayward no X11 window id."
 
 [[classification]]
 file = "135-floating-focus.t"
@@ -3875,15 +3887,19 @@ citation = "i3/src/x.c:328-338; i3/src/commands.c:1205-1225; xwayland-satellite/
 file = "146-floating-reinsert.t"
 assertion = 2
 outcome = "fail"
-reason = "swayward_geometry_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: line 38 got 3 expected 2. open_floating_window's UTILITY type is dropped, so the window tiles into the split."
 
 [[classification]]
 file = "146-floating-reinsert.t"
 assertion = 3
 outcome = "fail"
-reason = "swayward_geometry_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: line 48 got 2 expected 3. The window was tiled (row 2), so `floating toggle` floats it out of the split."
 
 [[classification]]
 file = "150-regress-dock-restart.t"
@@ -3971,6 +3987,8 @@ assertion = 5
 outcome = "fail"
 reason = "swayward_geometry_finding"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/server/event.rs:304-313 (a 0x0 configure keeps the X window's own size); sway/sway/desktop/xdg_shell.c:297-302,481-482; sway/sway/tree/container.c:832-846; swayward src/layout/workspace.rs:1024-1055 (initial configure sends a tile size)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: `floating toggle` width 1280, expected <420. Plain open_window 400x150: sway floats at the natural size; swayward's initial configure imposes the tile size. Real swayward finding (gap F1b)."
 
 [[classification]]
 file = "153-floating-originalsize.t"
@@ -3978,6 +3996,8 @@ assertion = 7
 outcome = "fail"
 reason = "swayward_geometry_finding"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/server/event.rs:304-313 (a 0x0 configure keeps the X window's own size); sway/sway/desktop/xdg_shell.c:297-302,481-482; sway/sway/tree/container.c:832-846; swayward src/layout/workspace.rs:1024-1055 (initial configure sends a tile size)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: `floating toggle` height 800, expected <170. Same natural-size finding as row 5."
 
 [[classification]]
 file = "154-regress-multiple-dock.t"
@@ -6248,8 +6268,10 @@ citation = "i3/src/x.c:328-338; i3/src/commands.c:1205-1225; xwayland-satellite/
 file = "174-border-config.t"
 assertion = 9
 outcome = "fail"
-reason = "swayward_geometry_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: line 90 0 floating nodes. open_floating_window's UTILITY type is dropped, so no floating container exists."
 
 [[classification]]
 file = "174-border-config.t"
@@ -6262,8 +6284,10 @@ reason_verified = true
 file = "174-border-config.t"
 assertion = 12
 outcome = "fail"
-reason = "swayward_geometry_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: line 117 0 floating nodes. Same UTILITY loss as row 9 (new_float 1pixel config)."
 
 [[classification]]
 file = "174-border-config.t"
@@ -6736,29 +6760,37 @@ reason_verified = true
 file = "181-regress-float-border.t"
 assertion = 1
 outcome = "fail"
-reason = "swayward_geometry_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: line 29 got 1280 expected 200. open_floating_window's UTILITY type is dropped, so the window tiles."
 
 [[classification]]
 file = "181-regress-float-border.t"
 assertion = 2
 outcome = "fail"
-reason = "swayward_geometry_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: height got 800 expected 100. Same UTILITY loss as row 1."
 
 [[classification]]
 file = "181-regress-float-border.t"
 assertion = 3
 outcome = "fail"
-reason = "swayward_geometry_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: width after `border 1pixel` still the tiled 1280. Same UTILITY loss as row 1."
 
 [[classification]]
 file = "181-regress-float-border.t"
 assertion = 4
 outcome = "fail"
-reason = "swayward_geometry_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: height after `border 1pixel` still the tiled 800. Same UTILITY loss as row 1."
 
 [[classification]]
 file = "182-regress-focus-dock.t"
@@ -8690,8 +8722,10 @@ reason_verified = true
 file = "222-regress-dock-resize.t"
 assertion = 1
 outcome = "unreached"
-reason = "swayward_geometry_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:930-941 (window-type atoms interned; no _NET_WM_WINDOW_TYPE_DOCK)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: `No such atom (_NET_WM_WINDOW_TYPE_DOCK)` before any compositor command: the satellite's X server never interns the dock type, which wlroots' XWM does."
 
 [[classification]]
 file = "226-internal-workspaces.t"
@@ -8852,8 +8886,10 @@ citation = "sway/sway/desktop/xwayland.c:310-339; sway/sway/tree/view.c:433-455;
 file = "231-ipc-floating-event.t"
 assertion = 1
 outcome = "fail"
-reason = "swayward_ipc_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "sway/sway/criteria.c:677 (T_ID matches the Xwayland window id); swayward src/tests/ipc/tree_commands/criteria.rs:497-502 (no X11 id on a satellite xdg_toplevel)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: 0 floating events, window id undef. The command is `[id=<XID>] floating enable`; with no X11 id the criterion matches nothing, so no event is due."
 
 [[classification]]
 file = "231-ipc-floating-event.t"
@@ -9035,8 +9071,10 @@ reason_verified = true
 file = "241-consistent-center.t"
 assertion = 8
 outcome = "fail"
-reason = "swayward_geometry_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY); xwayland-satellite 0.8.2 src/server/event.rs:301-303 (X window x/y = configure offset 0 + output offset; xdg_toplevel carries no position)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: line 71 got 400 expected 300. The baseline window opened with open_floating_window tiles (UTILITY dropped), and the scratchpad window's X11 rect is reported at the output origin, not at the compositor's centred position."
 
 [[classification]]
 file = "242-no-focus.t"
@@ -10618,8 +10656,10 @@ reason_verified = true
 file = "271-for_window_tilingfloating.t"
 assertion = 1
 outcome = "fail"
-reason = "swayward_ipc_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: line 43 got 2 tiling, expected 1: open_floating_window's UTILITY type is dropped, so B tiles."
 
 [[classification]]
 file = "271-for_window_tilingfloating.t"
@@ -10632,8 +10672,10 @@ reason_verified = true
 file = "271-for_window_tilingfloating.t"
 assertion = 3
 outcome = "fail"
-reason = "swayward_ipc_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: line 47 got 0 floating, expected 1: same UTILITY loss as row 1."
 
 [[classification]]
 file = "271-for_window_tilingfloating.t"
@@ -10646,8 +10688,10 @@ reason_verified = true
 file = "271-for_window_tilingfloating.t"
 assertion = 5
 outcome = "fail"
-reason = "swayward_ipc_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY); sway/sway/criteria.c:677 (T_ID matches the Xwayland window id); swayward src/tests/ipc/tree_commands/criteria.rs:497-502 (no X11 id on a satellite xdg_toplevel)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: line 61 got 2 tiling: `[id=<XID>] floating enable/disable` match nothing without an X11 id, and B was never floating."
 
 [[classification]]
 file = "271-for_window_tilingfloating.t"
@@ -10660,8 +10704,10 @@ reason_verified = true
 file = "271-for_window_tilingfloating.t"
 assertion = 7
 outcome = "fail"
-reason = "swayward_ipc_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY); sway/sway/criteria.c:677 (T_ID matches the Xwayland window id); swayward src/tests/ipc/tree_commands/criteria.rs:497-502 (no X11 id on a satellite xdg_toplevel)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: line 65 got 0 floating: same XID criteria and UTILITY loss as row 5."
 
 [[classification]]
 file = "271-for_window_tilingfloating.t"
@@ -10674,8 +10720,10 @@ reason_verified = true
 file = "271-for_window_tilingfloating.t"
 assertion = 9
 outcome = "fail"
-reason = "swayward_ipc_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY); sway/sway/criteria.c:677 (T_ID matches the Xwayland window id); swayward src/tests/ipc/tree_commands/criteria.rs:497-502 (no X11 id on a satellite xdg_toplevel)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: line 80 got 2 tiling: `[id=<XID>] mark A, floating disable` and `[id=<XID>] ... floating enable` match nothing without an X11 id."
 
 [[classification]]
 file = "271-for_window_tilingfloating.t"
@@ -10688,8 +10736,10 @@ reason_verified = true
 file = "271-for_window_tilingfloating.t"
 assertion = 11
 outcome = "fail"
-reason = "swayward_ipc_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY); sway/sway/criteria.c:677 (T_ID matches the Xwayland window id); swayward src/tests/ipc/tree_commands/criteria.rs:497-502 (no X11 id on a satellite xdg_toplevel)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: 0 floating: same XID criteria and UTILITY loss as row 9."
 
 [[classification]]
 file = "271-for_window_tilingfloating.t"
@@ -10716,8 +10766,10 @@ reason_verified = true
 file = "271-for_window_tilingfloating.t"
 assertion = 15
 outcome = "fail"
-reason = "swayward_ipc_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: 0 floating after relaunch: open_floating_window's UTILITY type is dropped."
 
 [[classification]]
 file = "271-for_window_tilingfloating.t"
@@ -10744,8 +10796,10 @@ reason_verified = true
 file = "271-for_window_tilingfloating.t"
 assertion = 19
 outcome = "fail"
-reason = "swayward_ipc_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: 0 floating: same UTILITY loss as row 15."
 
 [[classification]]
 file = "271-for_window_tilingfloating.t"
@@ -10814,29 +10868,37 @@ citation = "sway/sway/desktop/xwayland.c:310-339; sway/sway/ipc-json.c:475-484; 
 file = "276-ipc-window-move.t"
 assertion = 1
 outcome = "fail"
-reason = "swayward_ipc_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "sway/sway/ipc-json.c:475-484 (container.window = Xwayland window id); sway/sway/criteria.c:677 (T_ID matches the Xwayland window id); swayward src/tests/ipc/tree_commands/criteria.rs:497-502 (no X11 id on a satellite xdg_toplevel)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: 1 window::move event received, container.window undef vs XID 4194305. Only the X11 id field in the payload fails."
 
 [[classification]]
 file = "276-ipc-window-move.t"
 assertion = 2
 outcome = "fail"
-reason = "swayward_ipc_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "sway/sway/ipc-json.c:475-484 (container.window = Xwayland window id); sway/sway/criteria.c:677 (T_ID matches the Xwayland window id); swayward src/tests/ipc/tree_commands/criteria.rs:497-502 (no X11 id on a satellite xdg_toplevel)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: 1 window::move event received, container.window undef vs XID 4194305. Same XID-only failure as row 1."
 
 [[classification]]
 file = "277-ipc-window-urgent.t"
 assertion = 1
 outcome = "fail"
-reason = "swayward_ipc_finding"
+reason = "xwayland_satellite_no_dynamic_x11_state"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/server/mod.rs:961-970 (WM_HINTS keeps only group and input, not urgency); sway/sway/desktop/xwayland.c:756-773"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: 0 window::urgent events. The test sets the WM_HINTS urgency bit; the satellite does not forward it."
 
 [[classification]]
 file = "277-ipc-window-urgent.t"
 assertion = 2
 outcome = "fail"
-reason = "swayward_ipc_finding"
+reason = "xwayland_satellite_no_dynamic_x11_state"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:838-843 (property deletes ignored); xwayland-satellite 0.8.2 src/server/mod.rs:961-970; sway/sway/desktop/xwayland.c:756-773"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: 0 window::urgent events. The test deletes the WM_HINTS urgency bit; the satellite neither forwards urgency nor handles the delete."
 
 [[classification]]
 file = "279-regress-default-floating-border.t"
@@ -15538,15 +15600,19 @@ citation = "i3/src/x.c:328-338; i3/src/commands.c:1205-1225; xwayland-satellite/
 file = "523-move-position-center.t"
 assertion = 1
 outcome = "fail"
-reason = "swayward_mapping_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: line 45 got 0 expected 1 floating node. open_floating_window's UTILITY type is dropped, so nothing floats."
 
 [[classification]]
 file = "523-move-position-center.t"
 assertion = 4
 outcome = "fail"
-reason = "swayward_mapping_finding"
+reason = "xwayland_satellite_metadata_limit"
 reason_verified = true
+citation = "xwayland-satellite 0.8.2 src/xstate/mod.rs:1194-1196 (_NET_WM_WINDOW_TYPE_UTILITY -> plain toplevel, no xdg parent); sway/sway/desktop/xwayland.c:310-339 (wants_floating reads UTILITY)"
+note = "focused rerun 2026-10-04, oracle 3c2e4ec0 in the oracle container (swayward 54c5acd9 = ec03e0af tree), TAP: line 52 got 0 expected 1 floating node. Same UTILITY loss as row 1."
 
 [[classification]]
 file = "524-move.t"

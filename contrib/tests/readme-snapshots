@@ -286,7 +286,7 @@ if sys.argv[1:] == ["--self-test"]:
     import tempfile
     readme = (ROOT / "README.md").read_text()
     edits = [("| 815† (539† abort causes", "| 816† (539† abort causes"),
-             ("| 1,453† | 11† | 349† | 661† | 1,453†", "| 1,453† | 11† | 349† | 662† | 1,453†"),
+             ("| 1,453† | 11† | 378† | 632† | 1,453†", "| 1,453† | 11† | 378† | 633† | 1,453†"),
              ("- 86† N-x11-all", "- 85† N-x11-all"),
              ("| 3,754 | 1 | 0 | 0 | 0 | 0 | 0 |", "| 3,754 | 1 | 0 | 0 | 0 | 0 | 0† |"),
              ("including 418 tree states", "including 401 tree states"),
