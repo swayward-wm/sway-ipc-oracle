@@ -343,3 +343,8 @@ actions = ["window:fixture-1", "command:layout stacking", "window:fixture-2", "c
 name = "chained_command_focus"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:focus parent; allow_tearing yes", "command:focus parent; opacity bogus", "command:focus parent; border pixel 3", "command:focus child; border pixel 3", "command:focus parent; focus child; opacity bogus", "command:focus parent; shortcuts_inhibitor enable", "command:focus child; shortcuts_inhibitor bogus", "command:focus parent; opacity bogus; focus child", "capture:chained_command_focus"]
+
+[[scenario]]
+name = "tiled_border_csd"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:border csd", "capture:tiled_border_csd"]
