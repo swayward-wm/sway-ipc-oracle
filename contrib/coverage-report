@@ -154,7 +154,17 @@ def census(doc, classifications):
         "unstable": len(unstable),
         **totals,
         "classified": len(rows),
-        "verified": sum(item.get("reason_verified") is True for item in rows),
+        **review_counts(rows),
+    }
+
+
+def review_counts(rows):
+    """Review status of the classification rows (one per stable non-pass)."""
+    verified = sum(item.get("reason_verified") is True for item in rows)
+    return {
+        "verified": verified,
+        "unverified": len(rows) - verified,
+        "unclassified": sum(item.get("reason") == "unclassified" for item in rows),
     }
 
 

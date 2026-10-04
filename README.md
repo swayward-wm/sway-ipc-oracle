@@ -1,8 +1,22 @@
 # sway-ipc-oracle
 
-A conformance oracle for compositors that speak the i3/sway IPC protocol. It
-runs i3's own test suite, unchanged, and replays IPC replies captured from real
-sway, then records what each compositor did.
+sway-ipc-oracle measures compositors that speak the i3/sway IPC protocol. Sway 1.12's
+captured replies are the reference for sway compatibility; i3's 242 unchanged test files
+supply realistic command sequences and are also run directly, so every compositor's i3
+results are published in full with the reason for each non-pass. Swayward promises sway
+compatibility, and sway has no conformance suite of its own, which is why the oracle
+exists.
+
+Swayward promises sway compatibility. Sway has no conformance suite, so the oracle uses
+i3's unchanged tests as a source of realistic command sequences, and sway 1.12's replies
+as the reference. Whether sway passes an i3 assertion is an i3 question and does not
+change what sway did. Every state sway reached stays in the corpus. A row is set aside
+only when sway's own capture is not reproducible, or when the harness rather than the
+compositor caused the difference, and each such row says why.
+
+Not every i3-suite reason is reviewed yet. Each snapshot block below states how many of
+its non-pass rows carry a verified reason, how many are unverified, and how many are
+still unclassified.
 
 It is for people who build or change a sway-compatible compositor and want to
 know where it behaves like sway and i3, and where it does not.
@@ -85,9 +99,13 @@ compositor, is not N-i3, N-x11-all or N-harness. Each view is shown only in
 its own block, with its asymmetries: it excludes rows by that compositor's own
 labels, so the views have different denominators. No view is the fair one.
 
-Most of sway's non-passes against i3's tests are deliberate: sway is a Wayland
-compositor, and many i3 tests assume X11. Every non-pass carries a reviewed
-classification with a source citation, in `i3/classifications/`.
+Many of sway's non-passes against i3's tests are deliberate: sway is a Wayland
+compositor, and many i3 tests assume X11. Every stable non-pass has a row in
+`i3/classifications/`, but not every row is reviewed. A verified row names a
+reviewed reason family or cites its source. An unverified row carries a
+provisional note, such as "the pinned run emitted no TAP plan", or is marked
+`unclassified`. Each block's review line counts these rows from its
+classification file, and `contrib/validate` checks the line.
 
 ### i3 4.25 (`9be3249a`)
 
@@ -104,6 +122,8 @@ classification with a source citation, in `i3/classifications/`.
 | P | S | N-i3 | N-x11-all | N-x11-sway | N-harness | N-gap |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | 3,754 | 1 | 0 | 0 | 0 | 0 | 0 |
+
+i3-suite review: 1 non-pass row; 1 verified, 0 unverified, 0 of them unclassified.
 
 Comparable view of i3 4.25 (3,755 rows):
 
@@ -130,6 +150,8 @@ a measure of sway compatibility.
 | P | S | N-i3 | N-x11-all | N-x11-sway | N-harness | N-gap |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | 1,461† | 20† | 360† | 276† | 0† | 848† (539 inferred X11 cause, unverified) | 790† (233 not yet reviewed) |
+
+i3-suite review: 2,137 non-pass rows; 915 verified, 1,222 unverified, 587 of them unclassified.†
 
 Comparable view of sway 1.12 (2,271 rows):
 
@@ -159,6 +181,8 @@ each names its test file.
 | P | S | N-i3 | N-x11-all | N-x11-sway | N-harness | N-gap |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | 1,453† | 11† | 327† | 836† | 349† | 118† | 661† (81 not yet reviewed) |
+
+i3-suite review: 2,280 non-pass rows; 2,199 verified, 81 unverified, 81 of them unclassified.†
 
 Comparable view of swayward `ec03e0af` (2,474 rows):
 

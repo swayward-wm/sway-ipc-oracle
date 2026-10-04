@@ -18,6 +18,9 @@ Rules:
   figure does.
 - Each block's bucket row starts with the i3-suite pass and skip counts and
   sums to the i3-suite assertion total.
+- Each block states the review status of its i3-suite classifications
+  (verified, unverified, unclassified) as counted from
+  i3/classifications/<snapshot>.toml, with † when the i3 result is pending.
 """
 import re
 import sys
@@ -142,8 +145,21 @@ def corpus_rows(compositor, name, pending):
     return expected, counts, total, i3 in pending
 
 
+def review_line(name, stale):
+    rows = tomllib.load(open(ROOT / f"i3/classifications/{name}.toml", "rb")).get("classification", [])
+    verified = sum(row.get("reason_verified") is True for row in rows)
+    unclassified = sum(row.get("reason") == "unclassified" for row in rows)
+    noun = "row" if len(rows) == 1 else "rows"
+    return (f"i3-suite review: {len(rows):,} non-pass {noun}; {verified:,} verified, "
+            f"{len(rows) - verified:,} unverified, {unclassified:,} of them "
+            f"unclassified.{'†' if stale else ''}")
+
+
 def check_block(compositor, name, body, pending):
     expected, counts, total, stale = corpus_rows(compositor, name, pending)
+    line = review_line(name, stale)
+    if line not in body.splitlines():
+        fail(f"README block for {name} needs the line: {line}")
     rows = [row for table in tables(body) for _, row in table]
     for row in expected:
         if row not in rows:
