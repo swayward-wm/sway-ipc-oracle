@@ -1,0 +1,5 @@
+# Human-reviewed triage of swayward-ec03e0af i3-derived mismatches, keyed by
+# scenario.request. Not triaged yet: the corpus is stale (pending.toml) and the
+# sway capture is recaptured at the beta1 RC regeneration
+# (i3-derived-sway-recapture). derived-triage-after-regen classifies every
+# remaining row then; until that, every mismatch counts as untriaged.

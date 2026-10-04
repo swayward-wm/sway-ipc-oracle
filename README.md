@@ -74,10 +74,17 @@ inventory below.
 - **Random** replays 500 captured 20-step sequences, one verdict per seed.
 - **Command fuzz** (malformed commands) and **wire fuzz** (broken IPC framing)
   replay sway 1.12 captures at the fixed CI budget. Crash and hang record
-  compositor health, separately from mismatch. Human review of fuzz mismatches
-  lives in `sway-ipc/classifications/`, keyed by snapshot and case.
-  `contrib/validate` checks that each classification names a measured mismatch
-  and includes its triage, finding, reason, and source.
+  compositor health, separately from mismatch.
+
+Human review of sway-IPC mismatches lives in `sway-ipc/classifications/`, one
+file per result, keyed by case (fuzz), seed (random) or scenario and request
+(state, events, i3-derived). Each row is a swayward bug (naming its open task),
+a documented deviation (citing its KNOWN_DEVIATIONS anchor) or a harness issue
+(with evidence). `contrib/validate` checks that each classification names a
+measured mismatch and includes its triage, finding, reason, and source, and
+prints the untriaged count per corpus. A `[basis]` table names a newer,
+unpinned measurement the review used; mismatches that matched there are listed
+in it instead of classified.
 
 Buckets sort the same 3,755 i3-suite assertions by interpretation, using the
 classifications in `i3/classifications/`:

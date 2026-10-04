@@ -1,0 +1,49 @@
+# Human-reviewed triage of swayward-ec03e0af sway IPC state mismatches, keyed by
+# scenario.request. Families and open tasks: swayward scratch beta1-plan
+# sections/gap.md. contrib/validate prints the untriaged count.
+
+[basis]
+# Rows triaged from the rolling-baseline sweep, not from the committed result
+# above (R6; R6b moves these rows onto the RC result and drops this table).
+swayward = "aaad7f32655a4b8280aad6b4eb81935b3c28d832"
+oracle = "4093ce1afc2f50d5eabaee34aedd3fa34f5555f5"
+measurement = "contrib/oracle-sweep rolling baseline, 2026-10-04 (not committed)"
+match = ["floating_group_child_move_direction_after.tree", "floating_group_child_move_direction_after.workspaces", "floating_group_child_fullscreen_after.tree", "floating_group_child_fullscreen_after.workspaces"]
+
+[[classification]]
+rows = ["default_floating_fixed_width.tree", "default_floating_fixed_width.workspaces", "default_tiling_fixed_height_zero_width.tree", "default_floating_fixed_both.tree", "default_floating_fixed_both.workspaces", "default_floating_parent.tree", "default_floating_parent.workspaces"]
+triage = "swayward bug"
+finding = "parity-s1-xdg-float-border"
+reason = "S1: Default-floating xdg toplevels with size hints or a parent: sway reports border csd (fixed size) or none/0 (parented); swayward reports normal/2. The tiled zero-width case is the reverse."
+source = "sway/sway/desktop/xdg_shell.c:484-500 (csd at map); swayward src/layout/tile.rs, src/ipc/tree/node.rs; beta1-plan sections/gap.md S1"
+
+[[classification]]
+rows = ["output_scale.tree", "output_scale.outputs", "output_transform.tree", "output_transform.outputs", "output_position.tree", "output_position.outputs", "output_mode.tree"]
+triage = "swayward bug"
+finding = "parity-s2-output-layout-geometry"
+reason = "S2: Output percent and rect.y after output scale, transform, position or mode changes: swayward lays outputs out with Smithay Space geometry, sway with wlroots output-layout auto-placement."
+source = "wlroots types/wlr_output_layout.c auto-placement; swayward src/layout/monitor.rs, src/ipc/tree/outputs.rs; beta1-plan sections/gap.md S2"
+
+[[classification]]
+rows = [
+    "output_reenable.tree", "output_reenable.workspaces", "output_reenable.outputs", "output_power_off.tree", "output_power_off.workspaces", "output_power_off.outputs", "output_power_on.tree", "output_power_on.workspaces",
+    "output_power_on.outputs",
+]
+triage = "swayward bug"
+finding = "parity-s3-s4-output-reenable"
+reason = "S3: Re-enabling an output does not restore its workspaces as sway does; output_power_off and output_power_on inherit that state because the scenario captures cumulatively."
+source = "sway-ipc/scenarios.toml (cumulative output scenario); swayward src/layout/mod.rs, src/layout/monitor.rs; beta1-plan sections/gap.md S3"
+
+[[classification]]
+rows = ["output_disable.tree", "output_combined.tree", "output_switch.tree"]
+triage = "swayward bug"
+finding = "parity-s3-s4-output-reenable"
+reason = "S4: A floating group after an output change: focus child-position order and the group's child rects differ from sway's remap."
+source = "swayward src/layout/floating_tree.rs (add_removed_tree, remap_rect_center); beta1-plan sections/gap.md S4"
+
+[[classification]]
+rows = ["command_coverage.commands"]
+triage = "documented deviation"
+finding = "Per-view rendering and idle policy commands"
+reason = "S6: Swayward refuses allow_tearing and max_render_time because its frame clock has no per-view tearing or render deadline; sway accepts both."
+source = "sway/sway/commands/allow_tearing.c:6-25; sway/sway/commands/max_render_time.c:6-32; swayward docs/KNOWN_DEVIATIONS.md#per-view-rendering-and-idle-policy-commands"
