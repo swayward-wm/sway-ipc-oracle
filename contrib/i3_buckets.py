@@ -126,6 +126,8 @@ class Snapshot:
         if clash:
             raise SystemExit(f"{evidence}: files also have a source-decided abort override: {sorted(clash)}")
         self.bucket, self.cause = {}, {}
+        # Snapshots whose results the partition reads; a pending one marks every figure.
+        self.inputs = {self}
 
     def raw(self, key):
         if self.files[key[0]].get("flaky"):
@@ -178,6 +180,10 @@ class Snapshot:
         raise SystemExit(f"{self.name}: unmapped reason {reason!r} for {f}:{a}")
 
     def partition(self, reference):
+        # Kill-labelled rows are bucketed by the reference's outcome, so every
+        # figure of this snapshot can depend on the reference result.
+        if any(r["reason"] == KILL for r in self.rows):
+            self.inputs.add(reference)
         for key in self.keys:
             bucket, cause = self.classify(key, reference)
             if bucket == MIRROR:
@@ -193,9 +199,10 @@ class Snapshot:
         return {k for k in self.keys if self.bucket[k] not in EXCLUDED}
 
 
-def snapshots():
+def snapshots(pending=None):
     pins = load("pins.toml")
-    pending = {row["path"] for row in load("pending.toml").get("pending", [])}
+    if pending is None:
+        pending = {row["path"] for row in load("pending.toml").get("pending", [])}
     unstable = {(u["compositor"], u["file"], a) for u in load("i3/unstable.toml").get("unstable", [])
                 for a in u["assertions"]}
     snaps = {c: Snapshot(c, n, unstable, pending) for c, n in pins["snapshot"].items()}
@@ -214,9 +221,15 @@ def n(value):
     return f"{value:,}"
 
 
+def dagger(*snaps):
+    """† when any result these snapshots' partitions read is pending."""
+    return "†" if any(s.stale for snap in snaps for s in snap.inputs) else ""
+
+
 def render_region(compositor, pins, snaps):
     snap = snaps[compositor]
-    mark = "†" if snap.stale else ""
+    mark = dagger(snap)
+    review = "†" if snap.stale else ""
     counts = collections.Counter(snap.bucket.values())
     notes = collections.Counter(snap.cause.values())
     verified_aborts = sum(v for c, v in notes.items() if c.startswith("abort cause verified"))
@@ -225,9 +238,9 @@ def render_region(compositor, pins, snaps):
     for bucket in BUCKETS:
         cell = n(counts[bucket]) + mark
         if bucket == "N-x11-all" and verified_aborts:
-            cell += f" ({n(verified_aborts)} abort causes verified by focused reruns)"
+            cell += f" ({n(verified_aborts)}{mark} abort causes verified by focused reruns)"
         if bucket == "N-gap" and unreviewed:
-            cell += f" ({n(unreviewed)} not yet reviewed)"
+            cell += f" ({n(unreviewed)}{mark} not yet reviewed)"
         cells.append(cell)
     verified = sum(r.get("reason_verified") is True for r in snap.rows)
     unclassified = sum(r.get("reason") == "unclassified" for r in snap.rows)
@@ -242,10 +255,10 @@ def render_region(compositor, pins, snaps):
         "|" + " ---: |" * len(BUCKETS),
         "| " + " | ".join(cells) + " |",
         "",
-        f"i3-suite review: {n(len(snap.rows))} non-pass {noun}; {n(verified)} verified, "
-        f"{n(len(snap.rows) - verified)} unverified, {n(unclassified)} of them unclassified.{mark}",
+        f"i3-suite review: {n(len(snap.rows))}{review} non-pass {noun}; {n(verified)}{review} verified, "
+        f"{n(len(snap.rows) - verified)}{review} unverified, {n(unclassified)}{review} of them unclassified.",
         "",
-        f"Comparable view of {title} ({n(len(view))} rows):",
+        f"Comparable view of {title} ({n(len(view))}{mark} rows):",
         "",
         "| P | S | N-x11-sway | N-gap | " + " | ".join(RAW) + " |",
         "|" + " ---: |" * (4 + len(RAW)),
@@ -259,21 +272,22 @@ def render_region(compositor, pins, snaps):
         lines.append(f"Asymmetries: {compositor}'s view excludes no rows: every assertion is P or S.")
     for other in others:
         theirs = snaps[other]
+        pair = dagger(snap, theirs)
         only = [k for k in view if k not in theirs.view()]
         shared = len(view) - len(only)
         passed = sum(snap.bucket[k] == "P" for k in only)
         lines.append(
-            f"Asymmetries: {compositor}'s view and {other}'s view share {n(shared)} rows. "
-            f"{n(len(only))} rows are in {compositor}'s view only, excluded by {other}'s labels, "
-            f"and {compositor} passes {n(passed)} of them. By {other}'s bucket and cause:")
+            f"Asymmetries: {compositor}'s view and {other}'s view share {n(shared)}{pair} rows. "
+            f"{n(len(only))}{pair} rows are in {compositor}'s view only, excluded by {other}'s labels, "
+            f"and {compositor} passes {n(passed)}{pair} of them. By {other}'s bucket and cause:")
         lines.append("")
         by = collections.Counter((theirs.bucket[k], theirs.cause[k]) for k in only)
         for (bucket, cause), count in sorted(by.items(), key=lambda x: (-x[1], x[0])):
             cause = re.sub(r"(?<=: )([a-z0-9_]+)$", r"`\1`", cause)
-            lines.append(f"- {n(count)}{mark} {bucket}: {cause}")
+            lines.append(f"- {n(count)}{pair} {bucket}: {cause}")
         lines.append("")
         lines.append(f"Measured on {compositor}'s view, {other} has "
-                     f"{n(sum(theirs.bucket[k] == 'P' for k in view))}{'†' if snap.stale or theirs.stale else ''} P.")
+                     f"{n(sum(theirs.bucket[k] == 'P' for k in view))}{pair} P.")
     lines.append(END)
     return "\n".join(lines)
 
