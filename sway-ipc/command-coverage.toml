@@ -1,21 +1,23 @@
 # Census of sway 1.12 top-level command handler tables.
+# Each entry names its evidence: hand-picked scenarios, the random-v2 generator
+# (sway-ipc/random-v2/vocabulary.json), or a reason it is not exercised.
 source = "sway/sway/commands.c"
 commit = "88869399f421d9180dd8b6ed0b5a1f4a3585d252"
 
 [[command]]
 name = "assign"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "bar"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "bindcode"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "bindgesture"
@@ -30,7 +32,7 @@ reason = "Configuration command with no portable observable IPC state in the hea
 [[command]]
 name = "bindsym"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "client.background"
@@ -40,7 +42,7 @@ reason = "Configuration command with no portable observable IPC state in the hea
 [[command]]
 name = "client.focused"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "client.focused_inactive"
@@ -60,7 +62,7 @@ reason = "Configuration command with no portable observable IPC state in the hea
 [[command]]
 name = "client.unfocused"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "client.urgent"
@@ -70,17 +72,17 @@ reason = "Configuration command with no portable observable IPC state in the hea
 [[command]]
 name = "default_border"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "default_floating_border"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "exec"
 table = "handlers"
-reason = "Window actions exercise exec through the runner, but the literal command is adapter-specific (foot on Wayland, xterm on X11)."
+generators = ["random-v2"]
 
 [[command]]
 name = "exec_always"
@@ -90,72 +92,75 @@ reason = "Configuration reload lifecycle command; running it needs a persistent 
 [[command]]
 name = "floating_maximum_size"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "floating_minimum_size"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "floating_modifier"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "focus"
 table = "handlers"
 scenarios = ["container_mark", "nested_stacked_in_tabbed", "nested_tabbed_in_stacked", "three_floating_raise", "two_outputs"]
+generators = ["random-v2"]
 
 [[command]]
 name = "focus_follows_mouse"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "focus_on_window_activation"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "focus_wrapping"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "font"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "for_window"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "force_display_urgency_hint"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "force_focus_wrapping"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "fullscreen"
 table = "handlers"
 scenarios = ["fullscreen", "fullscreen_global", "fullscreen_workspace"]
+generators = ["random-v2"]
 
 [[command]]
 name = "gaps"
 table = "handlers"
 scenarios = ["borders_and_gaps"]
+generators = ["random-v2"]
 
 [[command]]
 name = "hide_edge_borders"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "input"
@@ -165,37 +170,38 @@ reason = "Configuration command with no portable observable IPC state in the hea
 [[command]]
 name = "mode"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "mouse_warping"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "new_float"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "new_window"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "no_focus"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "output"
 table = "handlers"
 scenarios = ["disabled_output_evacuation"]
+generators = ["random-v2"]
 
 [[command]]
 name = "popup_during_fullscreen"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "seat"
@@ -205,52 +211,52 @@ reason = "Configuration command with no portable observable IPC state in the hea
 [[command]]
 name = "set"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "show_marks"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "smart_borders"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "smart_gaps"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "tiling_drag"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "tiling_drag_threshold"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "title_align"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "titlebar_border_thickness"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "titlebar_padding"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "unbindcode"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "unbindgesture"
@@ -265,17 +271,18 @@ reason = "Configuration command with no portable observable IPC state in the hea
 [[command]]
 name = "unbindsym"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "workspace"
 table = "handlers"
 scenarios = ["empty_named", "named_workspace", "numbered_sparse", "sticky", "two_outputs", "two_workspaces", "urgent_via_command"]
+generators = ["random-v2"]
 
 [[command]]
 name = "workspace_auto_back_and_forth"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+generators = ["random-v2"]
 
 [[command]]
 name = "default_orientation"
@@ -316,11 +323,13 @@ reason = "Configuration-only directive; scenario recipes exercise runtime IPC co
 name = "allow_tearing"
 table = "command_handlers"
 scenarios = ["command_coverage"]
+generators = ["random-v2"]
 
 [[command]]
 name = "border"
 table = "command_handlers"
 scenarios = ["borders_and_gaps"]
+generators = ["random-v2"]
 
 [[command]]
 name = "create_output"
@@ -336,51 +345,60 @@ reason = "Ends the compositor session before a state or event checkpoint can be 
 name = "floating"
 table = "command_handlers"
 scenarios = ["one_floating", "sticky", "three_floating_raise", "two_floating"]
+generators = ["random-v2"]
 
 [[command]]
 name = "fullscreen"
 table = "command_handlers"
 scenarios = ["fullscreen", "fullscreen_global", "fullscreen_workspace"]
+generators = ["random-v2"]
 
 [[command]]
 name = "inhibit_idle"
 table = "command_handlers"
 scenarios = ["command_coverage"]
+generators = ["random-v2"]
 
 [[command]]
 name = "kill"
 table = "command_handlers"
 scenarios = ["command_coverage"]
+generators = ["random-v2"]
 
 [[command]]
 name = "layout"
 table = "command_handlers"
 scenarios = ["nested_stacked_in_tabbed", "nested_tabbed_in_stacked", "stacked", "tabbed"]
+generators = ["random-v2"]
 
 [[command]]
 name = "mark"
 table = "command_handlers"
 scenarios = ["container_mark", "marked"]
+generators = ["random-v2"]
 
 [[command]]
 name = "max_render_time"
 table = "command_handlers"
 scenarios = ["command_coverage"]
+generators = ["random-v2"]
 
 [[command]]
 name = "move"
 table = "command_handlers"
 scenarios = ["disabled_output_evacuation", "scratchpad", "two_outputs"]
+generators = ["random-v2"]
 
 [[command]]
 name = "nop"
 table = "command_handlers"
-reason = "Produces no observable state; binding.run.json records a real sway binding whose command is nop."
+generators = ["random-v2"]
 
 [[command]]
 name = "opacity"
 table = "command_handlers"
 scenarios = ["command_coverage"]
+generators = ["random-v2"]
 
 [[command]]
 name = "reload"
@@ -391,63 +409,73 @@ reason = "Covered by the existing workspace.reload event fixture, which predates
 name = "rename"
 table = "command_handlers"
 scenarios = ["command_coverage"]
+generators = ["random-v2"]
 
 [[command]]
 name = "resize"
 table = "command_handlers"
 scenarios = ["command_coverage"]
+generators = ["random-v2"]
 
 [[command]]
 name = "scratchpad"
 table = "command_handlers"
 scenarios = ["scratchpad"]
+generators = ["random-v2"]
 
 [[command]]
 name = "shortcuts_inhibitor"
 table = "command_handlers"
 scenarios = ["command_coverage"]
+generators = ["random-v2"]
 
 [[command]]
 name = "split"
 table = "command_handlers"
 scenarios = ["container_mark", "nested_h_in_v", "nested_stacked_in_tabbed", "nested_tabbed_in_stacked", "two_split_h", "two_split_v"]
+generators = ["random-v2"]
 
 [[command]]
 name = "splith"
 table = "command_handlers"
-reason = "Alias of the covered split family."
+generators = ["random-v2"]
 
 [[command]]
 name = "splitt"
 table = "command_handlers"
-reason = "Alias of the covered split family."
+generators = ["random-v2"]
 
 [[command]]
 name = "splitv"
 table = "command_handlers"
-reason = "Alias of the covered split family."
+generators = ["random-v2"]
 
 [[command]]
 name = "sticky"
 table = "command_handlers"
 scenarios = ["sticky"]
+generators = ["random-v2"]
 
 [[command]]
 name = "swap"
 table = "command_handlers"
 scenarios = ["command_coverage"]
+generators = ["random-v2"]
 
 [[command]]
 name = "title_format"
 table = "command_handlers"
 scenarios = ["command_coverage"]
+generators = ["random-v2"]
 
 [[command]]
 name = "unmark"
 table = "command_handlers"
 scenarios = ["command_coverage"]
+generators = ["random-v2"]
 
 [[command]]
 name = "urgent"
 table = "command_handlers"
 scenarios = ["urgent_via_command"]
+generators = ["random-v2"]

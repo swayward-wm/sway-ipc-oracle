@@ -1,0 +1,18 @@
+# Human-reviewed triage of swayward-ec03e0af events mismatches, keyed by
+# scenario.request. Families and open tasks: swayward scratch beta1-plan
+# sections/gap.md. contrib/validate prints the untriaged count.
+
+[basis]
+# Rows triaged from the rolling-baseline sweep, not from the committed result
+# above (R6; R6b moves these rows onto the RC result and drops this table).
+swayward = "aaad7f32655a4b8280aad6b4eb81935b3c28d832"
+oracle = "4093ce1afc2f50d5eabaee34aedd3fa34f5555f5"
+measurement = "contrib/oracle-sweep rolling baseline, 2026-10-04 (not committed)"
+match = []
+
+[[classification]]
+rows = ["command_coverage.events"]
+triage = "swayward bug"
+finding = "events-inhibit-idle-close"
+reason = "The close event reports the user inhibit_idle focus policy where sway reports none (2 fields, open bug). The other 6 fields are allow_tearing and max_render_time, the documented per-view rendering deviation."
+source = "sway/sway/ipc-json.c:633-645 (idle_inhibitors.user); swayward docs/KNOWN_DEVIATIONS.md#per-view-rendering-and-idle-policy-commands; beta1-plan sections/gap.md 4.1 events note"

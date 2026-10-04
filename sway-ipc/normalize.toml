@@ -75,6 +75,22 @@ reason = "Descendant percentages within a floating container change with sway's 
 evidence = "Fresh sway 1.12 random replays varied descendant percentages for seeds 226, 290, 363 and 440: 0.5/0.5 versus 0.5009523809523809/0.4990476190476191, and 2.5806451612903225 versus 2.585278276481149."
 
 [[tree_field_rule]]
+name = "hidden-scratchpad-descendant-rect"
+field = "rect"
+action = "ignore"
+selector = { under_hidden_scratchpad = true }
+reason = "Sway never arranges the children of a hidden scratchpad container, so GET_TREE reports whatever box each child last had: for a container sent straight from tiling to the scratchpad that is its pre-float tiled box. The floating root's own rect is still compared."
+evidence = "root_scratchpad_add_container floats the container with container_set_floating, whose floating_natural_resize sizes only the container (sway/tree/root.c:76-110, sway/tree/container.c:850-856); view_autoconfigure returns early for scratchpad-hidden views (sway/tree/view.c:353-356). Pinned sway 1.12 after 'window; focus parent; move scratchpad' reports the lone child at 0,0 1270x1408 (percent 2.67) inside a 635x1056 hidden group, and random seeds 19, 20, 27, 96, 204, 323, 338 and 380 differ only there; after 'scratchpad show' the child is arranged and both compositors agree."
+
+[[tree_field_rule]]
+name = "hidden-scratchpad-descendant-percent"
+field = "percent"
+action = "ignore"
+selector = { under_hidden_scratchpad = true }
+reason = "A hidden scratchpad container's children report percent from their unarranged stale boxes (see hidden-scratchpad-descendant-rect)."
+evidence = "The same pinned sway 1.12 capture reports percent 2.6666666666666665 for the lone child of a hidden group, from its stale 1270x1408 box over the group's 635x1056."
+
+[[tree_field_rule]]
 name = "tree-percent-tolerance"
 field = "percent"
 action = "numeric_tolerance"

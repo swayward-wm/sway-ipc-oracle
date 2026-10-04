@@ -36,6 +36,10 @@ NORMAL = "__oracle_normalized__"
 RUN_MARKER = "SWAY_IPC_ORACLE_RUN"
 I3_DERIVED = ROOT / "sway-ipc/i3-derived"
 RANDOM = ROOT / "sway-ipc/random"
+# random-v2 widens the generator; v1 stays byte-identical so its numbers stay comparable.
+RANDOM_V2 = ROOT / "sway-ipc/random-v2"
+RANDOM_ROOTS = {"v1": RANDOM, "v2": RANDOM_V2}
+RANDOM_SUFFIXES = {"v1": "-random", "v2": "-random-v2"}
 FUZZ_FIXTURES = ROOT / "sway-ipc/fuzz"
 COMMAND_FAMILIES = FUZZ_FIXTURES / "command-families.json"
 FUZZ_BUDGETS = {"ci": (2, 10), "local": (None, 16)}
@@ -129,6 +133,37 @@ def generate_commands(seed, steps):
         else:
             commands.append(rng.choice(COMMANDS))
     return commands
+
+
+def random_v2_vocabulary():
+    """Flat command list of sway-ipc/random-v2/vocabulary.json, in file order."""
+    vocabulary = json.loads((RANDOM_V2 / "vocabulary.json").read_text())
+    return vocabulary, [command for family in vocabulary["families"]
+                        if family["name"] != vocabulary["window_family"]
+                        for command in family["commands"]]
+
+
+def generate_commands_v2(seed, steps):
+    """Return a reproducible random-v2 sequence drawn from the vocabulary.
+
+    The prelude runs as observed steps so a minimised reproducer carries it.
+    """
+    vocabulary, commands_pool = random_v2_vocabulary()
+    window = next(family for family in vocabulary["families"]
+                  if family["name"] == vocabulary["window_family"])["commands"][0]
+    rng = random.Random(f"random-v2:{seed}")
+    commands = [*vocabulary["prelude"], window.format(ident="fixture-diff-1")]
+    next_window = 2
+    while len(commands) < steps:
+        if rng.random() < vocabulary["window_probability"]:
+            commands.append(window.format(ident=f"fixture-diff-{next_window}"))
+            next_window += 1
+        else:
+            commands.append(rng.choice(commands_pool))
+    return commands[:max(0, steps)]
+
+
+GENERATORS = {"v1": generate_commands, "v2": generate_commands_v2}
 
 
 def minimize_commands(commands, reproduces):
@@ -481,12 +516,25 @@ def tree_field_rules(rules, field, action=None):
             if rule["field"] == field and (action is None or rule["action"] == action)]
 
 
-def rule_matches(rule, value, under_floating=False):
-    return all(
-        under_floating == expected if key == "under_floating"
-        else value.get(key) == expected
-        for key, expected in rule.get("selector", {}).items()
-    )
+def rule_matches(rule, value, under_floating=False, under_hidden=False):
+    def matches(key, expected):
+        if key == "under_floating":
+            return under_floating == expected
+        if key == "under_hidden_scratchpad":
+            return under_hidden == expected
+        return value.get(key) == expected
+    return all(matches(key, expected) for key, expected in rule.get("selector", {}).items())
+
+
+def tree_context(value, under_floating, under_hidden, in_scratch):
+    """Context flags for `value`'s children: below a floating root, and below a
+    floating root that sits in sway's synthetic `__i3_scratch` workspace."""
+    in_scratch = in_scratch or (value.get("type") == "workspace"
+                                and value.get("name") == "__i3_scratch")
+    floating_root = value.get("type") == "floating_con"
+    return (under_floating or floating_root,
+            under_hidden or (floating_root and in_scratch),
+            in_scratch)
 
 
 def difference_path(difference):
@@ -558,17 +606,19 @@ def command_observation(text, reply):
     return {"command": text, "reply": reply}
 
 
-def normalize(value, rules, path="$", is_output=False, under_floating=False):
+def normalize(value, rules, path="$", is_output=False, under_floating=False,
+              under_hidden=False, in_scratch=False):
     if isinstance(value, dict):
         output = value.get("type") == "output"
-        child_under_floating = under_floating or value.get("type") == "floating_con"
+        child_under_floating, child_under_hidden, child_in_scratch = tree_context(
+            value, under_floating, under_hidden, in_scratch)
         ignored = {key for rule in rules["ignore_key"] for key in rule["keys"]}
         output_ignored = {key for rule in rules["ignore_output_key"] for key in rule["keys"]}
         suffixes = tuple(suffix for rule in rules["ignore_path"] for suffix in rule["suffixes"])
         shape_paths = {item for rule in rules["shape_path"] for item in rule["paths"]}
         conditional_ignores = [rule for rule in rules["tree_field_rule"]
                                if rule["action"] == "ignore"
-                               and rule_matches(rule, value, under_floating)]
+                               and rule_matches(rule, value, under_floating, under_hidden)]
         for key, child in value.items():
             child_path = f"{path}.{key}"
             if child_path in shape_paths:
@@ -578,10 +628,12 @@ def normalize(value, rules, path="$", is_output=False, under_floating=False):
                     or any(rule["field"] == key for rule in conditional_ignores)):
                 value[key] = NORMAL
             else:
-                normalize(child, rules, child_path, output, child_under_floating)
+                normalize(child, rules, child_path, output, child_under_floating,
+                          child_under_hidden, child_in_scratch)
     elif isinstance(value, list):
         for index, child in enumerate(value):
-            normalize(child, rules, f"{path}[{index}]", is_output, under_floating)
+            normalize(child, rules, f"{path}[{index}]", is_output, under_floating,
+                      under_hidden, in_scratch)
 
 
 def diff_values(expected, actual, path, differences, ignored_array_suffixes, numeric_tolerances):
@@ -608,12 +660,13 @@ def diff_values(expected, actual, path, differences, ignored_array_suffixes, num
             differences.append(f"{path}: {expected!r} != {actual!r}")
 
 
-def tree_pairs(expected, actual, path="$tree", under_floating=False):
-    yield expected, actual, path, under_floating
-    under_floating = under_floating or expected.get("type") == "floating_con"
+def tree_pairs(expected, actual, path="$tree", under_floating=False, under_hidden=False,
+               in_scratch=False):
+    yield expected, actual, path, under_floating, under_hidden
+    child_context = tree_context(expected, under_floating, under_hidden, in_scratch)
     for key in ("nodes", "floating_nodes"):
         for index, pair in enumerate(zip(expected.get(key, []), actual.get(key, []))):
-            yield from tree_pairs(*pair, f"{path}.{key}[{index}]", under_floating)
+            yield from tree_pairs(*pair, f"{path}.{key}[{index}]", *child_context)
 
 
 def semantic_tree_diffs(expected, actual, rules):
@@ -624,8 +677,10 @@ def semantic_tree_diffs(expected, actual, rules):
     percent_ignores = tree_field_rules(rules, "percent", "ignore")
     tolerance = rect_rule["tolerance"]
     epsilon = percent_rule["tolerance"]
-    for left, right, path, under_floating in tree_pairs(expected, actual):
-        if not any(rule_matches(rule, left, under_floating) for rule in rect_ignores):
+    for left, right, path, under_floating, under_hidden in tree_pairs(expected, actual):
+        rect_ignored = any(rule_matches(rule, left, under_floating, under_hidden)
+                           for rule in rect_ignores)
+        if not rect_ignored:
             for key in ("x", "y", "width", "height"):
                 if abs(left["rect"][key] - right["rect"][key]) > tolerance:
                     differences.append(f"{path}.rect.{key}: outside {tolerance}px tolerance")
@@ -637,14 +692,19 @@ def semantic_tree_diffs(expected, actual, rules):
         actual_focus = [item for item in right.get("focus", []) if item in actual_ids]
         if mapped_focus != actual_focus:
             differences.append(f"{path}.focus: child-position order differs")
-        if not any(rule_matches(rule, left, under_floating) for rule in percent_ignores):
+        if not any(rule_matches(rule, left, under_floating, under_hidden)
+                   for rule in percent_ignores):
             lp, rp = left.get("percent"), right.get("percent")
             if ((lp is None) != (rp is None)
                     or (lp is not None and (not isinstance(lp, (int, float))
                         or not isinstance(rp, (int, float)) or abs(lp - rp) >= epsilon))):
                 differences.append(f"{path}.percent: differs")
         if left.get("type") == "con" and not left.get("nodes"):
+            # The relationship compares a role with the outer rect, so it is
+            # meaningless where the rect itself is exempt.
             for role in ("window_rect", "deco_rect", "geometry"):
+                if rect_ignored:
+                    break
                 if (left.get(role) == left.get("rect")) != (right.get(role) == right.get("rect")):
                     differences.append(f"{path}.{role}: outer-rect relationship differs")
             if (left["deco_rect"]["height"] > 0) != (right["deco_rect"]["height"] > 0):
@@ -802,7 +862,7 @@ class FixtureUnavailable(RuntimeError):
 
 
 class WaylandAdapter(Adapter):
-    capabilities = frozenset({"xdg-toplevel-size-hints"})
+    capabilities = frozenset({"xdg-toplevel-size-hints", "wlr-foreign-toplevel-management"})
     config_text = ""
 
     def rendered_config(self):
@@ -841,6 +901,44 @@ class WaylandAdapter(Adapter):
         except subprocess.CalledProcessError as error:
             raise FixtureUnavailable("fixture client unavailable (build failed)") from error
         return binary
+
+    def foreign_toplevel_client(self):
+        binary = self.run_dir / "foreign-toplevel-request"
+        if binary.exists():
+            return binary
+        for tool in ("pkg-config", "wayland-scanner", "cc"):
+            if shutil.which(tool) is None:
+                raise FixtureUnavailable(f"foreign-toplevel client unavailable (missing {tool})")
+        if subprocess.run(["pkg-config", "--exists", "wayland-client"], check=False).returncode:
+            raise FixtureUnavailable("foreign-toplevel client unavailable (missing wayland-client)")
+        protocol = ROOT / "contrib/protocols/wlr-foreign-toplevel-management-unstable-v1.xml"
+        header = self.run_dir / "wlr-foreign-toplevel-management-unstable-v1-client-protocol.h"
+        code = self.run_dir / "wlr-foreign-toplevel-management-unstable-v1-protocol.c"
+        try:
+            subprocess.run(["wayland-scanner", "client-header", protocol, header], check=True)
+            subprocess.run(["wayland-scanner", "private-code", protocol, code], check=True)
+            flags = shlex.split(subprocess.check_output(
+                ["pkg-config", "--cflags", "--libs", "wayland-client"], text=True
+            ))
+            subprocess.run([
+                "cc", "-std=c11", "-Wall", "-Wextra", "-Werror", f"-I{self.run_dir}",
+                ROOT / "contrib/foreign-toplevel-request.c", code, "-o", binary, *flags,
+            ], check=True)
+        except subprocess.CalledProcessError as error:
+            raise FixtureUnavailable("foreign-toplevel client unavailable (build failed)") from error
+        return binary
+
+    def foreign_toplevel_request(self, ident, request):
+        """Send one wlr foreign-toplevel request to the toplevel with app_id `ident`."""
+        arguments = [ident, request]
+        subprocess.run(
+            [self.foreign_toplevel_client(), *arguments], env={
+                **self.env, "WAYLAND_DISPLAY": self.display,
+                "XDG_RUNTIME_DIR": str(self.run_dir),
+            }, stdout=subprocess.DEVNULL, check=True, timeout=10,
+        )
+        text = "foreign-toplevel-request " + " ".join(arguments)
+        return command_observation(text, [{"success": True}])
 
     def open_window_command(self, ident, title):
         return f"exec foot --app-id={shlex.quote(ident)} --title={shlex.quote(title)} sh -c 'sleep 300'"
@@ -1438,11 +1536,11 @@ def random_observation(adapter, text):
         time.sleep(0.05)
     raise RuntimeError("random sequence state did not settle")
 
-def random_manifest():
-    manifest = json.loads((RANDOM / "sequences.json").read_text())
+def random_manifest(root=RANDOM):
+    manifest = json.loads((root / "sequences.json").read_text())
     objects = {
         path.stem: json.loads(path.read_text())
-        for path in (RANDOM / "objects").glob("*.json")
+        for path in (root / "objects").glob("*.json")
     }
     return manifest, objects
 
@@ -1457,7 +1555,7 @@ def random_capture(args, parser):
 
 def random_capture_in(args, objects, sequences, scratch):
     for seed in range(args.seed, args.seed + args.seeds):
-        commands = generate_commands(seed, args.steps)
+        commands = GENERATORS[args.generator](seed, args.steps)
         run_dir = scratch / str(seed)
         shutil.rmtree(run_dir, ignore_errors=True)
         run_dir.mkdir()
@@ -1478,8 +1576,10 @@ def random_capture_in(args, objects, sequences, scratch):
         shutil.rmtree(run_dir)
         if (seed - args.seed + 1) % 25 == 0:
             print(f"captured {seed - args.seed + 1}/{args.seeds} seeds", flush=True)
-    object_dir = RANDOM / "objects"
-    shutil.rmtree(RANDOM, ignore_errors=True)
+    root = RANDOM_ROOTS[args.generator]
+    object_dir = root / "objects"
+    # Only captured data is replaced; random-v2 keeps its vocabulary file.
+    shutil.rmtree(object_dir, ignore_errors=True)
     object_dir.mkdir(parents=True)
     for digest, encoded in sorted(objects.items()):
         (object_dir / f"{digest}.json").write_text(encoded + "\n")
@@ -1489,7 +1589,11 @@ def random_capture_in(args, objects, sequences, scratch):
         "seeds": args.seeds, "steps": args.steps, "sequences": sequences,
         "excluded": [],
     }
-    (RANDOM / "sequences.json").write_text(
+    if args.generator != "v1":
+        manifest["generator"] = args.generator
+        # Seeds whose repeated sway replays disagreed with this capture.
+        manifest["unstable"] = []
+    (root / "sequences.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n"
     )
     print(f"captured {args.seeds} seeds; {len(objects)} distinct observations")
@@ -1511,7 +1615,8 @@ def write_random_results(path, args, version, commit, rows):
             grouped.append({**row, "key": key, "seeds": [row["seed"]]})
     rules = load_rules()
     lines = [
-        "# Generated by contrib/sway-ipc-run random.",
+        "# Generated by contrib/sway-ipc-run random"
+        + ("." if args.generator == "v1" else f" --generator {args.generator}."),
         "# One row is one seed. Mismatches show the shortest captured prefix ending at",
         "# the first divergent request; identical reproducers are grouped by seed.", "",
         "[run]", f"compositor = {toml_string(args.compositor)}",
@@ -1521,6 +1626,7 @@ def write_random_results(path, args, version, commit, rows):
         'normalization = "sway-ipc/normalize.toml"',
         "normalization_rules = [" + ", ".join(toml_string(name) for name in rule_names(rules)) + "]",
         'scenario_isolation = "fresh compositor per seed"',
+        *([] if args.generator == "v1" else [f"generator = {toml_string(args.generator)}"]),
         f"seeds = {len(rows)}", f"steps = {args.steps}",
         *[f"{key.replace(' ', '_')} = {counts[key]}" for key in counts], "",
     ]
@@ -1560,8 +1666,9 @@ def random_main(args, parser):
         args.seeds = int(args.seeds or 5)
         return random_capture(args, parser)
     require_clean_binary(args.binary, args.compositor)
-    manifest, objects = random_manifest()
+    manifest, objects = random_manifest(RANDOM_ROOTS[args.generator])
     args.steps = manifest["steps"]
+    args.unstable_seeds = {row["seed"] for row in manifest.get("unstable", [])}
     sequences = selected_random_sequences(manifest, args.seeds)
     rows, rules = [], load_rules()
     with tempfile.TemporaryDirectory(prefix="sio-") as directory:
@@ -1607,14 +1714,15 @@ def random_replay(args, sequences, objects, rows, rules, scratch):
             _, retry = random_sequence_run(args, sequence, scratch, "-retry")
             retried = random_result_rows(sequence["seed"], sequence["commands"],
                                          expected, retry, rules)
-            if retried != result:
+            if retried != result or sequence["seed"] in args.unstable_seeds:
                 result[0]["verdict"] = "unstable"
         rows += result
         if number % 25 == 0:
             print(f"replayed {number}/{len(sequences)} seeds", flush=True)
     version, _ = ADAPTERS[args.compositor].version_details(version_reply)
     commit = PINS[args.compositor]
-    out = args.out or ROOT / "sway-ipc/results" / f"{PINS['snapshot'][args.compositor]}-random.toml"
+    out = args.out or ROOT / "sway-ipc/results" / (
+        PINS["snapshot"][args.compositor] + RANDOM_SUFFIXES[args.generator] + ".toml")
     return write_random_results(out, args, version, commit, rows)
 
 def selected_scenarios(names, corpus="state"):
@@ -1715,9 +1823,14 @@ def scenario_main(args, parser):
                                                          "verdict": "not applicable",
                                                          "reason": scenario["reason"]})
                             continue
-                        if "xdg-toplevel-size-hints" in required:
+                        builders = [build for capability, build in (
+                            ("xdg-toplevel-size-hints", adapter.fixture_client),
+                            ("wlr-foreign-toplevel-management", adapter.foreign_toplevel_client),
+                        ) if capability in required]
+                        if builders:
                             try:
-                                adapter.fixture_client()
+                                for build in builders:
+                                    build()
                             except FixtureUnavailable as error:
                                 if os.environ.get("ORACLE_CONTAINER") == "1":
                                     raise RuntimeError(str(error)) from error
@@ -1762,6 +1875,9 @@ def scenario_main(args, parser):
                                         ident, min_width, min_height, max_width, max_height,
                                         bool(parent),
                                     ))
+                                elif kind == "foreign_toplevel":
+                                    ident, request = value.split("|", 1)
+                                    command_replies.append(adapter.foreign_toplevel_request(ident, request))
                                 elif kind == "capture":
                                     time.sleep(0.15)
                                     requests = (("events",) if args.corpus == "events" else
@@ -2028,6 +2144,7 @@ def write_differential_results(path, args, rows):
         "# Mismatches contain delta-debugged reproducers and require triage.", "",
         "[run]", f"a = {toml_string(args.a)}", f"b = {toml_string(args.b)}",
         f"seed_start = {args.seed}", f"seed_end = {args.seed + len(rows) - 1}",
+        f"generator = {toml_string(args.generator)}",
         f"steps = {args.steps}", f"seeds = {len(rows)}",
         f"a_commit = {toml_string(PINS[args.a])}",
         f"b_commit = {toml_string(PINS[args.b])}",
@@ -2061,7 +2178,7 @@ def differential_main(args):
     require_clean_binary(args.b_binary, args.b)
     rows = []
     for seed in range(args.seed, args.seed + args.seeds):
-        commands = generate_commands(seed, args.steps)
+        commands = GENERATORS[args.generator](seed, args.steps)
         divergence, _ = differential_once(args, commands)
         if divergence is None:
             rows.append({"seed": seed, "verdict": "match"})
@@ -2108,6 +2225,9 @@ def main():
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--seeds", help="seed count, or random replay seed numbers separated by commas")
     parser.add_argument("--steps", type=int, default=10)
+    parser.add_argument("--generator", choices=GENERATORS, default="v1",
+                        help="random/differential command generator: v1 (sway-ipc/random) or "
+                             "v2 (sway-ipc/random-v2, widened vocabulary)")
     parser.add_argument("--budget", choices=FUZZ_BUDGETS, default="ci",
                         help="fuzz case budget (ci uses two generated variants per command family)")
     parser.add_argument("--save-scenarios", action="store_true",

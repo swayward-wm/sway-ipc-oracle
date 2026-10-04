@@ -178,19 +178,19 @@
             {
               "allow_tearing": false,
               "app_id": "fixture-dialog",
-              "border": "none",
-              "current_border_width": 0,
+              "border": "normal",
+              "current_border_width": 2,
               "deco_rect": {
-                "height": 0,
-                "width": 0,
-                "x": 0,
-                "y": 0
+                "height": 27,
+                "width": 5,
+                "x": 595,
+                "y": 652
               },
               "floating": "user_on",
               "floating_nodes": [],
               "focus": [],
               "focused": true,
-              "foreign_toplevel_identifier": "d7c2df2fb602a98674bd951bf0256ba0",
+              "foreign_toplevel_identifier": "5b7db57618920118b44a83db58ee46aa",
               "fullscreen_mode": 0,
               "geometry": {
                 "height": 1,
@@ -211,12 +211,12 @@
               "nodes": [],
               "orientation": "none",
               "percent": 8.388511095204008e-05,
-              "pid": 72,
+              "pid": 339725,
               "rect": {
-                "height": 30,
+                "height": 3,
                 "width": 5,
                 "x": 595,
-                "y": 652
+                "y": 679
               },
               "sandbox_app_id": null,
               "sandbox_engine": null,
@@ -269,7 +269,7 @@
               "floating_nodes": [],
               "focus": [],
               "focused": false,
-              "foreign_toplevel_identifier": "d156a5c44ab883a8328b28fef2d2bbf1",
+              "foreign_toplevel_identifier": "91ffeda39f6aaae7a3f1c068b17d7c84",
               "fullscreen_mode": 0,
               "geometry": {
                 "height": 1,
@@ -290,7 +290,7 @@
               "nodes": [],
               "orientation": "none",
               "percent": 1.0,
-              "pid": 72,
+              "pid": 339725,
               "rect": {
                 "height": 1381,
                 "width": 1270,

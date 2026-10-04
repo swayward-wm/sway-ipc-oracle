@@ -1,0 +1,350 @@
+#!/usr/bin/env python3
+"""Check the README snapshot blocks against the committed results.
+
+Usage: readme-snapshots [README]   (default README.md; exit 1 on a violation)
+       readme-snapshots --self-test
+
+Rules:
+- No results table (a table with any digit in a cell) names more than one
+  compositor. A compositor is named by its snapshot name, its block heading
+  name, its pinned commit (7+ hex digits of it), or a cell that is exactly the
+  compositor key. Names match case-insensitively, with any run of spaces, `-`
+  or `_` as one separator and an optional `v` before the version. Checked first, so a
+  fixture holding only such a table fails for that reason.
+- Each pinned compositor has exactly one block, `### <name> (`<commit>`)`,
+  under `## Snapshots`.
+- Each block's corpus rows quote the [run] counts of its result files and link
+  them; a figure from a result listed in pending.toml ends in †, and no other
+  figure does.
+- Each block holds exactly one generated i3-suite region, equal to
+  contrib/i3_buckets.py's rendering from the committed results: both
+  partitions of the 3,755 assertions (buckets and raw outcome), the review
+  line, the comparable view and its asymmetries.
+- Every figure in a generated region ends in † exactly when it is derived from
+  a pending i3 result, checked independently of the generator: the review line
+  reads only the block's own classification; bucket and view figures also read
+  pinned sway's result when the block has a `xwm_kill_client_fallback` row; an
+  asymmetry figure also reads the other compositor's partition.
+- Prose counts (test files, assertions, i3-derived states, event scenarios
+  and captures, event families, census commands, random and random-v2 seeds
+  and steps)
+  equal the committed data they describe.
+"""
+import functools
+import json
+import re
+import sys
+import tomllib
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(ROOT / "contrib"))
+import i3_buckets  # noqa: E402
+FIXTURES = Path(__file__).resolve().parent / "fixtures"
+
+
+def fail(message):
+    raise SystemExit(message)
+
+
+def display(compositor, name, commit):
+    version = name.removeprefix(f"{compositor}-")
+    return compositor if version == commit[:8] else f"{compositor} {version}"
+
+
+def tables(text):
+    block = []
+    for number, line in enumerate(text.splitlines() + [""], 1):
+        if line.lstrip().startswith("|"):
+            block.append((number, [c.strip() for c in line.strip().strip("|").split("|")]))
+        elif block:
+            yield block
+            block = []
+
+
+def norm(text):
+    text = re.sub(r"[\s_-]+", " ", text.lower().strip("`*† "))
+    return re.sub(r"(?<![a-z0-9])v(?=\d)", "", text)
+
+
+def named_in(cell, compositor, name, commit):
+    cell = norm(cell)
+    if cell in {compositor, norm(display(compositor, name, commit))}:
+        return True
+    for label in {norm(name), norm(display(compositor, name, commit))} - {compositor}:
+        if re.search(rf"(?<![\w.]){re.escape(label)}(?![\w.])", cell):
+            return True
+    return any(commit.startswith(sha) for sha in re.findall(r"(?<![0-9a-f])[0-9a-f]{7,40}(?![0-9a-f])", cell))
+
+
+def check_combined(text, pins, where):
+    names = pins["snapshot"]
+    for table in tables(text):
+        cells = [cell for _, row in table for cell in row]
+        if not any(re.search(r"\d", cell) for cell in cells):
+            continue
+        named = {c for c, n in names.items() for cell in cells if named_in(cell, c, n, pins[c])}
+        if len(named) > 1:
+            fail(
+                f"{where}:{table[0][0]}: results table names {len(named)} compositors "
+                f"({', '.join(sorted(named))}); publish one block per snapshot, one "
+                "compositor per table"
+            )
+
+
+def blocks(text, pins):
+    section = re.search(r"^## Snapshots\n(.*?)(?=^## )", text, re.S | re.M)
+    if not section:
+        fail("README has no ## Snapshots section")
+    found = {}
+    parts = re.split(r"^(### .*)$", section.group(1), flags=re.M)
+    for heading, body in zip(parts[1::2], parts[2::2]):
+        found.setdefault(heading, []).append(body)
+    result = {}
+    for compositor, name in pins["snapshot"].items():
+        heading = f"### {display(compositor, name, pins[compositor])} (`{pins[compositor][:8]}`)"
+        bodies = found.get(heading, [])
+        if len(bodies) != 1:
+            fail(f"README needs exactly one block headed: {heading} (found {len(bodies)})")
+        result[compositor] = bodies[0]
+    return result
+
+
+def corpus_rows(compositor, name, pending):
+    mismatch = "differs" if compositor == "i3" else "mismatch"
+    i3 = f"i3/results/{name}.toml"
+    files = tomllib.load(open(ROOT / i3, "rb"))["files"]
+    unstable = {
+        (item["file"], number)
+        for item in tomllib.load(open(ROOT / "i3/unstable.toml", "rb")).get("unstable", [])
+        if item["compositor"] == compositor
+        for number in item["assertions"]
+    }
+    counts = [
+        sum(1 for file, entry in files.items() if not entry.get("flaky")
+            for number in entry.get(f"{outcome}_assertions", []) if (file, number) not in unstable)
+        for outcome in ("pass", "skip", "fail", "unreached")
+    ]
+    counts.append(sum(1 for file, _ in unstable if not files[file].get("flaky")))
+    counts.append(sum(entry["assertions"] for entry in files.values() if entry.get("flaky")))
+    total = sum(entry["assertions"] for entry in files.values())
+    if sum(counts) != total:
+        fail(f"{i3}: outcome partition sums to {sum(counts)}, not {total}")
+    labels = ("pass", "skip", "fail", "unreached", "unstable", "flaky")
+    rows = [("i3 suite", list(zip(counts, labels)), i3)]
+    for corpus, suffix, keys in (
+        ("sway IPC state", "", ("match", mismatch, "not_applicable")),
+        ("events", "-events", ("match", mismatch, "not_applicable")),
+        ("i3-derived", "-i3-derived", ("match", mismatch, "unstable", "not_applicable")),
+        ("random", "-random", ("match", mismatch, "unstable", "not_applicable")),
+        ("random-v2", "-random-v2", ("match", mismatch, "unstable", "not_applicable")),
+        ("command fuzz", "-command-fuzz", ("match", mismatch, "not_applicable", "crash", "hang")),
+        ("wire fuzz", "-wire-fuzz", ("match", mismatch, "not_applicable", "crash", "hang")),
+    ):
+        path = f"sway-ipc/results/{name}{suffix}.toml"
+        if not (ROOT / path).exists():
+            rows.append((corpus, None, None))
+            continue
+        run = tomllib.load(open(ROOT / path, "rb"))["run"]
+        rows.append((corpus, [(run.get(k, 0), k.replace("_", " ")) for k in keys], path))
+    expected = []
+    for corpus, figures, path in rows:
+        if figures is None:
+            expected.append([corpus, "not yet measured", "—"])
+            continue
+        outcome = " / ".join(f"{n:,} {label}" for n, label in figures)
+        outcome += "†" if path in pending else ""
+        expected.append([corpus, outcome, f"[{corpus}]({path})"])
+    return expected, counts, total, i3 in pending
+
+
+def check_block(compositor, name, body, pending, generated):
+    expected = corpus_rows(compositor, name, pending)[0]
+    rows = [row for table in tables(body) for _, row in table]
+    for row in expected:
+        if row not in rows:
+            fail(f"README block for {name} needs the row: | {' | '.join(row)} |")
+    found = i3_buckets.regions(body)
+    if found != [generated]:
+        fail(f"README block for {name}: the generated i3-suite region (buckets, review line, "
+             "comparable view, asymmetries) differs from the committed results; run "
+             "contrib/i3_buckets.py --write README.md")
+
+
+FIGURE = r"(?<![\w.,-])\d[\d,]*†?(?![\w.])"
+
+
+def region_figures(region):
+    """(scope, figure) for every figure in a generated region; scope is None
+    for the block's own partition, "review", or the other compositor's key."""
+    other = None
+    for line in region.splitlines()[1:-1]:
+        if line.startswith("| ") and re.search(r"\d", line):
+            yield from ((None, f) for f in re.findall(FIGURE, line))
+        elif line.startswith("i3-suite review:"):
+            yield from (("review", f) for f in re.findall(FIGURE, line))
+        elif line.startswith("Comparable view of"):
+            yield None, re.search(rf"\(({FIGURE}) rows\):$", line).group(1)
+        elif line.startswith("Asymmetries:") and "share" in line:
+            other = re.search(r"view and (\S+)'s view share", line).group(1)
+            yield from ((other, f) for f in re.findall(FIGURE, line.split(" share ", 1)[1]))
+        elif line.startswith("- "):
+            yield other, re.match(rf"- ({FIGURE}) ", line).group(1)
+        elif line.startswith("Measured on"):
+            yield other, re.search(rf" has ({FIGURE}) P\.$", line).group(1)
+
+
+@functools.cache
+def has_kill(name):
+    rows = tomllib.load(open(ROOT / f"i3/classifications/{name}.toml", "rb"))["classification"]
+    return any(r["reason"] == i3_buckets.KILL for r in rows)
+
+
+def check_marks(compositor, region, pins, pending):
+    names = pins["snapshot"]
+    stale = {c: f"i3/results/{n}.toml" in pending for c, n in names.items()}
+
+    def reads(c):
+        return {c, i3_buckets.REFERENCE} if has_kill(names[c]) else {c}
+
+    for scope, figure in region_figures(region):
+        sources = {compositor} if scope == "review" else reads(compositor) | (reads(scope) if scope else set())
+        if figure.endswith("†") != any(stale[c] for c in sources):
+            want = "needs" if any(stale[c] for c in sources) else "must not carry"
+            fail(f"README block for {names[compositor]}: generated figure {figure} {want} † "
+                 f"(derived from the i3 results of {', '.join(sorted(sources))})")
+
+
+def prose_counts():
+    """(pattern, value) pairs: README prose figures and the data that fixes them."""
+    files = tomllib.load(open(ROOT / "i3/results/i3-4.25.toml", "rb"))["files"]
+    scenarios = tomllib.load(open(ROOT / "sway-ipc/scenarios.toml", "rb"))["scenario"]
+    events = [s for s in scenarios if "events" in s.get("corpora", ["state", "events"])]
+    captures = sum(a.startswith("capture:") for s in events for a in s["actions"])
+    derived = json.loads((ROOT / "sway-ipc/i3-derived/scenarios.json").read_text())["scenarios"]
+    census = tomllib.load(open(ROOT / "sway-ipc/command-coverage.toml", "rb"))["command"]
+    random = json.loads((ROOT / "sway-ipc/random/sequences.json").read_text())
+    random_v2 = json.loads((ROOT / "sway-ipc/random-v2/sequences.json").read_text())
+    source = (ROOT / "contrib/sway-ipc-run").read_text()
+    families = len(re.search(r"^EVENTS = \((.*)\)$", source, re.M).group(1).split(","))
+    words = {9: "nine", 10: "ten"}
+    count = lambda n: f"{n:,}"
+    return [
+        (r"i3's (\S+) unchanged test files", count(len(files))),
+        (r"`i3/t/` holds (\S+) test files", count(len(files))),
+        (r"assertions in the (\S+) test files", count(len(files))),
+        (r"the same (\S+)\s+assertions", count(sum(e["assertions"] for e in files.values()))),
+        (r"Every one of the (\S+) assertions", count(sum(e["assertions"] for e in files.values()))),
+        (r"the same (\S+) i3-suite\s+assertions", count(sum(e["assertions"] for e in files.values()))),
+        (r"including (\S+) tree states", count(len(derived))),
+        (r"replays (\S+) distinct states", count(len(derived))),
+        (r"\*\*Events\*\* replays (\S+) scenarios", count(len(events))),
+        (r"scenarios \((\S+) captures\)", count(captures)),
+        (r"all\s+(\S+) sway event\s+families", words.get(families, str(families))),
+        (r"sway 1\.12's (\S+) top-level\s+commands", count(len(census))),
+        (r"\*\*Random\*\* replays (\S+) captured", count(random["seeds"])),
+        (r"\*\*Random\*\* replays \S+ captured (\S+)-step", count(random["steps"])),
+        (r"\*\*Random v2\*\* replays (\S+) captured", count(random_v2["seeds"])),
+        (r"\*\*Random v2\*\* replays \S+ captured (\S+)-step", count(random_v2["steps"])),
+    ]
+
+
+def check_prose(text, where):
+    for pattern, value in prose_counts():
+        found = re.findall(pattern, text)
+        if not found:
+            fail(f"{where}: README prose no longer states /{pattern}/; update readme-snapshots")
+        for got in found:
+            if got != value:
+                fail(f"{where}: README prose /{pattern}/ reads {got}, the committed data gives {value}")
+
+
+def read_pending():
+    return {row["path"] for row in tomllib.load(open(ROOT / "pending.toml", "rb")).get("pending", [])}
+
+
+def check(path, pending=None):
+    pins = tomllib.load(open(ROOT / "pins.toml", "rb"))
+    pending = read_pending() if pending is None else pending
+    text = Path(path).read_text()
+    check_combined(text, pins, path)
+    check_prose(text, path)
+    _, snaps = i3_buckets.snapshots(pending)
+    for compositor, body in blocks(text, pins).items():
+        for region in i3_buckets.regions(body):
+            check_marks(compositor, region, pins, pending)
+        generated = i3_buckets.render_region(compositor, pins, snaps)
+        check_block(compositor, pins["snapshot"][compositor], body, pending, generated)
+
+
+if sys.argv[1:] == ["--self-test"]:
+    for fixture in sorted(FIXTURES.glob("readme-combined-*.md")):
+        try:
+            check(fixture)
+        except SystemExit as error:
+            if "results table names" not in str(error):
+                fail(f"{fixture.name}: rejected for the wrong reason: {error}")
+        else:
+            fail(f"{fixture.name}: combined results table was accepted")
+    # A hand edit to any generated cell or checked prose count must fail.
+    import tempfile
+    readme = (ROOT / "README.md").read_text()
+    edits = [("| 815† (539† abort causes", "| 816† (539† abort causes"),
+             ("| 1,453† | 11† | 381† | 629† | 1,453†", "| 1,453† | 11† | 381† | 630† | 1,453†"),
+             ("- 86† N-x11-all", "- 85† N-x11-all"),
+             ("| 3,754 | 1 | 0 | 0 | 0 | 0 | 0 |", "| 3,754 | 1 | 0 | 0 | 0 | 0 | 0† |"),
+             ("including 418 tree states", "including 401 tree states"),
+             ("replays 36 scenarios", "replays 38 scenarios")]
+    with tempfile.TemporaryDirectory() as work:
+        for old, new in edits:
+            if readme.count(old) != 1:
+                fail(f"self-test edit target is not unique in README.md: {old!r}")
+            edited = Path(work, "README.md")
+            edited.write_text(readme.replace(old, new))
+            try:
+                check(edited)
+            except SystemExit:
+                continue
+            fail(f"hand edit {old!r} -> {new!r} was accepted")
+
+    # Edge case: only one of the two i3 inputs pending. Render the README as if
+    # sway's i3 result were fresh; swayward-derived figures in sway's block
+    # (asymmetries) must keep †, and dropping or adding any † must fail.
+    pins = tomllib.load(open(ROOT / "pins.toml", "rb"))
+    sway_i3 = f"i3/results/{pins['snapshot']['sway']}.toml"
+    pending = read_pending()
+    if sway_i3 not in pending:
+        fail(f"self-test assumes {sway_i3} is pending; update the edge case")
+    edge_pending = pending - {sway_i3}
+    _, snaps = i3_buckets.snapshots(edge_pending)
+    edge = readme
+    for old, compositor in zip(i3_buckets.regions(readme), snaps):
+        edge = edge.replace(old, i3_buckets.render_region(compositor, pins, snaps), 1)
+    corpus = f"22 flaky† | [i3 suite]({sway_i3})"
+    if edge.count(corpus) != 1:
+        fail(f"self-test edit target is not unique in README.md: {corpus!r}")
+    edge = edge.replace(corpus, corpus.replace("†", "", 1))
+    with tempfile.TemporaryDirectory() as work:
+        edited = Path(work, "README.md")
+        edited.write_text(edge)
+        check(edited, edge_pending)
+    sway_region = i3_buckets.regions(blocks(edge, pins)["sway"])[0]
+    if "†" not in sway_region or "| 1,461 |" not in sway_region:
+        fail("edge case: sway's block should mix marked and unmarked figures")
+    for compositor in snaps:
+        region = i3_buckets.regions(blocks(edge, pins)[compositor])[0]
+        figures = list(re.finditer(FIGURE, region))
+        for match in figures:
+            figure = match.group()
+            flipped = figure[:-1] if figure.endswith("†") else figure + "†"
+            mutated = region[:match.start()] + flipped + region[match.end():]
+            if [f for _, f in region_figures(mutated)] == [f for _, f in region_figures(region)]:
+                continue  # not a checked figure (for example a version in the title)
+            try:
+                check_marks(compositor, mutated, pins, edge_pending)
+            except SystemExit:
+                continue
+            fail(f"edge case: {compositor} figure {figure!r} -> {flipped!r} was accepted")
+else:
+    check(sys.argv[1] if len(sys.argv) > 1 else ROOT / "README.md")

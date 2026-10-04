@@ -1,0 +1,687 @@
+{
+  "description": "random-v2 generator vocabulary: runtime command families accepted by headless sway 1.12; source lines point into the pinned sway/commands.c handler tables",
+  "sway_commit": "88869399f421d9180dd8b6ed0b5a1f4a3585d252",
+  "prelude": [
+    "force_display_urgency_hint 0 ms"
+  ],
+  "window_family": "exec",
+  "window_probability": 0.22,
+  "first_step": "exec",
+  "families": [
+    {
+      "name": "exec",
+      "table": "handlers",
+      "source": "sway/commands.c:60",
+      "commands": [
+        "exec foot --app-id={ident} --title={ident} sh -c 'sleep 300'"
+      ]
+    },
+    {
+      "name": "allow_tearing",
+      "table": "command_handlers",
+      "source": "sway/commands.c:115",
+      "commands": [
+        "allow_tearing yes",
+        "allow_tearing no"
+      ]
+    },
+    {
+      "name": "border",
+      "table": "command_handlers",
+      "source": "sway/commands.c:116",
+      "commands": [
+        "border none",
+        "border normal",
+        "border normal 4",
+        "border pixel 1",
+        "border pixel 3",
+        "border toggle",
+        "border csd"
+      ]
+    },
+    {
+      "name": "floating",
+      "table": "command_handlers",
+      "source": "sway/commands.c:119",
+      "commands": [
+        "floating toggle",
+        "floating enable",
+        "floating disable"
+      ]
+    },
+    {
+      "name": "fullscreen",
+      "table": "command_handlers",
+      "source": "sway/commands.c:120",
+      "commands": [
+        "fullscreen toggle",
+        "fullscreen enable",
+        "fullscreen disable",
+        "fullscreen toggle global"
+      ]
+    },
+    {
+      "name": "inhibit_idle",
+      "table": "command_handlers",
+      "source": "sway/commands.c:121",
+      "commands": [
+        "inhibit_idle focus",
+        "inhibit_idle fullscreen",
+        "inhibit_idle open",
+        "inhibit_idle visible",
+        "inhibit_idle none"
+      ]
+    },
+    {
+      "name": "kill",
+      "table": "command_handlers",
+      "source": "sway/commands.c:122",
+      "commands": [
+        "kill"
+      ]
+    },
+    {
+      "name": "layout",
+      "table": "command_handlers",
+      "source": "sway/commands.c:123",
+      "commands": [
+        "layout splith",
+        "layout splitv",
+        "layout tabbed",
+        "layout stacking",
+        "layout toggle",
+        "layout toggle split",
+        "layout toggle all",
+        "layout default"
+      ]
+    },
+    {
+      "name": "mark",
+      "table": "command_handlers",
+      "source": "sway/commands.c:124",
+      "commands": [
+        "mark oracle",
+        "mark --add oracle-2",
+        "mark --toggle oracle",
+        "mark --add --toggle oracle-2"
+      ]
+    },
+    {
+      "name": "max_render_time",
+      "table": "command_handlers",
+      "source": "sway/commands.c:125",
+      "commands": [
+        "max_render_time off",
+        "max_render_time 5"
+      ]
+    },
+    {
+      "name": "move",
+      "table": "command_handlers",
+      "source": "sway/commands.c:126",
+      "commands": [
+        "move left",
+        "move right",
+        "move up",
+        "move down",
+        "move left 20 px",
+        "move down 30 px",
+        "move container to workspace 1",
+        "move container to workspace 2",
+        "move container to workspace oracle",
+        "move container to workspace next",
+        "move container to workspace back_and_forth",
+        "move container to workspace number 3",
+        "move scratchpad",
+        "move position center",
+        "move position 100 px 80 px",
+        "move absolute position 10 px 20 px",
+        "move container to output right",
+        "move workspace to output left",
+        "move container to mark oracle"
+      ]
+    },
+    {
+      "name": "nop",
+      "table": "command_handlers",
+      "source": "sway/commands.c:127",
+      "commands": [
+        "nop oracle"
+      ]
+    },
+    {
+      "name": "opacity",
+      "table": "command_handlers",
+      "source": "sway/commands.c:128",
+      "commands": [
+        "opacity set 0.5",
+        "opacity plus 0.1",
+        "opacity minus 0.2"
+      ]
+    },
+    {
+      "name": "rename",
+      "table": "command_handlers",
+      "source": "sway/commands.c:130",
+      "commands": [
+        "rename workspace to oracle-renamed",
+        "rename workspace 2 to 4",
+        "rename workspace number 1 to 5"
+      ]
+    },
+    {
+      "name": "resize",
+      "table": "command_handlers",
+      "source": "sway/commands.c:131",
+      "commands": [
+        "resize grow width 10 px",
+        "resize shrink height 10 px",
+        "resize grow height 10 ppt",
+        "resize shrink width 5 ppt",
+        "resize grow left 20 px",
+        "resize set 400 300",
+        "resize set width 50 ppt",
+        "resize set height 200 px"
+      ]
+    },
+    {
+      "name": "scratchpad",
+      "table": "command_handlers",
+      "source": "sway/commands.c:132",
+      "commands": [
+        "scratchpad show"
+      ]
+    },
+    {
+      "name": "shortcuts_inhibitor",
+      "table": "command_handlers",
+      "source": "sway/commands.c:133",
+      "commands": [
+        "shortcuts_inhibitor enable",
+        "shortcuts_inhibitor disable"
+      ]
+    },
+    {
+      "name": "split",
+      "table": "command_handlers",
+      "source": "sway/commands.c:134",
+      "commands": [
+        "split h",
+        "split v",
+        "split toggle",
+        "split none"
+      ]
+    },
+    {
+      "name": "splith",
+      "table": "command_handlers",
+      "source": "sway/commands.c:135",
+      "commands": [
+        "splith"
+      ]
+    },
+    {
+      "name": "splitt",
+      "table": "command_handlers",
+      "source": "sway/commands.c:136",
+      "commands": [
+        "splitt"
+      ]
+    },
+    {
+      "name": "splitv",
+      "table": "command_handlers",
+      "source": "sway/commands.c:137",
+      "commands": [
+        "splitv"
+      ]
+    },
+    {
+      "name": "sticky",
+      "table": "command_handlers",
+      "source": "sway/commands.c:138",
+      "commands": [
+        "sticky toggle",
+        "sticky enable",
+        "sticky disable"
+      ]
+    },
+    {
+      "name": "swap",
+      "table": "command_handlers",
+      "source": "sway/commands.c:139",
+      "commands": [
+        "swap container with mark oracle",
+        "swap container with mark oracle-2"
+      ]
+    },
+    {
+      "name": "title_format",
+      "table": "command_handlers",
+      "source": "sway/commands.c:140",
+      "commands": [
+        "title_format %title",
+        "title_format [%app_id] %title"
+      ]
+    },
+    {
+      "name": "unmark",
+      "table": "command_handlers",
+      "source": "sway/commands.c:141",
+      "commands": [
+        "unmark oracle",
+        "unmark"
+      ]
+    },
+    {
+      "name": "urgent",
+      "table": "command_handlers",
+      "source": "sway/commands.c:142",
+      "commands": [
+        "urgent enable",
+        "urgent disable",
+        "urgent toggle"
+      ]
+    },
+    {
+      "name": "focus",
+      "table": "handlers",
+      "source": "sway/commands.c:65",
+      "commands": [
+        "focus left",
+        "focus right",
+        "focus up",
+        "focus down",
+        "focus parent",
+        "focus child",
+        "focus mode_toggle",
+        "focus floating",
+        "focus tiling",
+        "focus next",
+        "focus prev",
+        "focus next sibling",
+        "focus output left"
+      ]
+    },
+    {
+      "name": "gaps",
+      "table": "handlers",
+      "source": "sway/commands.c:74",
+      "commands": [
+        "gaps inner current set 10",
+        "gaps outer current plus 5",
+        "gaps inner all set 0",
+        "gaps horizontal current toggle 8"
+      ]
+    },
+    {
+      "name": "workspace",
+      "table": "handlers",
+      "source": "sway/commands.c:98",
+      "commands": [
+        "workspace 1",
+        "workspace 2",
+        "workspace oracle",
+        "workspace back_and_forth",
+        "workspace next",
+        "workspace prev",
+        "workspace next_on_output",
+        "workspace prev_on_output",
+        "workspace number 3",
+        "workspace --no-auto-back-and-forth 1"
+      ]
+    },
+    {
+      "name": "workspace_auto_back_and_forth",
+      "table": "handlers",
+      "source": "sway/commands.c:99",
+      "commands": [
+        "workspace_auto_back_and_forth yes",
+        "workspace_auto_back_and_forth no"
+      ]
+    },
+    {
+      "name": "default_border",
+      "table": "handlers",
+      "source": "sway/commands.c:58",
+      "commands": [
+        "default_border pixel 1",
+        "default_border normal 2",
+        "default_border none"
+      ]
+    },
+    {
+      "name": "default_floating_border",
+      "table": "handlers",
+      "source": "sway/commands.c:59",
+      "commands": [
+        "default_floating_border pixel 3",
+        "default_floating_border normal 2"
+      ]
+    },
+    {
+      "name": "new_window",
+      "table": "handlers",
+      "source": "sway/commands.c:80",
+      "commands": [
+        "new_window pixel 2"
+      ]
+    },
+    {
+      "name": "new_float",
+      "table": "handlers",
+      "source": "sway/commands.c:79",
+      "commands": [
+        "new_float normal 1"
+      ]
+    },
+    {
+      "name": "hide_edge_borders",
+      "table": "handlers",
+      "source": "sway/commands.c:75",
+      "commands": [
+        "hide_edge_borders none",
+        "hide_edge_borders both",
+        "hide_edge_borders smart",
+        "hide_edge_borders --i3 vertical"
+      ]
+    },
+    {
+      "name": "smart_borders",
+      "table": "handlers",
+      "source": "sway/commands.c:87",
+      "commands": [
+        "smart_borders on",
+        "smart_borders off",
+        "smart_borders no_gaps"
+      ]
+    },
+    {
+      "name": "smart_gaps",
+      "table": "handlers",
+      "source": "sway/commands.c:88",
+      "commands": [
+        "smart_gaps on",
+        "smart_gaps off"
+      ]
+    },
+    {
+      "name": "titlebar_border_thickness",
+      "table": "handlers",
+      "source": "sway/commands.c:92",
+      "commands": [
+        "titlebar_border_thickness 2",
+        "titlebar_border_thickness 1"
+      ]
+    },
+    {
+      "name": "titlebar_padding",
+      "table": "handlers",
+      "source": "sway/commands.c:93",
+      "commands": [
+        "titlebar_padding 4 3",
+        "titlebar_padding 1"
+      ]
+    },
+    {
+      "name": "title_align",
+      "table": "handlers",
+      "source": "sway/commands.c:91",
+      "commands": [
+        "title_align left",
+        "title_align center",
+        "title_align right"
+      ]
+    },
+    {
+      "name": "font",
+      "table": "handlers",
+      "source": "sway/commands.c:69",
+      "commands": [
+        "font monospace 10",
+        "font monospace 14"
+      ]
+    },
+    {
+      "name": "floating_minimum_size",
+      "table": "handlers",
+      "source": "sway/commands.c:63",
+      "commands": [
+        "floating_minimum_size 100 x 100",
+        "floating_minimum_size 75 x 50"
+      ]
+    },
+    {
+      "name": "floating_maximum_size",
+      "table": "handlers",
+      "source": "sway/commands.c:62",
+      "commands": [
+        "floating_maximum_size 800 x 600",
+        "floating_maximum_size 0 x 0"
+      ]
+    },
+    {
+      "name": "focus_wrapping",
+      "table": "handlers",
+      "source": "sway/commands.c:68",
+      "commands": [
+        "focus_wrapping yes",
+        "focus_wrapping no",
+        "focus_wrapping force",
+        "focus_wrapping workspace"
+      ]
+    },
+    {
+      "name": "force_focus_wrapping",
+      "table": "handlers",
+      "source": "sway/commands.c:72",
+      "commands": [
+        "force_focus_wrapping yes",
+        "force_focus_wrapping no"
+      ]
+    },
+    {
+      "name": "focus_follows_mouse",
+      "table": "handlers",
+      "source": "sway/commands.c:66",
+      "commands": [
+        "focus_follows_mouse yes",
+        "focus_follows_mouse no"
+      ]
+    },
+    {
+      "name": "focus_on_window_activation",
+      "table": "handlers",
+      "source": "sway/commands.c:67",
+      "commands": [
+        "focus_on_window_activation smart",
+        "focus_on_window_activation focus"
+      ]
+    },
+    {
+      "name": "mouse_warping",
+      "table": "handlers",
+      "source": "sway/commands.c:78",
+      "commands": [
+        "mouse_warping output",
+        "mouse_warping container",
+        "mouse_warping none"
+      ]
+    },
+    {
+      "name": "popup_during_fullscreen",
+      "table": "handlers",
+      "source": "sway/commands.c:83",
+      "commands": [
+        "popup_during_fullscreen smart",
+        "popup_during_fullscreen leave_fullscreen"
+      ]
+    },
+    {
+      "name": "show_marks",
+      "table": "handlers",
+      "source": "sway/commands.c:86",
+      "commands": [
+        "show_marks yes",
+        "show_marks no"
+      ]
+    },
+    {
+      "name": "tiling_drag",
+      "table": "handlers",
+      "source": "sway/commands.c:89",
+      "commands": [
+        "tiling_drag enable",
+        "tiling_drag disable"
+      ]
+    },
+    {
+      "name": "tiling_drag_threshold",
+      "table": "handlers",
+      "source": "sway/commands.c:90",
+      "commands": [
+        "tiling_drag_threshold 9"
+      ]
+    },
+    {
+      "name": "floating_modifier",
+      "table": "handlers",
+      "source": "sway/commands.c:64",
+      "commands": [
+        "floating_modifier Mod4 normal"
+      ]
+    },
+    {
+      "name": "force_display_urgency_hint",
+      "table": "handlers",
+      "source": "sway/commands.c:71",
+      "commands": [
+        "force_display_urgency_hint 0 ms"
+      ]
+    },
+    {
+      "name": "mode",
+      "table": "handlers",
+      "source": "sway/commands.c:77",
+      "commands": [
+        "mode default"
+      ]
+    },
+    {
+      "name": "set",
+      "table": "handlers",
+      "source": "sway/commands.c:85",
+      "commands": [
+        "set $oracle value"
+      ]
+    },
+    {
+      "name": "client.focused",
+      "table": "handlers",
+      "source": "sway/commands.c:52",
+      "commands": [
+        "client.focused #4c7899 #285577 #ffffff #2e9ef4 #285577"
+      ]
+    },
+    {
+      "name": "client.unfocused",
+      "table": "handlers",
+      "source": "sway/commands.c:56",
+      "commands": [
+        "client.unfocused #333333 #222222 #888888 #292d2e #222222"
+      ]
+    },
+    {
+      "name": "bindsym",
+      "table": "handlers",
+      "source": "sway/commands.c:50",
+      "commands": [
+        "bindsym Mod4+F12 nop oracle"
+      ]
+    },
+    {
+      "name": "unbindsym",
+      "table": "handlers",
+      "source": "sway/commands.c:97",
+      "commands": [
+        "unbindsym Mod4+F12"
+      ]
+    },
+    {
+      "name": "bindcode",
+      "table": "handlers",
+      "source": "sway/commands.c:47",
+      "commands": [
+        "bindcode 96 nop oracle"
+      ]
+    },
+    {
+      "name": "unbindcode",
+      "table": "handlers",
+      "source": "sway/commands.c:94",
+      "commands": [
+        "unbindcode 96"
+      ]
+    },
+    {
+      "name": "for_window",
+      "table": "handlers",
+      "source": "sway/commands.c:70",
+      "commands": [
+        "for_window [app_id=\"fixture-diff-3\"] floating enable",
+        "for_window [app_id=\"fixture-diff-4\"] mark oracle-window"
+      ]
+    },
+    {
+      "name": "assign",
+      "table": "handlers",
+      "source": "sway/commands.c:45",
+      "commands": [
+        "assign [app_id=\"fixture-diff-4\"] workspace 2",
+        "assign [app_id=\"fixture-diff-5\"] workspace oracle"
+      ]
+    },
+    {
+      "name": "no_focus",
+      "table": "handlers",
+      "source": "sway/commands.c:81",
+      "commands": [
+        "no_focus [app_id=\"fixture-diff-3\"]"
+      ]
+    },
+    {
+      "name": "bar",
+      "table": "handlers",
+      "source": "sway/commands.c:46",
+      "commands": [
+        "bar mode hide",
+        "bar hidden_state show"
+      ]
+    },
+    {
+      "name": "output",
+      "table": "handlers",
+      "source": "sway/commands.c:82",
+      "commands": [
+        "output * scale 2",
+        "output * scale 1",
+        "output * transform 90",
+        "output * transform normal"
+      ]
+    },
+    {
+      "name": "criteria",
+      "table": "execute_command",
+      "source": "sway/commands.c:237",
+      "commands": [
+        "[app_id=\"fixture-diff-1\"] focus",
+        "[app_id=\"fixture-diff-2\"] urgent enable",
+        "[app_id=\"fixture-diff-2\"] kill",
+        "[con_mark=\"oracle\"] focus",
+        "[workspace=\"2\"] move container to workspace 1",
+        "[floating] border pixel 4",
+        "[tiling] mark --add oracle-tiled"
+      ]
+    }
+  ]
+}
