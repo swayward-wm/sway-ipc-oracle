@@ -484,6 +484,17 @@ def run_unit(run: Run, unit: dict, digest: str, base: str) -> bool:
             if not manifest["scenarios"]:
                 evidence(run, unit, digest, base, start, "failed", extra.strip() + " capture is empty")
                 return False
+            if empty and not run.trial:
+                # A test whose recording came back empty silently drops its
+                # states from the corpus; the full capture must not shrink.
+                evidence(run, unit, digest, base, start, "failed", extra.strip() + " empty command logs")
+                return False
+            if not run.trial:
+                previous = json.loads(git("show", "HEAD:sway-ipc/i3-derived/scenarios.json"))
+                if len(manifest["scenarios"]) < len(previous["scenarios"]):
+                    evidence(run, unit, digest, base, start, "failed", extra.strip()
+                             + f" capture shrank from {len(previous['scenarios'])} scenarios")
+                    return False
             continue
         if isinstance(step, str):
             _, _, number, count = step.split(":")
