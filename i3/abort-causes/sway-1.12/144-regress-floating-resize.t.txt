@@ -14,3 +14,8 @@ Could not get reply for: xcb_intern_atom_reply at /usr/local/lib64/perl5/5.42/X1
 00:00:05.350 [DEBUG] [sway/tree/arrange.c:161] Arranging 0x7ffe579a1740 vertically
 00:00:05.350 [DEBUG] [sway/tree/arrange.c:274] Usable area for ws: 1280x800@0,0
 00:00:05.350 [DEBUG] [sway/tree/arrange.c:308] Arranging workspace '/tmp/Q16RO1V84n' at 0.000000, 0.000000
+# first wlroots xcb errors after that command (max 4 lines)
+00:00:05.350 [ERROR] [wlr] [xwayland/xwm.c:1960] xcb error: op ConfigureWindow (no minor), code Window (no extension), sequence 333, value 4194304
+00:00:05.350 [ERROR] [wlr] [xwayland/xwm.c:1960] xcb error: op ConfigureWindow (no minor), code Window (no extension), sequence 335, value 4194306
+00:00:05.350 [ERROR] [wlr] [xwayland/xwm.c:1960] xcb error: op ConfigureWindow (no minor), code Window (no extension), sequence 336, value 4194306
+00:00:05.350 [ERROR] [wlr] [xwayland/xwm.c:1960] xcb error: op ConfigureWindow (no minor), code Window (no extension), sequence 338, value 4194305

@@ -426,9 +426,56 @@ for path in sorted(Path("i3/abort-causes").glob("*.toml")):
         if excerpt.parent != path.with_suffix("") or not excerpt.is_file() \
                 or hashlib.sha256(excerpt.read_bytes()).hexdigest() != row.get("excerpt_sha256"):
             raise SystemExit(f"{where}: excerpt is missing or does not match excerpt_sha256")
+        # The excerpt must show the cause's signature from the file header.
+        text = excerpt.read_text()
+        if cause == "kill":
+            after = text.partition("Handling command 'kill'")[2]
+            if "Could not get reply for: xcb_intern_atom_reply" not in text \
+                    or not re.search(r"\[ERROR\] \[wlr\] \[xwayland/xwm\.c:\d+\] xcb error", after):
+                raise SystemExit(f"{where}: kill excerpt needs the X11::XCB reply error, "
+                                 "the kill command and wlroots xcb errors after it")
+        if cause == "xtest":
+            line = row["blocked_in"].rsplit(":", 1)[1]
+            if not re.search(rf"enter xtest_sync_with_i3 from line {line}\n*\Z", text):
+                raise SystemExit(f"{where}: xtest excerpt must end in the traced xtest_sync_with_i3 call")
     extra = {p.name for p in path.with_suffix("").iterdir()} - {f"{n}.txt" for n in seen}
     if extra:
         raise SystemExit(f"{path}: excerpts without an entry: {sorted(extra)}")
+    if path.stem != pins["snapshot"]["sway"]:
+        continue
+    # Every row the kill/XTEST correlation applies to must have evidence: a
+    # non-flaky sway file with unverified unreached rows whose first unreached
+    # assertion matches swayward's, where swayward's row there has a verified
+    # kill or XTEST family.
+    families = {"xwm_kill_client_fallback", "headless_xtest_boundary"}
+    sw = pins["snapshot"]["swayward"]
+    sw_result = tomllib.load(open(f"i3/results/{sw}.toml", "rb"))["files"]
+    sw_class = {(r["file"], r["assertion"]): r
+                for r in tomllib.load(open(f"i3/classifications/{sw}.toml", "rb"))["classification"]}
+    expected = {}
+    for name, entry in result.items():
+        unreached = entry.get("unreached_assertions", [])
+        theirs = sw_result[name].get("unreached_assertions", [])
+        row = sw_class.get((name, theirs[0]), {}) if theirs else {}
+        if entry.get("flaky") or not unreached or unreached[:1] != theirs[:1] \
+                or row.get("reason") not in families or not row.get("reason_verified"):
+            continue
+        rows = sum((name, a) in unverified for a in unreached)
+        if rows:
+            expected[name] = rows
+    if seen != set(expected):
+        raise SystemExit(f"{path}: evidence must cover exactly the kill/XTEST-correlated files; "
+                         f"missing {sorted(set(expected) - seen)}, extra {sorted(seen - set(expected))}")
+    # README sway bucket split: evidence moves verified rows from N-harness to
+    # N-x11-all. 276/848 is the split of the committed results and
+    # classifications without evidence.
+    moved = sum(r["rows"] for r in doc["file"] if r["cause"] in ("kill", "xtest"))
+    x11, harness = 276 + moved, 848 - moved
+    readme = Path("README.md").read_text()
+    want = (f"| {x11:,}† ({moved} abort causes verified by focused reruns) | 0† | {harness:,}† |")
+    if want not in readme:
+        raise SystemExit(f"README.md: sway N-x11-all/N-harness must read {x11:,}/{harness:,} "
+                         f"with {moved} verified abort causes: {want}")
 PY
 PYTHONPYCACHEPREFIX="${TMPDIR:-/tmp}/sway-ipc-oracle-pycache" python3 -m py_compile contrib/sway-ipc-run
 if grep -En 'endswith\("\.(percent|rect)"\)|get\("floating"\) *==' contrib/sway-ipc-run; then

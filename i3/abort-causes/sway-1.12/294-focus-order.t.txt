@@ -17,3 +17,8 @@ Could not get reply for: xcb_intern_atom_reply at /usr/local/lib64/perl5/5.42/X1
 00:00:09.820 [DEBUG] [sway/desktop/transaction.c:821] Transaction 0xda00d60 committing with 7 instructions
 00:00:09.820 [DEBUG] [sway/desktop/transaction.c:717] Applying transaction 0xda00d60
 00:00:09.821 [DEBUG] [sway/tree/arrange.c:274] Usable area for ws: 1024x768@0,0
+# first wlroots xcb errors after that command (max 4 lines)
+00:00:09.822 [ERROR] [wlr] [xwayland/xwm.c:1960] xcb error: op ConfigureWindow (no minor), code Window (no extension), sequence 566, value 4194304
+00:00:09.822 [ERROR] [wlr] [xwayland/xwm.c:1960] xcb error: op ConfigureWindow (no minor), code Window (no extension), sequence 568, value 4194306
+00:00:09.822 [ERROR] [wlr] [xwayland/xwm.c:1960] xcb error: op ConfigureWindow (no minor), code Window (no extension), sequence 570, value 4194306
+00:00:09.822 [ERROR] [wlr] [xwayland/xwm.c:1960] xcb error: op ChangeProperty (no minor), code Window (no extension), sequence 573, value 4194304

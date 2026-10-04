@@ -81,7 +81,7 @@ runner_exit = 255
 last_sway_command = "kill"
 cause = "kill"
 excerpt = "i3/abort-causes/sway-1.12/144-regress-floating-resize.t.txt"
-excerpt_sha256 = "132bbaf858674e274e365821e1d48d145469aa774406da2c269b98b21539820a"
+excerpt_sha256 = "79f21c30b23fec9a125ca4759de4a98dff3a244f82f45918677b725ae8a38bcf"
 
 [[file]]
 file = "164-kill-win-vs-client.t"
@@ -201,7 +201,7 @@ runner_exit = 255
 last_sway_command = "kill"
 cause = "kill"
 excerpt = "i3/abort-causes/sway-1.12/294-focus-order.t.txt"
-excerpt_sha256 = "b7ad9e407136affd2ae7c9d138ebb3a26bf0728c5a7767da7b76a27340f07594"
+excerpt_sha256 = "676ca960a5ecef5dd852aa1df5a5cc37cafae2f1f17381d280c3eb68adaa2045"
 
 [[file]]
 file = "295-net-wm-state-focused.t"
@@ -285,7 +285,7 @@ runner_exit = 255
 last_sway_command = "kill"
 cause = "kill"
 excerpt = "i3/abort-causes/sway-1.12/516-move.t.txt"
-excerpt_sha256 = "8171dfc9d6d37efaa76b8278d502fad1e8124a19f1d61d3b356b70cf160f9a92"
+excerpt_sha256 = "70cf9d60827446f4c190f44cea9921a5f03a0b7c8a7343e235d5acd9b22ed3d3"
 
 [[file]]
 file = "527-focus-fallback.t"
