@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+"""Self-test: every swayward sway-IPC corpus needs a result and a classification."""
+import shutil
+import sys
+import tempfile
+import tomllib
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "contrib"))
+import sway_ipc_triage  # noqa: E402
+
+names = tomllib.load(open(ROOT / "pins.toml", "rb"))["snapshot"]
+name = names["swayward"]
+assert len(sway_ipc_triage.check(ROOT, names)) == 1
+
+for corpus in sway_ipc_triage.CORPUS_KEYS:
+    stem = name if corpus == "state" else f"{name}-{corpus}"
+    for kind in ("results", "classifications"):
+        with tempfile.TemporaryDirectory() as tmp:
+            copy = Path(tmp) / "sway-ipc"
+            for sub in ("results", "classifications"):
+                shutil.copytree(ROOT / "sway-ipc" / sub, copy / sub)
+            (copy / kind / f"{stem}.toml").unlink()
+            try:
+                sway_ipc_triage.check(tmp, names)
+            except SystemExit as error:
+                assert stem in str(error), error
+            else:
+                raise AssertionError(f"check passed without {kind}/{stem}.toml")
+print("sway-ipc triage self-test passed")
