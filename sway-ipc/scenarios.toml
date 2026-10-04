@@ -328,3 +328,8 @@ actions = ["command:move container to output right", "command:move container to 
 name = "view_commands_without_view"
 corpora = ["state"]
 actions = ["command:allow_tearing no", "command:max_render_time 5", "command:max_render_time off", "command:shortcuts_inhibitor disable", "command:inhibit_idle none", "command:opacity minus 0.2", "window:fixture-1", "command:focus parent", "command:shortcuts_inhibitor enable", "command:inhibit_idle visible", "command:opacity minus 0.2", "capture:view_commands_without_view"]
+
+[[scenario]]
+name = "criteria_no_match_border_and_scratchpad"
+corpora = ["state"]
+actions = ["probe:criteria_no_match_border_empty:[floating] border pixel 4", "window:fixture-criteria-hidden", "command:move scratchpad", "probe:criteria_no_match_tiling_hidden:[tiling] mark --add oracle-tiled", "probe:criteria_match_floating_hidden:[floating] mark --add oracle-floated", "capture:criteria_no_match_border_and_scratchpad"]
