@@ -17,10 +17,10 @@ assert scenarios["urgent_via_command"]["not_applicable"] is True
 assert scenarios["command_coverage"]["requires"] == ["sway-command-language"]
 assert scenarios["command_coverage"]["not_applicable"] is True
 assert runner.SwayAdapter.capabilities == {
-    "sway-command-language", "xdg-toplevel-size-hints",
+    "sway-command-language", "xdg-toplevel-size-hints", "wlr-foreign-toplevel-management",
 }
 assert runner.SwaywardAdapter.capabilities == {
-    "sway-command-language", "xdg-toplevel-size-hints",
+    "sway-command-language", "xdg-toplevel-size-hints", "wlr-foreign-toplevel-management",
 }
 assert not runner.I3Adapter.capabilities
 assert "sway/sway/commands/output/disable.c" in scenarios["disabled_output_evacuation"]["reason"]

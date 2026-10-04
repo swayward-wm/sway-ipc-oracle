@@ -37,6 +37,10 @@ live in `sway-ipc/normalize.toml`. Size-hint scenarios lazily compile
 `wayland-scanner`, and the `wayland-client` and `wayland-protocols` development
 packages. Without them, only those scenarios are reported as not applicable;
 the pinned oracle container has them and treats a missing fixture as an error.
+Foreign-toplevel scenarios likewise compile `contrib/foreign-toplevel-request.c`
+against `contrib/protocols/wlr-foreign-toplevel-management-unstable-v1.xml`,
+vendored from the pinned wlroots, and send one taskbar request per
+`foreign_toplevel:APP_ID|REQUEST` action.
 `sway-ipc/applicability.toml` limits i3
 comparisons to the fields in i3's pinned IPC protocol and cites sway's source
 for excluded sway extensions. Every sway field remains applicable to swayward.

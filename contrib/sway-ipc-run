@@ -827,7 +827,7 @@ class FixtureUnavailable(RuntimeError):
 
 
 class WaylandAdapter(Adapter):
-    capabilities = frozenset({"xdg-toplevel-size-hints"})
+    capabilities = frozenset({"xdg-toplevel-size-hints", "wlr-foreign-toplevel-management"})
     config_text = ""
 
     def rendered_config(self):
@@ -866,6 +866,44 @@ class WaylandAdapter(Adapter):
         except subprocess.CalledProcessError as error:
             raise FixtureUnavailable("fixture client unavailable (build failed)") from error
         return binary
+
+    def foreign_toplevel_client(self):
+        binary = self.run_dir / "foreign-toplevel-request"
+        if binary.exists():
+            return binary
+        for tool in ("pkg-config", "wayland-scanner", "cc"):
+            if shutil.which(tool) is None:
+                raise FixtureUnavailable(f"foreign-toplevel client unavailable (missing {tool})")
+        if subprocess.run(["pkg-config", "--exists", "wayland-client"], check=False).returncode:
+            raise FixtureUnavailable("foreign-toplevel client unavailable (missing wayland-client)")
+        protocol = ROOT / "contrib/protocols/wlr-foreign-toplevel-management-unstable-v1.xml"
+        header = self.run_dir / "wlr-foreign-toplevel-management-unstable-v1-client-protocol.h"
+        code = self.run_dir / "wlr-foreign-toplevel-management-unstable-v1-protocol.c"
+        try:
+            subprocess.run(["wayland-scanner", "client-header", protocol, header], check=True)
+            subprocess.run(["wayland-scanner", "private-code", protocol, code], check=True)
+            flags = shlex.split(subprocess.check_output(
+                ["pkg-config", "--cflags", "--libs", "wayland-client"], text=True
+            ))
+            subprocess.run([
+                "cc", "-std=c11", "-Wall", "-Wextra", "-Werror", f"-I{self.run_dir}",
+                ROOT / "contrib/foreign-toplevel-request.c", code, "-o", binary, *flags,
+            ], check=True)
+        except subprocess.CalledProcessError as error:
+            raise FixtureUnavailable("foreign-toplevel client unavailable (build failed)") from error
+        return binary
+
+    def foreign_toplevel_request(self, ident, request):
+        """Send one wlr foreign-toplevel request to the toplevel with app_id `ident`."""
+        arguments = [ident, request]
+        subprocess.run(
+            [self.foreign_toplevel_client(), *arguments], env={
+                **self.env, "WAYLAND_DISPLAY": self.display,
+                "XDG_RUNTIME_DIR": str(self.run_dir),
+            }, stdout=subprocess.DEVNULL, check=True, timeout=10,
+        )
+        text = "foreign-toplevel-request " + " ".join(arguments)
+        return command_observation(text, [{"success": True}])
 
     def open_window_command(self, ident, title):
         return f"exec foot --app-id={shlex.quote(ident)} --title={shlex.quote(title)} sh -c 'sleep 300'"
@@ -1740,9 +1778,14 @@ def scenario_main(args, parser):
                                                          "verdict": "not applicable",
                                                          "reason": scenario["reason"]})
                             continue
-                        if "xdg-toplevel-size-hints" in required:
+                        builders = [build for capability, build in (
+                            ("xdg-toplevel-size-hints", adapter.fixture_client),
+                            ("wlr-foreign-toplevel-management", adapter.foreign_toplevel_client),
+                        ) if capability in required]
+                        if builders:
                             try:
-                                adapter.fixture_client()
+                                for build in builders:
+                                    build()
                             except FixtureUnavailable as error:
                                 if os.environ.get("ORACLE_CONTAINER") == "1":
                                     raise RuntimeError(str(error)) from error
@@ -1787,6 +1830,9 @@ def scenario_main(args, parser):
                                         ident, min_width, min_height, max_width, max_height,
                                         bool(parent),
                                     ))
+                                elif kind == "foreign_toplevel":
+                                    ident, request = value.split("|", 1)
+                                    command_replies.append(adapter.foreign_toplevel_request(ident, request))
                                 elif kind == "capture":
                                     time.sleep(0.15)
                                     requests = (("events",) if args.corpus == "events" else

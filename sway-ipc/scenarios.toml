@@ -1,5 +1,6 @@
 # Scenario recipes are compositor-neutral sway/i3 commands. `window:ID` opens a
-# standalone client; `capture:NAME` records tree, workspaces, and outputs.
+# standalone client; `foreign_toplevel:ID|REQUEST` sends one wlr foreign-toplevel
+# request to it; `capture:NAME` records tree, workspaces, and outputs.
 # Add scenarios by appending a table. The runner resets state before each table.
 
 [[scenario]]
@@ -304,3 +305,11 @@ actions = ["command:splith", "window:fixture-move-one", "window:fixture-move-two
 name = "command_parser_errors"
 corpora = ["state"]
 actions = ["command:focus", "command:layout default", "command:layout stacked", "command:resize nonsense", "capture:command_parser_errors"]
+
+[[scenario]]
+name = "foreign_toplevel_set_minimized"
+corpora = ["state"]
+requires = ["wlr-foreign-toplevel-management"]
+not_applicable = true
+reason = "i3 does not implement wlr-foreign-toplevel-management; X11 taskbars use EWMH _NET_WM_STATE_HIDDEN, a different protocol path."
+actions = ["window:fixture-1", "window:fixture-2", "foreign_toplevel:fixture-2|set_minimized", "capture:foreign_toplevel_set_minimized", "foreign_toplevel:fixture-2|set_maximized", "capture:foreign_toplevel_set_maximized"]
