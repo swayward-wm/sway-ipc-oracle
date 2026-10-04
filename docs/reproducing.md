@@ -96,3 +96,24 @@ same oracle commit and image. At the end it regenerates the README i3-suite
 blocks and runs `contrib/validate`. The script never commits or pushes. Review
 the diff, triage the new swayward rows, and commit the results.
 
+The i3-derived recapture is required because the committed corpus predates
+the fake-N to `HEADLESS-(count-N)` mapping. Before the mapping change, the
+multi-output fixtures put workspace 1 and the initial focus on different
+outputs than the replay uses now. Under the current runner, pinned sway
+matches its own captures on every single-output scenario. It mismatches on
+all 189 multi-output scenarios: 3624/4180 rows match, in tree, workspaces and
+outputs.
+
+To rehearse only the capture unit on a few i3 test files, run a trial in a
+scratch clone and discard the clone afterwards:
+
+```sh
+./contrib/regenerate-rc <swayward-sha> --trial 502-focus-output.t --trial 100-fullscreen.t
+```
+
+A trial runs the same capture, staging and two-replay checks. It installs no
+result, leaves `pending.toml` unchanged, and writes its evidence to
+`target/rc/<sha8>-trial/`. It still rewrites `sway-ipc/i3-derived`.
+The capture unit fails when the recapture yields no scenarios, for example
+when the i3 shim could not write its command logs.
+

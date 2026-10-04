@@ -2,6 +2,7 @@
 """Regenerate the release-candidate results in the pinned container.
 
 Usage: contrib/regenerate-rc SWAYWARD_SHA [--dry-run] [--image NAME] [--shards N]
+                             [--trial I3_FILE ...]
 
 This is the T4 runbook in one command. Run it on the host from a clean oracle
 checkout. It never commits and never pushes; review and commit the changed
@@ -31,6 +32,13 @@ lines against the committed result) to target/rc/SHA8/evidence.log. A rerun
 skips units that already have an agreeing line for the same oracle commit,
 swayward commit and image. `--dry-run` changes nothing: it checks the
 prerequisites and prints the full unit plan with the exact commands.
+
+`--trial I3_FILE` (repeatable) rehearses only the i3-derived-capture unit,
+recording just those i3 test files. It runs the same steps and checks but
+installs no result, leaves pending.toml alone, skips the finish, and logs to
+target/rc/SHA8-trial/, so a trial never satisfies the real unit on resume.
+The trial still recaptures sway-ipc/i3-derived and repins, so run it in a
+scratch worktree and discard that worktree afterwards.
 
 The run takes the host's oracle-sweep lock when ORACLE_SWEEP_LOCK names one,
 so a sweep and a regeneration never share the machine.
@@ -151,14 +159,21 @@ def sway_ipc_command(compositor: str, corpus: str, out: str) -> str:
             f'--binary "{BINARY[compositor]}" --out {shlex.quote(out)} || test $? = 1')
 
 
-def unit_steps(unit: dict, work: str, shards: int) -> list[list[str]]:
+def unit_steps(unit: dict, work: str, shards: int, files: tuple[str, ...] = ()) -> list[list[str]]:
     """Container command lines per step; a step's commands run in parallel."""
     name, compositor, corpus = unit["name"], unit["compositor"], unit["corpus"]
     if name == "i3-derived-capture":
-        logs = f"{work}/record"
+        # Absolute: the i3 shim opens SWAY_CAL_RECORD from each test's own
+        # directory, so a relative --work-dir records nothing.
+        logs = f"/oracle/{work}/record"
+        # The committed corpus predates the fake-N -> HEADLESS-(count-N)
+        # mapping, so its multi-output fixtures put workspace 1 and the focus
+        # on other outputs than the replay does. Recapture with the mapping the
+        # replay uses; both read it from sway-ipc-run's rendered_config.
+        only = "".join(f" --files {shlex.quote(name)}" for name in files)
         return [
             [f'./contrib/i3-suite-run --compositor sway --binary "$SWAY_BINARY" --i3src "$I3SRC" '
-             f'--i3build "$I3BUILD" --parallel 1 --record-commands --out {logs}.toml --work-dir {logs}'],
+             f'--i3build "$I3BUILD" --parallel 1 --record-commands --out {logs}.toml --work-dir {logs}{only}'],
             [f'./contrib/sway-ipc-run i3-derived --compositor sway --binary "$SWAY_BINARY" '
              f'--command-logs {logs} --capture'],
             "HOST:stage-i3-derived",
@@ -244,7 +259,8 @@ class Run:
         self.args, self.sha, self.dry = args, args.sha, args.dry_run
         self.short = args.sha[:8]
         self.image = args.image or f"sway-ipc-oracle:rc-{self.short}"
-        self.work = Path("target/rc") / self.short
+        self.trial = tuple(args.trial or ())
+        self.work = Path("target/rc") / (self.short + ("-trial" if self.trial else ""))
         self.failed = False
         common = Path(git("rev-parse", "--git-common-dir"))
         self.common = (common if common.is_absolute() else ROOT / common).resolve()
@@ -456,13 +472,18 @@ def run_unit(run: Run, unit: dict, digest: str, base: str) -> bool:
     host.mkdir(parents=True)
     start = time.monotonic()
     extra = ""
-    for index, step in enumerate(unit_steps(unit, str(work), run.args.shards)):
+    for index, step in enumerate(unit_steps(unit, str(work), run.args.shards, run.trial)):
         if step == "HOST:stage-i3-derived":
             # provenance hashes tracked files, so stage the new corpus before
             # any result is generated from it.
             git("add", "-A", "--", "sway-ipc/i3-derived")
             manifest = json.loads((ROOT / "sway-ipc/i3-derived/scenarios.json").read_text())
-            extra = f" scenarios={len(manifest['scenarios'])} skips={len(manifest['skips'])}"
+            empty = sum(not path.stat().st_size for path in (host / "record").glob("*.commands.jsonl"))
+            extra = (f" scenarios={len(manifest['scenarios'])} skips={len(manifest['skips'])}"
+                     f" empty_command_logs={empty}")
+            if not manifest["scenarios"]:
+                evidence(run, unit, digest, base, start, "failed", extra.strip() + " capture is empty")
+                return False
             continue
         if isinstance(step, str):
             _, _, number, count = step.split(":")
@@ -491,6 +512,9 @@ def run_unit(run: Run, unit: dict, digest: str, base: str) -> bool:
     if problems:
         evidence(run, unit, digest, base, start, "no", extra.strip() + " " + "; ".join(problems[:10]))
         return False
+    if run.trial:
+        evidence(run, unit, digest, base, start, "yes", f"trial=1 installed=no{extra}")
+        return True
     target = ROOT / unit["result"]
     committed = strip_date(target.read_text()) if target.exists() else []
     changed = sum(1 for line in difflib.unified_diff(committed, strip_date(first.read_text()), lineterm="", n=0)
@@ -529,7 +553,7 @@ def print_plan(run: Run, units: list[dict]) -> None:
     for number, unit in enumerate(units, 1):
         print(f"{number:2}. {unit['name']} -> {unit['result']}")
         work = str(run.work / unit["name"].replace("/", "-"))
-        for step in unit_steps(unit, work, run.args.shards):
+        for step in unit_steps(unit, work, run.args.shards, run.trial):
             if step == "HOST:stage-i3-derived":
                 print("      host: git add -A sway-ipc/i3-derived (provenance hashes tracked files)")
             elif isinstance(step, str):
@@ -544,8 +568,12 @@ def print_plan(run: Run, units: list[dict]) -> None:
             if unit["corpus"] == "i3-suite" else "two runs equal apart from date"
         if unit["name"] == "i3-derived-capture":
             check += "; both sway replays match every row"
-        print(f"      agree: {check}; install run1; drop its pending.toml entry")
-    print("Finish: contrib/i3_buckets.py --write README.md; contrib/validate")
+        if run.trial:
+            print(f"      agree: {check}; trial: install nothing")
+        else:
+            print(f"      agree: {check}; install run1; drop its pending.toml entry")
+    if not run.trial:
+        print("Finish: contrib/i3_buckets.py --write README.md; contrib/validate")
 
 
 def main() -> int:
@@ -554,10 +582,19 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="check prerequisites and print the plan")
     parser.add_argument("--image", help="oracle image tag (default sway-ipc-oracle:rc-SHA8)")
     parser.add_argument("--shards", type=int, default=4, help="parallel swayward i3-suite shards (default 4)")
+    parser.add_argument("--trial", action="append", metavar="I3_FILE",
+                        help="rehearse only i3-derived-capture on these i3 test files; install nothing")
     args = parser.parse_args()
     os.chdir(ROOT)
     run = Run(args)
     snapshots, units = check_prerequisites(run)
+    if run.trial:
+        known = {path.name for path in (ROOT / "i3/t").glob("*.t")}
+        unknown = sorted(set(run.trial) - known)
+        if unknown:
+            run.say("FAIL", f"unknown i3 test files for --trial: {', '.join(unknown)}")
+        units = [{"name": "i3-derived-capture", "compositor": "sway", "corpus": "i3-derived",
+                  "result": result_path("sway", "i3-derived", snapshots)}] if snapshots else []
     if units:
         print_plan(run, units)
     if run.failed:
@@ -591,7 +628,8 @@ def regenerate(run: Run, snapshots: dict[str, str], units: list[dict]) -> int:
     with (ROOT / run.work / "evidence.log").open("a") as handle:
         handle.write(f"# rc swayward={run.sha} oracle={base} image={digest} "
                      f"started={datetime.datetime.now().isoformat(timespec='seconds')}\n")
-    done = completed(run, digest, base)
+    # A trial always reruns: each rehearsal is its own evidence.
+    done = set() if run.trial else completed(run, digest, base)
     for unit in units:
         if unit["name"] in done:
             print(f"[skip] {unit['name']}: already agreed in this run's evidence", flush=True)
@@ -599,6 +637,9 @@ def regenerate(run: Run, snapshots: dict[str, str], units: list[dict]) -> int:
         if not run_unit(run, unit, digest, base):
             print(f"\nunit {unit['name']} failed; fix the cause and rerun to resume", file=sys.stderr)
             return 1
+    if run.trial:
+        print(f"\ntrial agreed; evidence in {run.work}/evidence.log; discard this worktree")
+        return 0
     subprocess.run([str(ROOT / "contrib/i3_buckets.py"), "--write", "README.md"], check=True)
     code = subprocess.run([str(ROOT / "contrib/validate")]).returncode
     with (ROOT / run.work / "evidence.log").open("a") as handle:
