@@ -206,8 +206,9 @@ a snapshot only after its maintainers have had a courtesy note.
 tiling layout, but the oracle cannot run against it. The runners speak i3/sway
 IPC: they connect to `$SWAYSOCK` or `$I3SOCK`, send `RUN_COMMAND` with sway
 command syntax and read `GET_TREE` in the i3 tree schema. hy3 is a Hyprland
-plugin. It is driven through Hyprland's own IPC (`hyprctl dispatch hy3:…`, or
-`hl.plugin.hy3` from a Lua config) and opens no i3/sway IPC socket. The same
+plugin. It is driven by Hyprland dispatchers, from keybindings, from Lua
+(`hl.plugin.hy3` dispatchers passed to `hl.bind`) or over Hyprland's own IPC
+(`hyprctl dispatch hy3:…`), and opens no i3/sway IPC socket. The same
 holds for [hy3-lua](https://github.com/aarobc/hy3-lua), a separate Lua layout
 registered as `lua:hy3` (Hyprland 0.50 or later). Supporting either would need
 a layer that translates sway commands and the i3 tree onto Hyprland dispatchers
