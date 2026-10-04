@@ -1,0 +1,179 @@
+#!/usr/bin/env python3
+"""Check the README snapshot blocks against the committed results.
+
+Usage: readme-snapshots [README]   (default README.md; exit 1 on a violation)
+       readme-snapshots --self-test
+
+Rules:
+- No results table (a table with any digit in a cell) names more than one
+  compositor. A compositor is named by its snapshot name, its block heading
+  name, or a cell that is exactly the compositor key. Checked first, so a
+  fixture holding only such a table fails for that reason.
+- Each pinned compositor has exactly one block, `### <name> (`<commit>`)`,
+  under `## Snapshots`.
+- Each block's corpus rows quote the [run] counts of its result files and link
+  them; a figure from a result listed in pending.toml ends in †, and no other
+  figure does.
+- Each block's bucket row starts with the i3-suite pass and skip counts and
+  sums to the i3-suite assertion total.
+"""
+import re
+import sys
+import tomllib
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+FIXTURES = Path(__file__).resolve().parent / "fixtures"
+
+
+def fail(message):
+    raise SystemExit(message)
+
+
+def display(compositor, name, commit):
+    version = name.removeprefix(f"{compositor}-")
+    return compositor if version == commit[:8] else f"{compositor} {version}"
+
+
+def tables(text):
+    block = []
+    for number, line in enumerate(text.splitlines() + [""], 1):
+        if line.lstrip().startswith("|"):
+            block.append((number, [c.strip() for c in line.strip().strip("|").split("|")]))
+        elif block:
+            yield block
+            block = []
+
+
+def check_combined(text, pins, where):
+    names = pins["snapshot"]
+    labels = {c: {c, display(c, n, pins[c])} for c, n in names.items()}
+    for table in tables(text):
+        cells = [cell for _, row in table for cell in row]
+        if not any(re.search(r"\d", cell) for cell in cells):
+            continue
+        named = {
+            c for c, n in names.items()
+            for cell in cells
+            if re.search(rf"(?<![\w.-]){re.escape(n)}(?![\w.])", cell)
+            or cell.strip("`*† ") in labels[c]
+        }
+        if len(named) > 1:
+            fail(
+                f"{where}:{table[0][0]}: results table names {len(named)} compositors "
+                f"({', '.join(sorted(named))}); publish one block per snapshot, one "
+                "compositor per table"
+            )
+
+
+def blocks(text, pins):
+    section = re.search(r"^## Snapshots\n(.*?)(?=^## )", text, re.S | re.M)
+    if not section:
+        fail("README has no ## Snapshots section")
+    found = {}
+    parts = re.split(r"^(### .*)$", section.group(1), flags=re.M)
+    for heading, body in zip(parts[1::2], parts[2::2]):
+        found.setdefault(heading, []).append(body)
+    result = {}
+    for compositor, name in pins["snapshot"].items():
+        heading = f"### {display(compositor, name, pins[compositor])} (`{pins[compositor][:8]}`)"
+        bodies = found.get(heading, [])
+        if len(bodies) != 1:
+            fail(f"README needs exactly one block headed: {heading} (found {len(bodies)})")
+        result[compositor] = bodies[0]
+    return result
+
+
+def corpus_rows(compositor, name, pending):
+    mismatch = "differs" if compositor == "i3" else "mismatch"
+    i3 = f"i3/results/{name}.toml"
+    files = tomllib.load(open(ROOT / i3, "rb"))["files"]
+    unstable = {
+        (item["file"], number)
+        for item in tomllib.load(open(ROOT / "i3/unstable.toml", "rb")).get("unstable", [])
+        if item["compositor"] == compositor
+        for number in item["assertions"]
+    }
+    counts = [
+        sum(1 for file, entry in files.items() if not entry.get("flaky")
+            for number in entry.get(f"{outcome}_assertions", []) if (file, number) not in unstable)
+        for outcome in ("pass", "skip", "fail", "unreached")
+    ]
+    counts.append(sum(1 for file, _ in unstable if not files[file].get("flaky")))
+    counts.append(sum(entry["assertions"] for entry in files.values() if entry.get("flaky")))
+    total = sum(entry["assertions"] for entry in files.values())
+    if sum(counts) != total:
+        fail(f"{i3}: outcome partition sums to {sum(counts)}, not {total}")
+    labels = ("pass", "skip", "fail", "unreached", "unstable", "flaky")
+    rows = [("i3 suite", list(zip(counts, labels)), i3)]
+    for corpus, suffix, keys in (
+        ("sway IPC state", "", ("match", mismatch, "not_applicable")),
+        ("events", "-events", ("match", mismatch, "not_applicable")),
+        ("i3-derived", "-i3-derived", ("match", mismatch, "unstable", "not_applicable")),
+        ("random", "-random", ("match", mismatch, "unstable", "not_applicable")),
+        ("command fuzz", "-command-fuzz", ("match", mismatch, "not_applicable", "crash", "hang")),
+        ("wire fuzz", "-wire-fuzz", ("match", mismatch, "not_applicable", "crash", "hang")),
+    ):
+        path = f"sway-ipc/results/{name}{suffix}.toml"
+        if not (ROOT / path).exists():
+            rows.append((corpus, None, None))
+            continue
+        run = tomllib.load(open(ROOT / path, "rb"))["run"]
+        rows.append((corpus, [(run.get(k, 0), k.replace("_", " ")) for k in keys], path))
+    expected = []
+    for corpus, figures, path in rows:
+        if figures is None:
+            expected.append([corpus, "not yet measured", "—"])
+            continue
+        outcome = " / ".join(f"{n:,} {label}" for n, label in figures)
+        outcome += "†" if path in pending else ""
+        expected.append([corpus, outcome, f"[{corpus}]({path})"])
+    return expected, counts, total, i3 in pending
+
+
+def check_block(compositor, name, body, pending):
+    expected, counts, total, stale = corpus_rows(compositor, name, pending)
+    rows = [row for table in tables(body) for _, row in table]
+    for row in expected:
+        if row not in rows:
+            fail(f"README block for {name} needs the row: | {' | '.join(row)} |")
+    bucket_tables = [t for t in tables(body) if t[0][1][:2] == ["P", "S"] and t[0][1][2] == "N-i3"]
+    if len(bucket_tables) != 1 or len(bucket_tables[0]) != 3:
+        fail(f"README block for {name} needs one bucket table (P | S | N-i3 | ...) with one row")
+    view_tables = [t for t in tables(body) if t[0][1][:3] == ["P", "S", "N-x11-sway"]]
+    if len(view_tables) != 1 or len(view_tables[0]) != 3:
+        fail(f"README block for {name} needs one comparable-view table with one row")
+    if "Asymmetries:" not in body:
+        fail(f"README block for {name} needs its view's Asymmetries: note")
+    for table in bucket_tables + view_tables:
+        cells = table[2][1]
+        for cell in cells:
+            if stale != ("†" in cell):
+                fail(f"README block for {name}: bucket cell {cell!r} must "
+                     f"{'carry' if stale else 'not carry'} † (i3 result pending: {stale})")
+    buckets = [int(re.match(r"[\d,]+", c).group().replace(",", "")) for c in bucket_tables[0][2][1]]
+    if buckets[:2] != counts[:2] or sum(buckets) != total:
+        fail(f"README block for {name}: buckets must start with pass {counts[0]} and skip "
+             f"{counts[1]} and sum to {total}")
+
+
+def check(path):
+    pins = tomllib.load(open(ROOT / "pins.toml", "rb"))
+    pending = {row["path"] for row in tomllib.load(open(ROOT / "pending.toml", "rb")).get("pending", [])}
+    text = Path(path).read_text()
+    check_combined(text, pins, path)
+    for compositor, body in blocks(text, pins).items():
+        check_block(compositor, pins["snapshot"][compositor], body, pending)
+
+
+if sys.argv[1:] == ["--self-test"]:
+    for fixture in sorted(FIXTURES.glob("readme-combined-*.md")):
+        try:
+            check(fixture)
+        except SystemExit as error:
+            if "results table names" not in str(error):
+                fail(f"{fixture.name}: rejected for the wrong reason: {error}")
+        else:
+            fail(f"{fixture.name}: combined results table was accepted")
+else:
+    check(sys.argv[1] if len(sys.argv) > 1 else ROOT / "README.md")

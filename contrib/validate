@@ -280,19 +280,9 @@ for path in Path("i3/results").iterdir():
     if path.suffix != ".toml":
         raise SystemExit(f"{path}: only snapshot TOML files belong in results/")
 
-# The README snapshot table quotes each snapshot's figures, all columns together.
-readme = Path("README.md").read_text()
-table = {}
-for line in readme.splitlines():
-    cells = [c.strip() for c in line.strip().strip("|").split("|")]
-    if len(cells) == 6 and cells[0].startswith("`") and cells[0].strip("`") in names.values():
-        table[cells[0].strip("`")] = cells
-    elif len(cells) == 6 and cells[1] == "not yet measured" and cells[2:] != ["—", "—", "—", "—"]:
-        raise SystemExit(f"README placeholder row for {cells[0]} must not carry figures")
 unstable_doc = tomllib.load(open("i3/unstable.toml", "rb"))
 flaky_runs = tomllib.load(open("i3/flaky-runs.toml", "rb")).get("run", [])
 for compositor, name in names.items():
-    doc = tomllib.load(open(f"i3/results/{name}.toml", "rb"))
     unstable = {
         (item["file"], number)
         for item in unstable_doc.get("unstable", [])
@@ -311,59 +301,10 @@ for compositor, name in names.items():
                        if first.get(number) != second.get(number))
     if unstable != derived:
         raise SystemExit(f"i3/unstable.toml does not match i3/flaky-runs.toml for {compositor}")
-    totals = []
-    for outcomes in (("pass",), ("skip",), ("fail", "unreached")):
-        totals.append(sum(
-            1
-            for file, entry in doc["files"].items()
-            if not entry.get("flaky")
-            for outcome in outcomes
-            for number in entry.get(f"{outcome}_assertions", [])
-            if (file, number) not in unstable
-        ))
-    suite = "/".join(f"{n:,}" for n in totals)
-    unstable_count = str(len(unstable))
-    ipc = tomllib.load(open(f"sway-ipc/results/{name}.toml", "rb"))["run"]
-    fields = "/".join(str(n) for n in (ipc.get("match", 0), ipc.get("mismatch", ipc.get("differs", 0)), ipc.get("not_applicable", 0)))
-    ev = tomllib.load(open(f"sway-ipc/results/{name}-events.toml", "rb"))["run"]
-    events = "/".join(str(n) for n in (ev.get("match", 0), ev.get("mismatch", ev.get("differs", 0)), ev.get("not_applicable", 0)))
-    commit = f"`{pins[compositor][:8]}`"
-    expected = [f"`{name}`", suite, unstable_count, fields, events, commit]
-    if table.get(name) != expected:
-        raise SystemExit(f"README snapshot row for {name} should be: | {' | '.join(expected)} |")
 
-derived_rows = {}
-in_derived = False
-for line in readme.splitlines():
-    if line == "### i3-derived sway IPC corpus":
-        in_derived = True
-    elif in_derived and line.startswith("### "):
-        break
-    elif in_derived:
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if len(cells) == 5 and cells[0].startswith("`"):
-            derived_rows[cells[0].strip("`")] = cells
-for compositor, name in names.items():
-    run = tomllib.load(open(f"sway-ipc/results/{name}-i3-derived.toml", "rb"))["run"]
-    expected = [f"`{name}`", *(f"{n:,}" for n in (
-        run.get("match", 0), run.get("mismatch", run.get("differs", 0)),
-        run.get("unstable", 0), run.get("not_applicable", 0),
-    ))]
-    if derived_rows.get(name) != expected:
-        raise SystemExit(
-            f"README i3-derived row for {name} should be: | {' | '.join(expected)} |"
-        )
-
-# Fuzz corpora: results replay the sway-captured fixture, and the README
-# fuzz table quotes every verdict count of every measured snapshot.
+# Fuzz corpora: results replay the sway-captured fixture.
 import json
 verdicts = ("match", "mismatch", "not_applicable", "crash", "hang")
-fuzz_rows = {}
-for line in readme.splitlines():
-    cells = [c.strip() for c in line.strip().strip("|").split("|")]
-    if len(cells) == 3 and cells[0].startswith("`") and cells[0].endswith("-fuzz`"):
-        fuzz_rows[cells[0].strip("`")] = cells
-expected_rows = set()
 families = json.loads(Path("sway-ipc/fuzz/command-families.json").read_text())
 family_rows = families.get("families", [])
 family_names = [row.get("name") for row in family_rows]
@@ -392,14 +333,6 @@ for corpus in ("command-fuzz", "wire-fuzz"):
         figures = [run.get(v if v != "mismatch" else key, 0) for v in verdicts]
         if sum(figures) != len(rows) or run.get("cases") != len(rows):
             raise SystemExit(f"{path}: verdict counts do not sum to its rows")
-        stem = f"{name}-{corpus}"
-        expected_rows.add(stem)
-        expected = [f"`{stem}`", "/".join(map(str, figures)), f"`{pins[compositor][:8]}`"]
-        if fuzz_rows.get(stem) != expected:
-            raise SystemExit(f"README fuzz row for {stem} should be: | {' | '.join(expected)} |")
-extra = set(fuzz_rows) - expected_rows
-if extra:
-    raise SystemExit(f"README fuzz rows without a result file: {sorted(extra)}")
 
 # Fuzz classifications are review metadata keyed to raw result rows. They may
 # leave a mismatch untriaged, but cannot classify a match or invent a case.
@@ -427,12 +360,6 @@ for path in sorted(classification_dir.glob("*-fuzz.toml")):
             if not row.get(field):
                 raise SystemExit(f"{path}: {case} has no {field}")
 
-random_rows = {}
-for line in readme.splitlines():
-    cells = [c.strip() for c in line.strip().strip("|").split("|")]
-    if len(cells) == 3 and cells[0].startswith("`") and cells[0].endswith("-random`"):
-        random_rows[cells[0].strip("`")] = cells
-expected_rows = set()
 for compositor, name in names.items():
     path = Path(f"sway-ipc/results/{name}-random.toml")
     if not path.exists():
@@ -441,14 +368,6 @@ for compositor, name in names.items():
     figures = [run.get(key, 0) for key in ("match", "mismatch", "unstable", "not_applicable")]
     if sum(figures) != run["seeds"]:
         raise SystemExit(f"{path}: verdict counts do not sum to its seeds")
-    stem = f"{name}-random"
-    expected_rows.add(stem)
-    expected = [f"`{stem}`", "/".join(map(str, figures)), f"`{pins[compositor][:8]}`"]
-    if random_rows.get(stem) != expected:
-        raise SystemExit(f"README random row for {stem} should be: | {' | '.join(expected)} |")
-extra = set(random_rows) - expected_rows
-if extra:
-    raise SystemExit(f"README random rows without a result file: {sorted(extra)}")
 PY
 PYTHONPYCACHEPREFIX="${TMPDIR:-/tmp}/sway-ipc-oracle-pycache" python3 -m py_compile contrib/sway-ipc-run
 if grep -En 'endswith\("\.(percent|rect)"\)|get\("floating"\) *==' contrib/sway-ipc-run; then
@@ -543,6 +462,8 @@ PYTHONPYCACHEPREFIX="${TMPDIR:-/tmp}/sway-ipc-oracle-pycache" ./contrib/tests/sw
 ./contrib/i3-suite-run --self-test
 ./contrib/tests/sway-ipc-reap-clients
 ./contrib/tests/sway-ipc-short-path
+./contrib/tests/readme-snapshots
+./contrib/tests/readme-snapshots --self-test
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
