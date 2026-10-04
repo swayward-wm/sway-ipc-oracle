@@ -13,19 +13,19 @@
       {
         "allow_tearing": false,
         "app_id": "fixture-dialog",
-        "border": "none",
-        "current_border_width": 0,
+        "border": "normal",
+        "current_border_width": 2,
         "deco_rect": {
-          "height": 0,
-          "width": 0,
-          "x": 0,
-          "y": 0
+          "height": 27,
+          "width": 5,
+          "x": 595,
+          "y": 652
         },
         "floating": "user_on",
         "floating_nodes": [],
         "focus": [],
         "focused": true,
-        "foreign_toplevel_identifier": "d7c2df2fb602a98674bd951bf0256ba0",
+        "foreign_toplevel_identifier": "5b7db57618920118b44a83db58ee46aa",
         "fullscreen_mode": 0,
         "geometry": {
           "height": 1,
@@ -46,12 +46,12 @@
         "nodes": [],
         "orientation": "none",
         "percent": 8.388511095204008e-05,
-        "pid": 72,
+        "pid": 339725,
         "rect": {
-          "height": 30,
+          "height": 3,
           "width": 5,
           "x": 595,
-          "y": 652
+          "y": 679
         },
         "sandbox_app_id": null,
         "sandbox_engine": null,

@@ -47,9 +47,20 @@ static const struct xdg_wm_base_listener wm_base_listener = {
     .ping = wm_base_ping,
 };
 
+struct toplevel {
+    struct wl_surface *surface;
+    int configured;
+};
+
+/* Ack every configure. After the first, commit at once so the compositor sees
+ * the ack, as a real client does: sway's transactions otherwise wait for the
+ * txn timeout and IPC reports the state from before the configure. */
 static void surface_configure(void *data, struct xdg_surface *surface, uint32_t serial) {
+    struct toplevel *toplevel = data;
     xdg_surface_ack_configure(surface, serial);
-    *(int *)data = 1;
+    if (toplevel->configured)
+        wl_surface_commit(toplevel->surface);
+    toplevel->configured = 1;
 }
 
 static const struct xdg_surface_listener surface_listener = {
@@ -84,12 +95,13 @@ static struct xdg_toplevel *map_toplevel(struct wl_display *display, const char 
     struct wl_surface *surface = wl_compositor_create_surface(compositor);
     struct xdg_surface *xdg_surface = xdg_wm_base_get_xdg_surface(wm_base, surface);
     struct xdg_toplevel *toplevel = xdg_surface_get_toplevel(xdg_surface);
-    int *configured = calloc(1, sizeof(*configured));
-    if (!configured) {
+    struct toplevel *state = calloc(1, sizeof(*state));
+    if (!state) {
         perror("calloc");
         exit(1);
     }
-    xdg_surface_add_listener(xdg_surface, &surface_listener, configured);
+    state->surface = surface;
+    xdg_surface_add_listener(xdg_surface, &surface_listener, state);
     xdg_toplevel_set_app_id(toplevel, app_id);
     xdg_toplevel_set_title(toplevel, app_id);
     xdg_toplevel_set_min_size(toplevel, min_width, min_height);
@@ -97,8 +109,8 @@ static struct xdg_toplevel *map_toplevel(struct wl_display *display, const char 
     if (parent)
         xdg_toplevel_set_parent(toplevel, parent);
     wl_surface_commit(surface);
-    while (!*configured && wl_display_dispatch(display) >= 0) {}
-    if (!*configured) {
+    while (!state->configured && wl_display_dispatch(display) >= 0) {}
+    if (!state->configured) {
         fputs("compositor disconnected before initial configure\n", stderr);
         exit(1);
     }

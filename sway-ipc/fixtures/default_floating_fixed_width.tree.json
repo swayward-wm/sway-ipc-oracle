@@ -178,19 +178,19 @@
             {
               "allow_tearing": false,
               "app_id": "fixture-fixed-width",
-              "border": "csd",
+              "border": "normal",
               "current_border_width": 2,
               "deco_rect": {
-                "height": 0,
-                "width": 0,
-                "x": 0,
-                "y": 0
+                "height": 27,
+                "width": 5,
+                "x": 595,
+                "y": 652
               },
               "floating": "user_on",
               "floating_nodes": [],
               "focus": [],
               "focused": true,
-              "foreign_toplevel_identifier": "637042df02c83adca0b63dcf622bd8bb",
+              "foreign_toplevel_identifier": "c417ea128567bdf974d1c549a2e57977",
               "fullscreen_mode": 0,
               "geometry": {
                 "height": 1,
@@ -211,12 +211,12 @@
               "nodes": [],
               "orientation": "none",
               "percent": 8.388511095204008e-05,
-              "pid": 27,
+              "pid": 339522,
               "rect": {
-                "height": 30,
+                "height": 3,
                 "width": 5,
                 "x": 595,
-                "y": 652
+                "y": 679
               },
               "sandbox_app_id": null,
               "sandbox_engine": null,
@@ -233,7 +233,7 @@
                 "height": 1,
                 "width": 1,
                 "x": 2,
-                "y": 27
+                "y": 0
               }
             }
           ],

@@ -12,10 +12,10 @@ match = ["floating_group_child_move_direction_after.tree", "floating_group_child
 
 [[classification]]
 rows = ["default_floating_fixed_width.tree", "default_floating_fixed_width.workspaces", "default_tiling_fixed_height_zero_width.tree", "default_floating_fixed_both.tree", "default_floating_fixed_both.workspaces", "default_floating_parent.tree", "default_floating_parent.workspaces"]
-triage = "swayward bug"
+triage = "harness issue"
 finding = "parity-s1-xdg-float-border"
-reason = "S1: Default-floating xdg toplevels with size hints or a parent: sway reports border csd (fixed size) or none/0 (parented); swayward reports normal/2. The tiled zero-width case is the reverse."
-source = "sway/sway/desktop/xdg_shell.c:484-500 (csd at map); swayward src/layout/tile.rs, src/ipc/tree/node.rs; beta1-plan sections/gap.md S1"
+reason = "S1 was a capture-timing artefact. xdg-toplevel-fixture acked configures without committing, so every sway transaction holding the view waited out the 200 ms transaction timeout, and the capture 150 ms after the last command saw sway's stale committed border (csd from map, or calloc's none/0). Pinned sway settles at normal/2 within about 300 ms, which is what swayward reports. The fixture now commits each acked configure and the fixtures were recaptured from pinned sway 1.12 (5 runs agree); the swayward pin matches all 40 rows of the four scenarios. Row verdicts change at the RC regeneration."
+source = "sway/sway/server.c:696-697 (txn_timeout_ms 200); sway/sway/desktop/transaction.c:830-868 (wait for configure ack); sway/sway/ipc-json.c:757-761 (IPC reports current.border); contrib/xdg-toplevel-fixture.c"
 
 [[classification]]
 rows = ["output_scale.tree", "output_scale.outputs", "output_transform.tree", "output_transform.outputs", "output_position.tree", "output_position.outputs", "output_mode.tree"]

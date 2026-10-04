@@ -29,7 +29,7 @@ reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percen
 
 [[pending]]
 path = "sway-ipc/results/i3-4.25-events.toml"
-reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container. scenarios.toml gained foreign_toplevel_set_minimized, captured from pinned sway 1.12; regenerate with the rest at the beta1 RC."
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container. scenarios.toml gained foreign_toplevel_set_minimized, captured from pinned sway 1.12; regenerate with the rest at the beta1 RC. The default_floating_* and default_tiling_fixed_height_zero_width fixtures were recaptured from pinned sway 1.12 after xdg-toplevel-fixture began committing each acked configure; regenerate with the rest at the beta1 RC."
 
 [[pending]]
 path = "sway-ipc/results/i3-4.25-wire-fuzz.toml"
@@ -37,7 +37,7 @@ reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percen
 
 [[pending]]
 path = "sway-ipc/results/i3-4.25.toml"
-reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container. scenarios.toml gained foreign_toplevel_set_minimized, captured from pinned sway 1.12; regenerate with the rest at the beta1 RC."
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container. scenarios.toml gained foreign_toplevel_set_minimized, captured from pinned sway 1.12; regenerate with the rest at the beta1 RC. The default_floating_* and default_tiling_fixed_height_zero_width fixtures were recaptured from pinned sway 1.12 after xdg-toplevel-fixture began committing each acked configure; regenerate with the rest at the beta1 RC."
 
 [[pending]]
 path = "sway-ipc/results/sway-1.12-command-fuzz.toml"
@@ -45,7 +45,7 @@ reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percen
 
 [[pending]]
 path = "sway-ipc/results/sway-1.12-events.toml"
-reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container. scenarios.toml gained foreign_toplevel_set_minimized, captured from pinned sway 1.12; regenerate with the rest at the beta1 RC."
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container. scenarios.toml gained foreign_toplevel_set_minimized, captured from pinned sway 1.12; regenerate with the rest at the beta1 RC. The default_floating_* and default_tiling_fixed_height_zero_width fixtures were recaptured from pinned sway 1.12 after xdg-toplevel-fixture began committing each acked configure; regenerate with the rest at the beta1 RC."
 
 [[pending]]
 path = "sway-ipc/results/sway-1.12-random.toml"
@@ -57,7 +57,7 @@ reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percen
 
 [[pending]]
 path = "sway-ipc/results/sway-1.12.toml"
-reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container. scenarios.toml gained foreign_toplevel_set_minimized, captured from pinned sway 1.12; regenerate with the rest at the beta1 RC."
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container. scenarios.toml gained foreign_toplevel_set_minimized, captured from pinned sway 1.12; regenerate with the rest at the beta1 RC. The default_floating_* and default_tiling_fixed_height_zero_width fixtures were recaptured from pinned sway 1.12 after xdg-toplevel-fixture began committing each acked configure; regenerate with the rest at the beta1 RC."
 
 [[pending]]
 path = "sway-ipc/results/swayward-ec03e0af-command-fuzz.toml"
@@ -65,7 +65,7 @@ reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percen
 
 [[pending]]
 path = "sway-ipc/results/swayward-ec03e0af-events.toml"
-reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container. scenarios.toml gained foreign_toplevel_set_minimized, captured from pinned sway 1.12; regenerate with the rest at the beta1 RC."
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container. scenarios.toml gained foreign_toplevel_set_minimized, captured from pinned sway 1.12; regenerate with the rest at the beta1 RC. The default_floating_* and default_tiling_fixed_height_zero_width fixtures were recaptured from pinned sway 1.12 after xdg-toplevel-fixture began committing each acked configure; regenerate with the rest at the beta1 RC."
 
 [[pending]]
 path = "sway-ipc/results/swayward-ec03e0af-random.toml"
@@ -77,4 +77,4 @@ reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percen
 
 [[pending]]
 path = "sway-ipc/results/swayward-ec03e0af.toml"
-reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container. scenarios.toml gained foreign_toplevel_set_minimized, captured from pinned sway 1.12; regenerate with the rest at the beta1 RC."
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container. scenarios.toml gained foreign_toplevel_set_minimized, captured from pinned sway 1.12; regenerate with the rest at the beta1 RC. The default_floating_* and default_tiling_fixed_height_zero_width fixtures were recaptured from pinned sway 1.12 after xdg-toplevel-fixture began committing each acked configure; regenerate with the rest at the beta1 RC."
