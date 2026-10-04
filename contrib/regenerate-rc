@@ -1,0 +1,597 @@
+#!/usr/bin/env python3
+"""Regenerate the release-candidate results in the pinned container.
+
+Usage: contrib/regenerate-rc SWAYWARD_SHA [--dry-run] [--image NAME] [--shards N]
+
+This is the T4 runbook in one command. Run it on the host from a clean oracle
+checkout. It never commits and never pushes; review and commit the changed
+files afterwards. Steps, in this order:
+
+1. Pin: set the swayward pin and snapshot name to SWAYWARD_SHA, and rename the
+   swayward result, classification and pending.toml entries to the new name.
+2. Image: build the oracle image from pins.toml, unless an image with the same
+   pins.toml already exists.
+3. Units, one at a time, each container capped at 4 GiB with swap disabled:
+   - i3-derived-capture: record sway's commands from the i3 suite, recapture
+     sway-ipc/i3-derived from pinned sway, and require two sway replays of the
+     new corpus that match on every row.
+   - i3-suite/sway: two serial `--shard 1/1` runs.
+   - i3-suite/swayward: two complete runs, each as N parallel shards.
+   - sway-ipc/COMPOSITOR/CORPUS: two runs each.
+   The units are every result in pending.toml plus every swayward result.
+   Two runs agree when their results are equal apart from the `date` line. For
+   the i3 suite, assertions listed in i3/unstable.toml and files listed in
+   i3/flaky.toml are excluded, and both runs must pass every canary. An
+   agreeing unit installs the first run as the committed result and drops its
+   pending.toml entry. A disagreeing unit stops the run and installs nothing.
+4. Finish: regenerate the README i3-suite blocks and run contrib/validate.
+
+Each unit appends one evidence line (unit, runs, wall time, agreement, diff
+lines against the committed result) to target/rc/SHA8/evidence.log. A rerun
+skips units that already have an agreeing line for the same oracle commit,
+swayward commit and image. `--dry-run` changes nothing: it checks the
+prerequisites and prints the full unit plan with the exact commands.
+
+The run takes the host's oracle-sweep lock when ORACLE_SWEEP_LOCK names one,
+so a sweep and a regeneration never share the machine.
+Exit status: 0 done and validate passes; 1 a prerequisite or unit failed;
+3 every unit agreed but validate fails (follow-up triage or README figures).
+"""
+from __future__ import annotations
+
+import argparse
+import datetime
+import difflib
+import fcntl
+import json
+import os
+from pathlib import Path
+import re
+import shlex
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+import tomllib
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(ROOT / "contrib"))
+from sway_ipc_triage import CORPUS_KEYS  # noqa: E402
+
+SWAYWARD_URL = "https://github.com/swayward-wm/swayward.git"
+CAP = ["--memory", "4g", "--memory-swap", "4g"]
+BINARY = {"i3": "$I3_BINARY", "sway": "$SWAY_BINARY", "swayward": "$SWAYWARD_BINARY"}
+# The paths this script writes; a resumed run tolerates changes only here.
+OWNED = ("pins.toml", "pending.toml", "README.md", "i3/adapters/swayward/README.md",
+         "contrib/tests/fixtures/", "i3/results/", "i3/classifications/",
+         "i3/abort-causes/", "sway-ipc/results/", "sway-ipc/classifications/",
+         "sway-ipc/i3-derived/")
+POLL = 300
+
+
+def git(*args: str, cwd: Path = ROOT) -> str:
+    return subprocess.run(["git", "-C", str(cwd), *args], text=True, check=True,
+                          capture_output=True).stdout.strip()
+
+
+def load_pins() -> dict:
+    return tomllib.load((ROOT / "pins.toml").open("rb"))
+
+
+def pending_paths() -> list[str]:
+    return [row["path"] for row in tomllib.load((ROOT / "pending.toml").open("rb")).get("pending", [])]
+
+
+def canaries() -> list[str]:
+    # contrib/validate owns the canary list; read it rather than copy it.
+    match = re.search(r"^\s*canaries=\(([^)]*)\)", (ROOT / "contrib/validate").read_text(), re.M)
+    return match.group(1).split()
+
+
+# --- plan --------------------------------------------------------------------
+
+def result_unit(path: str, snapshots: dict[str, str]) -> tuple[str, str, str] | None:
+    """(unit, compositor, corpus) for a committed result path, or None."""
+    p = Path(path)
+    by_name = {name: compositor for compositor, name in snapshots.items()}
+    if p.parent == Path("i3/results"):
+        compositor = by_name.get(p.stem)
+        return (f"i3-suite/{compositor}", compositor, "i3-suite") if compositor else None
+    if p.parent != Path("sway-ipc/results"):
+        return None
+    for corpus in CORPUS_KEYS:
+        stem = p.stem if corpus == "state" else p.stem.removesuffix(f"-{corpus}")
+        if (corpus == "state" or stem != p.stem) and stem in by_name:
+            compositor = by_name[stem]
+            if compositor == "sway" and corpus == "i3-derived":
+                return "i3-derived-capture", "sway", corpus
+            return f"sway-ipc/{compositor}/{corpus}", compositor, corpus
+    return None
+
+
+def result_path(compositor: str, corpus: str, snapshots: dict[str, str]) -> str:
+    name = snapshots[compositor]
+    if corpus == "i3-suite":
+        return f"i3/results/{name}.toml"
+    return f"sway-ipc/results/{name}{'' if corpus == 'state' else '-' + corpus}.toml"
+
+
+def plan_units(snapshots: dict[str, str], pending: list[str]) -> tuple[list[dict], list[str]]:
+    wanted, unknown = {}, []
+    for path in pending:
+        unit = result_unit(path, snapshots)
+        if unit is None:
+            unknown.append(path)
+        else:
+            wanted[unit[0]] = unit
+    for corpus in ("i3-suite", *CORPUS_KEYS):
+        unit = result_unit(result_path("swayward", corpus, snapshots), snapshots)
+        wanted[unit[0]] = unit
+    # The recapture changes the i3-derived corpus, so every i3-derived result
+    # replays it; the capture runs first because those replays read it.
+    if any(corpus == "i3-derived" for _, _, corpus in wanted.values()):
+        wanted["i3-derived-capture"] = ("i3-derived-capture", "sway", "i3-derived")
+        for compositor in snapshots:
+            unit = result_unit(result_path(compositor, "i3-derived", snapshots), snapshots)
+            wanted[unit[0]] = unit
+    order = ["i3-derived-capture", "i3-suite/i3", "i3-suite/sway", "i3-suite/swayward"]
+    order += [f"sway-ipc/{c}/{k}" for c in ("i3", "sway", "swayward") for k in CORPUS_KEYS]
+    units = [{"name": name, "compositor": wanted[name][1], "corpus": wanted[name][2],
+              "result": result_path(wanted[name][1], wanted[name][2], snapshots)}
+             for name in order if name in wanted]
+    return units, unknown
+
+
+def sway_ipc_command(compositor: str, corpus: str, out: str) -> str:
+    mode = {"state": "scenarios --corpus state", "events": "scenarios --corpus events"}.get(corpus, corpus)
+    # sway-ipc-run exits 1 when it finishes with mismatches; that is a result.
+    return (f'./contrib/sway-ipc-run {mode} --compositor {compositor} '
+            f'--binary "{BINARY[compositor]}" --out {shlex.quote(out)} || test $? = 1')
+
+
+def unit_steps(unit: dict, work: str, shards: int) -> list[list[str]]:
+    """Container command lines per step; a step's commands run in parallel."""
+    name, compositor, corpus = unit["name"], unit["compositor"], unit["corpus"]
+    if name == "i3-derived-capture":
+        logs = f"{work}/record"
+        return [
+            [f'./contrib/i3-suite-run --compositor sway --binary "$SWAY_BINARY" --i3src "$I3SRC" '
+             f'--i3build "$I3BUILD" --parallel 1 --record-commands --out {logs}.toml --work-dir {logs}'],
+            [f'./contrib/sway-ipc-run i3-derived --compositor sway --binary "$SWAY_BINARY" '
+             f'--command-logs {logs} --capture'],
+            "HOST:stage-i3-derived",
+            [sway_ipc_command("sway", corpus, f"{work}/run1.toml")],
+            [sway_ipc_command("sway", corpus, f"{work}/run2.toml")],
+        ]
+    if corpus == "i3-suite":
+        count = 1 if compositor in ("i3", "sway") else shards
+        steps = []
+        for run in (1, 2):
+            steps.append([f"./contrib/validate reproduce {compositor} --snapshot i3-suite "
+                          f"--shard {k}/{count} --out {work}/run{run}/{k}.toml"
+                          for k in range(1, count + 1)])
+            steps.append(f"HOST:merge:{run}:{count}")
+        return steps
+    return [[sway_ipc_command(compositor, corpus, f"{work}/run{run}.toml")] for run in (1, 2)]
+
+
+# --- agreement ---------------------------------------------------------------
+
+def strip_date(text: str) -> list[str]:
+    return [line for line in text.splitlines() if not line.startswith("date = ")]
+
+
+def outcomes(entry: dict) -> dict[int, str]:
+    return {n: outcome for outcome in ("pass", "skip", "fail", "unreached")
+            for n in entry.get(f"{outcome}_assertions", [])}
+
+
+def i3_agreement(compositor: str, first: Path, second: Path) -> list[str]:
+    flaky = set(tomllib.load((ROOT / "i3/flaky.toml").open("rb")).get(compositor, {}).get("files", []))
+    unstable = {(row["file"], n) for row in tomllib.load((ROOT / "i3/unstable.toml").open("rb")).get("unstable", [])
+                if row["compositor"] == compositor for n in row["assertions"]}
+    docs = [tomllib.load(path.open("rb"))["files"] for path in (first, second)]
+    problems = []
+    for name in sorted(docs[0].keys() | docs[1].keys()):
+        if name in flaky:
+            continue
+        a, b = docs[0].get(name, {}), docs[1].get(name, {})
+        if (a.get("assertions"), a.get("tap_plan")) != (b.get("assertions"), b.get("tap_plan")):
+            problems.append(f"{name}: plan {a.get('tap_plan')} vs {b.get('tap_plan')}")
+        oa, ob = outcomes(a), outcomes(b)
+        for n in sorted(oa.keys() | ob.keys()):
+            if (name, n) not in unstable and oa.get(n) != ob.get(n):
+                problems.append(f"{name}:{n} {oa.get(n)} vs {ob.get(n)}")
+    # The sanity gates contrib/validate applies to unsharded runs.
+    for index, files in enumerate(docs, 1):
+        for name in canaries():
+            entry = files.get(name, {})
+            if entry.get("pass", 0) != entry.get("assertions", -1) or not entry.get("assertions"):
+                problems.append(f"run{index}: canary {name} is not all-pass")
+        zero = sum(entry.get("pass", 0) == 0 and not entry.get("flaky") for entry in files.values())
+        if zero > 60:
+            problems.append(f"run{index}: {zero} files have zero passes (limit 60)")
+        diagnostics = first.parent / f"run{index}"
+        for path in diagnostics.rglob("*") if diagnostics.is_dir() else ():
+            if path.is_file() and "159-socketpaths.t" not in path.name + str(path.parent):
+                text = path.read_text(errors="replace")
+                for needle in ("No such atom (I3_SOCKET_PATH)", "no free X11 display"):
+                    if needle in text:
+                        problems.append(f"run{index}: {needle} in {path.name}")
+    return problems
+
+
+def agreement(unit: dict, first: Path, second: Path) -> list[str]:
+    if unit["corpus"] == "i3-suite":
+        return i3_agreement(unit["compositor"], first, second)
+    if strip_date(first.read_text()) == strip_date(second.read_text()):
+        return []
+    diff = difflib.unified_diff(strip_date(first.read_text()), strip_date(second.read_text()), lineterm="", n=0)
+    return [line for line in diff if line[:1] in "+-" and line[:3] not in ("+++", "---")][:20]
+
+
+def full_match(path: Path) -> tuple[int, int]:
+    rows = tomllib.load(path.open("rb")).get("result", [])
+    return sum(row["verdict"] == "match" for row in rows), len(rows)
+
+
+# --- environment -------------------------------------------------------------
+
+class Run:
+    def __init__(self, args):
+        self.args, self.sha, self.dry = args, args.sha, args.dry_run
+        self.short = args.sha[:8]
+        self.image = args.image or f"sway-ipc-oracle:rc-{self.short}"
+        self.work = Path("target/rc") / self.short
+        self.failed = False
+        common = Path(git("rev-parse", "--git-common-dir"))
+        self.common = (common if common.is_absolute() else ROOT / common).resolve()
+
+    def say(self, status: str, message: str) -> None:
+        print(f"[{status}] {message}", flush=True)
+        if status == "FAIL":
+            self.failed = True
+
+    def podman(self, command: str) -> list[str]:
+        mounts = ["-v", f"{ROOT}:/oracle"]
+        if not self.common.is_relative_to(ROOT):
+            mounts += ["-v", f"{self.common}:{self.common}:ro"]
+        return ["podman", "run", "--rm", *CAP, "--security-opt", "label=disable", *mounts,
+                "-e", "GIT_CONFIG_COUNT=1", "-e", "GIT_CONFIG_KEY_0=safe.directory",
+                "-e", "GIT_CONFIG_VALUE_0=*", "-w", "/oracle", self.image, "bash", "-c", command]
+
+    def image_pins(self, image: str) -> str | None:
+        cp = subprocess.run(["podman", "run", "--rm", *CAP, image, "cat", "/opt/oracle-pins.toml"],
+                            text=True, capture_output=True)
+        return cp.stdout if cp.returncode == 0 else None
+
+    def image_digest(self) -> str:
+        if self.dry:
+            return "(dry-run)"
+        return subprocess.run(["podman", "image", "inspect", "--format", "{{.Digest}}", self.image],
+                              text=True, capture_output=True, check=True).stdout.strip()
+
+
+def check_prerequisites(run: Run) -> tuple[dict[str, str], list[dict]]:
+    if not re.fullmatch(r"[0-9a-f]{40}", run.sha):
+        run.say("FAIL", f"swayward sha must be 40 lowercase hex digits: {run.sha}")
+        return {}, []
+    for tool in ("podman", "git", "flock"):
+        if shutil.which(tool) is None:
+            run.say("FAIL", f"{tool} is not installed")
+    evidence = run.work / "evidence.log"
+    resuming = (ROOT / evidence).exists() and (ROOT / evidence).read_text().strip()
+    status = subprocess.run(["git", "-C", str(ROOT), "status", "--porcelain", "-z", "--untracked-files=all"],
+                            text=True, capture_output=True, check=True).stdout
+    dirty = [entry[3:] for entry in status.split("\0") if len(entry) > 3]
+    stray = [path for path in dirty if not path.startswith(OWNED)]
+    if dirty and not resuming:
+        run.say("FAIL", f"oracle checkout is dirty: {', '.join(dirty[:5])}")
+    elif stray:
+        run.say("FAIL", f"oracle checkout has changes outside the regenerated files: {', '.join(stray[:5])}")
+    else:
+        run.say("ok", f"oracle checkout {'resumes ' + str(evidence) if resuming else 'is clean'} "
+                       f"at {git('rev-parse', 'HEAD')[:12]}")
+
+    with tempfile.TemporaryDirectory() as scratch:
+        clone = subprocess.run(["git", "clone", "--quiet", "--filter=blob:none", "--no-checkout",
+                                "--single-branch", "--branch", "main", SWAYWARD_URL, scratch],
+                               capture_output=True, text=True)
+        reachable = clone.returncode == 0 and subprocess.run(
+            ["git", "-C", scratch, "merge-base", "--is-ancestor", run.sha, "origin/main"],
+            capture_output=True).returncode == 0
+    if reachable:
+        run.say("ok", f"swayward {run.short} is reachable from a fresh clone of {SWAYWARD_URL} main")
+    else:
+        run.say("FAIL", f"swayward {run.sha} is not reachable from {SWAYWARD_URL} main"
+                        + ("" if clone.returncode == 0 else f" (clone failed: {clone.stderr.strip()})"))
+
+    pins = load_pins()
+    snapshots = dict(pins["snapshot"])
+    new_name = f"swayward-{run.short}"
+    if pins["swayward"] == run.sha and snapshots["swayward"] == new_name:
+        run.say("ok", f"pins.toml already pins swayward {run.short}; no repin")
+    else:
+        old = snapshots["swayward"]
+        run.say("plan", f"repin swayward {pins['swayward'][:8]} -> {run.short}; rename {old}* -> {new_name}*")
+        snapshots["swayward"] = new_name
+    pending = [path.replace(pins["snapshot"]["swayward"], snapshots["swayward"]) for path in pending_paths()]
+    units, unknown = plan_units(snapshots, pending)
+    for path in unknown:
+        run.say("FAIL", f"pending.toml entry has no regeneration unit: {path}")
+    uncovered = set(pending) - {unit["result"] for unit in units}
+    if uncovered:
+        run.say("FAIL", f"pending.toml entries outside the plan: {sorted(uncovered)}")
+    else:
+        run.say("ok", f"pending.toml: {len(pending)} entries, all covered by the plan")
+
+    info = subprocess.run(["podman", "info", "--format", "{{.Host.CgroupsVersion}} {{.Host.CgroupControllers}}"],
+                          text=True, capture_output=True).stdout
+    if info.startswith("v2") and "memory" in info:
+        run.say("ok", "podman uses cgroup v2 with the memory controller")
+    else:
+        run.say("FAIL", f"podman needs cgroup v2 with the memory controller: {info.strip()}")
+    available = next(int(line.split()[1]) for line in open("/proc/meminfo") if line.startswith("MemAvailable:"))
+    need = 4 * 1024 * 1024 * max(1, run.args.shards)
+    run.say("ok" if available >= need else "FAIL",
+            f"{available / 2**20:.1f} GiB available; the swayward shards need {need / 2**20:.0f} GiB")
+
+    lock = os.environ.get("ORACLE_SWEEP_LOCK")
+    if lock:
+        with open(lock, "a") as handle:
+            try:
+                fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                fcntl.flock(handle, fcntl.LOCK_UN)
+                run.say("ok", f"sweep lock {lock} is free")
+            except BlockingIOError:
+                run.say("FAIL", f"a sweep holds {lock}: {Path(lock).read_text().strip()}")
+    else:
+        run.say("warn", "ORACLE_SWEEP_LOCK is unset; make sure no sweep runs during the regeneration")
+
+    # The caps are checked inside a container, so a broken cgroup setup fails
+    # here rather than as an out-of-memory kill an hour into a unit.
+    exists = subprocess.run(["podman", "image", "exists", run.image]).returncode == 0
+    base = re.search(r"^FROM\s+(\S+)", (ROOT / "Containerfile").read_text(), re.M).group(1)
+    probe = run.image if exists else base
+    caps = subprocess.run(["podman", "run", "--rm", *CAP, probe, "cat", "/sys/fs/cgroup/memory.max",
+                           "/sys/fs/cgroup/memory.swap.max"], text=True, capture_output=True)
+    if caps.stdout.split() == ["4294967296", "0"]:
+        run.say("ok", f"container caps are 4 GiB memory and 0 swap (probed with {probe})")
+    else:
+        run.say("FAIL", f"container caps are wrong in {probe}: {caps.stdout.split()} {caps.stderr.strip()}")
+    expected = (ROOT / "pins.toml").read_text() if snapshots == pins["snapshot"] else None
+    if exists and expected is not None and run.image_pins(run.image) == expected:
+        run.say("ok", f"image {run.image} was built from this pins.toml; reuse it")
+    else:
+        why = "is absent" if not exists else "was built from other pins"
+        run.say("plan", f"image {run.image} {why}; build it from pins.toml (about 12 min, needs the network)")
+    return snapshots, units
+
+
+# --- actions -----------------------------------------------------------------
+
+def repin(run: Run, snapshots: dict[str, str]) -> None:
+    pins = load_pins()
+    old, new = pins["snapshot"]["swayward"], snapshots["swayward"]
+    if old == new and pins["swayward"] == run.sha:
+        return
+    text = (ROOT / "pins.toml").read_text()
+    text = re.sub(r'^swayward = "[0-9a-f]{40}"$', f'swayward = "{run.sha}"', text, flags=re.M)
+    text = re.sub(rf'^swayward = "{re.escape(old)}"$', f'swayward = "{new}"', text, flags=re.M)
+    (ROOT / "pins.toml").write_text(text)
+    for directory in ("i3/results", "i3/classifications", "i3/abort-causes",
+                      "sway-ipc/results", "sway-ipc/classifications"):
+        for path in sorted((ROOT / directory).glob(f"{old}*")):
+            git("mv", str(path.relative_to(ROOT)), str(path.relative_to(ROOT)).replace(old, new))
+    pending = ROOT / "pending.toml"
+    pending.write_text(pending.read_text().replace(f"/{old}", f"/{new}"))
+    # Prose names the snapshot and its short commit, as the B1 re-label did.
+    old_short = pins["swayward"][:8]
+    prose = [ROOT / "README.md", ROOT / "i3/adapters/swayward/README.md",
+             *sorted((ROOT / "contrib/tests/fixtures").glob("readme-*.md"))]
+    for path in prose:
+        path.write_text(path.read_text().replace(old, new).replace(old_short, run.short))
+    run.say("done", f"repinned swayward to {run.short} ({old} -> {new}); the classifications keep "
+                    "their rows until R6b triages the RC results")
+
+
+def build_image(run: Run) -> None:
+    if subprocess.run(["podman", "image", "exists", run.image]).returncode == 0 \
+            and run.image_pins(run.image) == (ROOT / "pins.toml").read_text():
+        return
+    with tempfile.TemporaryDirectory() as context:
+        for name in ("Containerfile", "pins.toml"):
+            shutil.copy2(ROOT / name, Path(context) / name)
+        log = ROOT / run.work / "image-build.log"
+        start = time.monotonic()
+        with log.open("w") as handle:
+            code = subprocess.run(["podman", "build", "-t", run.image, "-f", "Containerfile", context],
+                                  stdout=handle, stderr=subprocess.STDOUT).returncode
+    if code:
+        raise SystemExit(f"image build failed; see {log}")
+    run.say("done", f"built {run.image} in {time.monotonic() - start:.0f} s")
+
+
+def remove_pending(paths: set[str]) -> None:
+    """Drop the pending.toml entries for these results, keeping the header."""
+    text = (ROOT / "pending.toml").read_text()
+    header, *blocks = text.split("[[pending]]\n")
+    kept = [block for block in blocks if tomllib.loads(block)["path"] not in paths]
+    (ROOT / "pending.toml").write_text(header + "".join("[[pending]]\n" + block for block in kept))
+
+
+def wait_all(run: Run, unit: str, procs: list[tuple[subprocess.Popen, Path]]) -> list[int]:
+    start = time.monotonic()
+    codes = []
+    for proc, _ in procs:
+        while True:
+            try:
+                codes.append(proc.wait(timeout=POLL))
+                break
+            except subprocess.TimeoutExpired:
+                print(f"[....] {unit}: running for {(time.monotonic() - start) / 60:.0f} min", flush=True)
+    return codes
+
+
+def run_unit(run: Run, unit: dict, digest: str, base: str) -> bool:
+    work = run.work / unit["name"].replace("/", "-")
+    host = ROOT / work
+    shutil.rmtree(host, ignore_errors=True)
+    host.mkdir(parents=True)
+    start = time.monotonic()
+    extra = ""
+    for index, step in enumerate(unit_steps(unit, str(work), run.args.shards)):
+        if step == "HOST:stage-i3-derived":
+            # provenance hashes tracked files, so stage the new corpus before
+            # any result is generated from it.
+            git("add", "-A", "--", "sway-ipc/i3-derived")
+            manifest = json.loads((ROOT / "sway-ipc/i3-derived/scenarios.json").read_text())
+            extra = f" scenarios={len(manifest['scenarios'])} skips={len(manifest['skips'])}"
+            continue
+        if isinstance(step, str):
+            _, _, number, count = step.split(":")
+            partials = [str(host / f"run{number}/{k}.toml") for k in range(1, int(count) + 1)]
+            subprocess.run([str(ROOT / "contrib/i3-suite-run"), "--merge", *partials,
+                            "--out", str(host / f"run{number}.toml")], check=True, capture_output=True)
+            continue
+        procs = []
+        for k, command in enumerate(step):
+            log = host / f"step{index}-{k}.log"
+            procs.append((subprocess.Popen(run.podman(command), stdout=log.open("w"),
+                                           stderr=subprocess.STDOUT, cwd=ROOT), log))
+        codes = wait_all(run, unit["name"], procs)
+        if any(codes):
+            bad = [str(log.relative_to(ROOT)) for (_, log), code in zip(procs, codes) if code]
+            evidence(run, unit, digest, base, start, "failed", f"exit={codes} logs={','.join(bad)}")
+            return False
+    first, second = host / "run1.toml", host / "run2.toml"
+    problems = agreement(unit, first, second)
+    if unit["name"] == "i3-derived-capture":
+        for index, path in enumerate((first, second), 1):
+            matched, total = full_match(path)
+            extra += f" replay{index}={matched}/{total}"
+            if matched != total or total == 0:
+                problems.append(f"sway replay {index} matches {matched}/{total} of its own capture")
+    if problems:
+        evidence(run, unit, digest, base, start, "no", extra.strip() + " " + "; ".join(problems[:10]))
+        return False
+    target = ROOT / unit["result"]
+    committed = strip_date(target.read_text()) if target.exists() else []
+    changed = sum(1 for line in difflib.unified_diff(committed, strip_date(first.read_text()), lineterm="", n=0)
+                  if line[:1] in "+-" and line[:3] not in ("+++", "---"))
+    shutil.copy2(first, target)
+    remove_pending({unit["result"]})
+    evidence(run, unit, digest, base, start, "yes", f"diff_vs_committed={changed}{extra}")
+    return True
+
+
+def evidence(run: Run, unit: dict, digest: str, base: str, start: float, agree: str, note: str) -> None:
+    line = (f"unit={unit['name']} result={unit['result']} oracle={base[:12]} swayward={run.short} "
+            f"image={digest.removeprefix('sha256:')[:12]} runs=2 wall={time.monotonic() - start:.0f}s "
+            f"agreement={agree} {note}").rstrip()
+    with (ROOT / run.work / "evidence.log").open("a") as handle:
+        handle.write(line + "\n")
+    print(f"[{'done' if agree == 'yes' else 'FAIL'}] {line}", flush=True)
+
+
+def completed(run: Run, digest: str, base: str) -> set[str]:
+    path = ROOT / run.work / "evidence.log"
+    if not path.exists():
+        return set()
+    done = set()
+    for line in path.read_text().splitlines():
+        fields = dict(item.split("=", 1) for item in line.split() if "=" in item)
+        if fields.get("agreement") == "yes" and fields.get("oracle") == base[:12] \
+                and fields.get("image") == digest.removeprefix("sha256:")[:12]:
+            done.add(fields["unit"])
+    return done
+
+
+def print_plan(run: Run, units: list[dict]) -> None:
+    print(f"\nUnit plan ({len(units)} units, one at a time; every container: podman run --rm "
+          f"{' '.join(CAP)} ... {run.image}):")
+    for number, unit in enumerate(units, 1):
+        print(f"{number:2}. {unit['name']} -> {unit['result']}")
+        work = str(run.work / unit["name"].replace("/", "-"))
+        for step in unit_steps(unit, work, run.args.shards):
+            if step == "HOST:stage-i3-derived":
+                print("      host: git add -A sway-ipc/i3-derived (provenance hashes tracked files)")
+            elif isinstance(step, str):
+                _, _, number_, count = step.split(":")
+                print(f"      host: contrib/i3-suite-run --merge {work}/run{number_}/{{1..{count}}}.toml "
+                      f"--out {work}/run{number_}.toml")
+            else:
+                label = "parallel" if len(step) > 1 else "container"
+                for command in step:
+                    print(f"      {label}: {command}")
+        check = "two runs agree outside i3/unstable.toml and i3/flaky.toml; canaries all-pass" \
+            if unit["corpus"] == "i3-suite" else "two runs equal apart from date"
+        if unit["name"] == "i3-derived-capture":
+            check += "; both sway replays match every row"
+        print(f"      agree: {check}; install run1; drop its pending.toml entry")
+    print("Finish: contrib/i3_buckets.py --write README.md; contrib/validate")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Regenerate the RC results in the pinned container.")
+    parser.add_argument("sha", help="the frozen swayward RC commit (40 hex digits)")
+    parser.add_argument("--dry-run", action="store_true", help="check prerequisites and print the plan")
+    parser.add_argument("--image", help="oracle image tag (default sway-ipc-oracle:rc-SHA8)")
+    parser.add_argument("--shards", type=int, default=4, help="parallel swayward i3-suite shards (default 4)")
+    args = parser.parse_args()
+    os.chdir(ROOT)
+    run = Run(args)
+    snapshots, units = check_prerequisites(run)
+    if units:
+        print_plan(run, units)
+    if run.failed:
+        print("\nprerequisites failed; nothing was changed", file=sys.stderr)
+        return 1
+    if args.dry_run:
+        print("\ndry run: prerequisites hold; nothing was changed")
+        return 0
+
+    lock = os.environ.get("ORACLE_SWEEP_LOCK")
+    handle = None
+    if lock:
+        handle = open(lock, "a")
+        fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        Path(lock).write_text(f"pid={os.getpid()}\nswayward={run.sha}\nstarted="
+                              f"{datetime.datetime.now().isoformat(timespec='seconds')}\nregenerate-rc\n")
+    try:
+        return regenerate(run, snapshots, units)
+    finally:
+        if handle is not None:
+            Path(lock).write_text("")
+            handle.close()
+
+
+def regenerate(run: Run, snapshots: dict[str, str], units: list[dict]) -> int:
+    (ROOT / run.work).mkdir(parents=True, exist_ok=True)
+    base = git("rev-parse", "HEAD")
+    repin(run, snapshots)
+    build_image(run)
+    digest = run.image_digest()
+    with (ROOT / run.work / "evidence.log").open("a") as handle:
+        handle.write(f"# rc swayward={run.sha} oracle={base} image={digest} "
+                     f"started={datetime.datetime.now().isoformat(timespec='seconds')}\n")
+    done = completed(run, digest, base)
+    for unit in units:
+        if unit["name"] in done:
+            print(f"[skip] {unit['name']}: already agreed in this run's evidence", flush=True)
+            continue
+        if not run_unit(run, unit, digest, base):
+            print(f"\nunit {unit['name']} failed; fix the cause and rerun to resume", file=sys.stderr)
+            return 1
+    subprocess.run([str(ROOT / "contrib/i3_buckets.py"), "--write", "README.md"], check=True)
+    code = subprocess.run([str(ROOT / "contrib/validate")]).returncode
+    with (ROOT / run.work / "evidence.log").open("a") as handle:
+        handle.write(f"# finished validate={code} pending={len(pending_paths())}\n")
+    print(f"\nall units agreed; evidence in {run.work}/evidence.log; validate exit {code}")
+    return 0 if code == 0 else 3
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
