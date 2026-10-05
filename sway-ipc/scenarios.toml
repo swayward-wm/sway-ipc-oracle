@@ -568,3 +568,8 @@ actions = ["window:fixture-fw-1", "command:fullscreen enable", "command:for_wind
 name = "no_container_title_format_urgent"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:focus parent", "probe:no_container_title_format:title_format %title", "probe:no_container_urgent:urgent toggle", "command:focus child", "window:fixture-2", "command:splitv", "command:focus parent", "probe:split_container_urgent:urgent toggle", "capture:no_container_title_format_urgent"]
+
+[[scenario]]
+name = "fullscreen_split_global_coexist"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:fullscreen enable", "command:split toggle", "command:fullscreen toggle global", "capture:fullscreen_split_global_coexist"]
