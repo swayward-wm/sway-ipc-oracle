@@ -488,3 +488,8 @@ actions = ["window:fixture-fs-gaps", "command:gaps outer current plus 5", "comma
 name = "fullscreen_global_workspace_arrange"
 corpora = ["state"]
 actions = ["window:fixture-global-one", "window:fixture-global-two", "command:fullscreen toggle global", "command:gaps outer current plus 5", "capture:fullscreen_global_workspace_arrange"]
+
+[[scenario]]
+name = "urgent_enable_under_focused_parent"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:splitv", "window:fixture-3", "command:[app_id=\"^fixture-3$\"] urgent enable", "command:focus parent", "command:[app_id=\"^fixture-3$\"] urgent enable", "command:focus parent", "command:[app_id=\"^fixture-1$\"] urgent enable", "capture:urgent_enable_under_focused_parent"]
