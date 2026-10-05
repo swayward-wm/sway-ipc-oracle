@@ -493,3 +493,8 @@ actions = ["window:fixture-global-one", "window:fixture-global-two", "command:fu
 name = "urgent_enable_under_focused_parent"
 corpora = ["state"]
 actions = ["window:fixture-1", "window:fixture-2", "command:splitv", "window:fixture-3", "command:[app_id=\"^fixture-3$\"] urgent enable", "command:focus parent", "command:[app_id=\"^fixture-3$\"] urgent enable", "command:focus parent", "command:[app_id=\"^fixture-1$\"] urgent enable", "capture:urgent_enable_under_focused_parent"]
+
+[[scenario]]
+name = "focus_stack_singletons"
+corpora = ["state"]
+actions = ["window:fixture-fs-1", "window:fixture-fs-2", "command:no_focus [app_id=\"^fixture-fs-3$\"]", "window:fixture-fs-3", "capture:focus_stack_no_focus_tail", "command:[app_id=\"^fixture-fs-2$\"] kill", "capture:focus_stack_kill_skips_unfocused", "command:focus parent", "command:workspace 1", "capture:focus_stack_workspace_switch_descends", "command:fullscreen enable", "command:focus tiling", "command:focus next sibling", "capture:focus_stack_fullscreen_holds_focus", "command:fullscreen disable", "command:focus parent", "command:floating disable", "capture:focus_stack_floating_disable_wraps"]
