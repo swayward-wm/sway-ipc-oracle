@@ -56,6 +56,14 @@ reason = "i3 does not implement xdg-shell; the equivalent X11 WM_NORMAL_HINTS ex
 actions = ["hint_window:fixture-fixed-both|300|200|300|200|0", "window:fixture-border-settle", "command:[app_id=\"^fixture-border-settle$\"] kill", "command:[app_id=\"^fixture-fixed-both$\"] border normal 2", "capture:default_floating_fixed_both"]
 
 [[scenario]]
+name = "hinted_view_without_decoration_maps_csd"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell or xdg-decoration; X11 windows map without client-side decorations."
+actions = ["hint_window:fixture-hinted|400|300|400|300|0", "capture:hinted_view_without_decoration_maps_csd"]
+
+[[scenario]]
 name = "default_floating_parent"
 corpora = ["state"]
 requires = ["xdg-toplevel-size-hints"]
