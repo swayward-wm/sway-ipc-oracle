@@ -408,3 +408,8 @@ actions = ["window:fixture-1", "command:focus parent", "command:split h", "captu
 name = "criteria_move_to_workspace_keeps_match_order"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:workspace 2", "window:fixture-2", "window:fixture-3", "window:fixture-4", "command:[workspace=\"2\"] move container to workspace 1", "capture:criteria_move_to_workspace_keeps_match_order"]
+
+[[scenario]]
+name = "focus_prev_next_lone_floating"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating enable", "command:focus prev", "command:focus next", "capture:focus_prev_next_lone_floating"]
