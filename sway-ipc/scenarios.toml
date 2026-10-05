@@ -624,3 +624,13 @@ actions = ["window:fixture-fmark-1", "window:fixture-fmark-2", "command:floating
 name = "move_tiled_to_floating_mark_stacks_above_mark"
 corpora = ["state"]
 actions = ["window:fixture-fmark-1", "command:splitv", "window:fixture-fmark-2", "window:fixture-fmark-3", "command:floating enable", "command:mark m", "window:fixture-fmark-4", "command:floating enable", "command:[app_id=\"^fixture-fmark-2$\"] focus", "command:move container to mark m", "capture:move_tiled_to_floating_mark_stacks_above_mark"]
+
+[[scenario]]
+name = "floating_split_only_child_workspace_move"
+corpora = ["state"]
+actions = ["window:fixture-fsplit-1", "command:floating enable", "command:splitv", "command:move container to workspace 2", "capture:floating_split_only_child_workspace_move"]
+
+[[scenario]]
+name = "floating_split_child_move_to_current_workspace"
+corpora = ["state"]
+actions = ["window:fixture-fsplit-1", "window:fixture-fsplit-2", "command:floating enable", "command:split h", "command:move container to workspace next", "capture:floating_split_child_move_to_current_workspace"]
