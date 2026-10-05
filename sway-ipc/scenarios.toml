@@ -393,3 +393,8 @@ actions = ["window:fixture-1", "window:fixture-2", "command:move up", "command:f
 name = "bar_runtime_without_bars"
 corpora = ["state"]
 actions = ["probe:bar_runtime_hidden_state:bar hidden_state show", "probe:bar_runtime_mode:bar mode hide", "probe:bar_runtime_no_bar:bar position top", "capture:bar_runtime_without_bars"]
+
+[[scenario]]
+name = "split_workspace_keeps_stale_representation"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus parent", "command:split h", "capture:split_workspace_keeps_stale_representation", "window:fixture-2", "capture:split_workspace_keeps_stale_representation_after_map"]
