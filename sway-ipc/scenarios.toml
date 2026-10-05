@@ -495,6 +495,11 @@ corpora = ["state"]
 actions = ["window:fixture-1", "command:floating toggle", "command:border pixel 3", "command:split v", "capture:floating_border_split_keeps_content"]
 
 [[scenario]]
+name = "floating_output_scale_keeps_position"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating toggle", "command:output * scale 2", "command:splith", "capture:floating_output_scale_keeps_position"]
+
+[[scenario]]
 name = "fullscreen_percent_gapped_workspace"
 corpora = ["state"]
 actions = ["window:fixture-fs-gaps", "command:gaps outer current plus 5", "command:fullscreen enable", "capture:fullscreen_percent_gapped_workspace"]
