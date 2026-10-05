@@ -425,6 +425,11 @@ corpora = ["state"]
 actions = ["window:fixture-1", "command:focus parent", "command:split h", "capture:split_workspace_keeps_stale_representation", "window:fixture-2", "capture:split_workspace_keeps_stale_representation_after_map"]
 
 [[scenario]]
+name = "split_tabbed_workspace_keeps_stale_representation"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus parent", "command:layout tabbed", "command:splith", "capture:split_tabbed_workspace_keeps_stale_representation", "window:fixture-2", "capture:split_tabbed_workspace_keeps_stale_representation_after_map"]
+
+[[scenario]]
 name = "criteria_move_to_workspace_keeps_match_order"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:workspace 2", "window:fixture-2", "window:fixture-3", "window:fixture-4", "command:[workspace=\"2\"] move container to workspace 1", "capture:criteria_move_to_workspace_keeps_match_order"]
