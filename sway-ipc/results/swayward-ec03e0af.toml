@@ -12,9 +12,9 @@ date = "2026-10-02"
 normalization = "sway-ipc/normalize.toml"
 normalization_rules = ["runtime-identifiers", "focus-by-child-position", "rectangle-semantics", "backend-output-reference", "backend-output-properties", "backend-output-capabilities", "version-runtime-identity", "backend-output-name", "floating-rect-run-variance", "tree-rect-tolerance", "floating-percent-run-variance", "floating-descendant-percent-run-variance", "tree-percent-tolerance", "focus-child-position-comparison", "backend-mode-array-length"]
 scenario_isolation = "fresh compositor per scenario"
-difference_fields = 67
-match = 749
-mismatch = 31
+difference_fields = 68
+match = 758
+mismatch = 32
 not_applicable = 0
 
 [[result]]
@@ -2225,6 +2225,57 @@ verdict = "match"
 
 [[result]]
 scenario = "empty_named"
+request = "commands"
+verdict = "match"
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "tree"
+verdict = "mismatch"
+differences = ["$tree.nodes[1].nodes[0].nodes[0].percent: 2.0 != 1.0"]
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "workspaces"
+verdict = "match"
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "outputs"
+verdict = "match"
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "binding_modes"
+verdict = "match"
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "seats"
+verdict = "match"
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "inputs"
+verdict = "match"
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "version"
+verdict = "match"
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
 request = "commands"
 verdict = "match"
 

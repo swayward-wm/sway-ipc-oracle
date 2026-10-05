@@ -129,7 +129,7 @@ classification file, and `contrib/validate` checks the line.
 | Corpus | Outcome | Raw result |
 | --- | --- | --- |
 | i3 suite | 3,754 pass / 1 skip / 0 fail / 0 unreached / 0 unstable / 0 flaky | [i3 suite](i3/results/i3-4.25.toml) |
-| sway IPC state | 242 match / 246 differs / 540 not applicable† | [sway IPC state](sway-ipc/results/i3-4.25.toml) |
+| sway IPC state | 245 match / 251 differs / 546 not applicable† | [sway IPC state](sway-ipc/results/i3-4.25.toml) |
 | events | 1 match / 41 differs / 30 not applicable† | [events](sway-ipc/results/i3-4.25-events.toml) |
 | i3-derived | 1,096 match / 2,248 differs / 0 unstable / 2,227 not applicable† | [i3-derived](sway-ipc/results/i3-4.25-i3-derived.toml) |
 | random | not yet measured | — |
@@ -161,7 +161,7 @@ a measure of sway compatibility.
 | Corpus | Outcome | Raw result |
 | --- | --- | --- |
 | i3 suite | 1,461 pass / 20 skip / 716 fail / 1,401 unreached / 135 unstable / 22 flaky† | [i3 suite](i3/results/sway-1.12.toml) |
-| sway IPC state | 740 match / 0 mismatch / 40 not applicable† | [sway IPC state](sway-ipc/results/sway-1.12.toml) |
+| sway IPC state | 750 match / 0 mismatch / 40 not applicable† | [sway IPC state](sway-ipc/results/sway-1.12.toml) |
 | events | 45 match / 0 mismatch / 0 not applicable† | [events](sway-ipc/results/sway-1.12-events.toml) |
 | i3-derived | 4,180 match / 0 mismatch / 0 unstable / 0 not applicable† | [i3-derived](sway-ipc/results/sway-1.12-i3-derived.toml) |
 | random | 500 match / 0 mismatch / 0 unstable / 0 not applicable† | [random](sway-ipc/results/sway-1.12-random.toml) |
@@ -202,7 +202,7 @@ each names its test file.
 | Corpus | Outcome | Raw result |
 | --- | --- | --- |
 | i3 suite | 1,453 pass / 11 skip / 800 fail / 1,469 unreached / 0 unstable / 22 flaky† | [i3 suite](i3/results/swayward-ec03e0af.toml) |
-| sway IPC state | 749 match / 31 mismatch / 0 not applicable† | [sway IPC state](sway-ipc/results/swayward-ec03e0af.toml) |
+| sway IPC state | 758 match / 32 mismatch / 0 not applicable† | [sway IPC state](sway-ipc/results/swayward-ec03e0af.toml) |
 | events | 44 match / 1 mismatch / 0 not applicable† | [events](sway-ipc/results/swayward-ec03e0af-events.toml) |
 | i3-derived | 4,118 match / 62 mismatch / 0 unstable / 0 not applicable† | [i3-derived](sway-ipc/results/swayward-ec03e0af-i3-derived.toml) |
 | random | 329 match / 171 mismatch / 0 unstable / 0 not applicable† | [random](sway-ipc/results/swayward-ec03e0af-random.toml) |

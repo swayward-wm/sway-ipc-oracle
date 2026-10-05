@@ -186,6 +186,12 @@ name = "empty_named"
 actions = ["command:workspace mail", "capture:empty_named"]
 
 [[scenario]]
+name = "fullscreen_global_two_outputs"
+outputs = 2
+corpora = ["state"]
+actions = ["window:fixture-1", "command:fullscreen enable global", "capture:fullscreen_global_two_outputs"]
+
+[[scenario]]
 name = "two_outputs"
 outputs = 2
 actions = ["window:fixture-1", "command:move workspace to output right", "command:workspace 2", "window:fixture-2", "command:focus output left", "capture:two_outputs"]

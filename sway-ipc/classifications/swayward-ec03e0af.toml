@@ -47,3 +47,10 @@ triage = "documented deviation"
 finding = "Per-view rendering and idle policy commands"
 reason = "S6: Swayward refuses allow_tearing and max_render_time because its frame clock has no per-view tearing or render deadline; sway accepts both."
 source = "sway/sway/commands/allow_tearing.c:6-25; sway/sway/commands/max_render_time.c:6-32; swayward docs/KNOWN_DEVIATIONS.md#per-view-rendering-and-idle-policy-commands"
+
+[[classification]]
+rows = ["fullscreen_global_two_outputs.tree"]
+triage = "documented deviation"
+finding = "Global fullscreen on several outputs"
+reason = "Sway sizes a global fullscreen view to the root box spanning both outputs, so percent is root area over workspace area (2.0); swayward covers one output and reports 1.0 ($tree.nodes[1].nodes[0].nodes[0].percent).; spanning outputs is the planned swayward feature feature-global-fullscreen-span-outputs."
+source = "sway/sway/tree/arrange.c:349-355; sway/sway/tree/view.c:365-369; sway/sway/ipc-json.c:744-755; swayward docs/KNOWN_DEVIATIONS.md#global-fullscreen-on-several-outputs"
