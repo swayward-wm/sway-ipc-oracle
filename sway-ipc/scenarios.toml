@@ -553,3 +553,8 @@ actions = ["command:smart_gaps on", "window:fixture-gaps-resize", "command:gaps 
 name = "swap_focused_tab_keeps_focus"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:mark oracle", "command:layout tabbed", "window:fixture-2", "probe:swap_focused_tab_keeps_focus:swap container with mark oracle", "capture:swap_focused_tab_keeps_focus"]
+
+[[scenario]]
+name = "focus_stack_singletons"
+corpora = ["state"]
+actions = ["window:fixture-fs-1", "window:fixture-fs-2", "command:no_focus [app_id=\"^fixture-fs-3$\"]", "window:fixture-fs-3", "capture:focus_stack_no_focus_tail", "command:[app_id=\"^fixture-fs-2$\"] kill", "capture:focus_stack_kill_skips_unfocused", "command:focus parent", "command:workspace 1", "capture:focus_stack_workspace_switch_descends", "command:fullscreen enable", "command:focus tiling", "command:focus next sibling", "capture:focus_stack_fullscreen_holds_focus", "command:fullscreen disable", "command:focus parent", "command:floating disable", "capture:focus_stack_floating_disable_wraps"]

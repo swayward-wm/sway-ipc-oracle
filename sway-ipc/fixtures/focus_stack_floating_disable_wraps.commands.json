@@ -1,0 +1,106 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-fs-1 --title=fixture-fs-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-fs-2 --title=fixture-fs-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "no_focus [app_id=\"^fixture-fs-3$\"]",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-fs-3 --title=fixture-fs-3 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "[app_id=\"^fixture-fs-2$\"] kill",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace 1",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "fullscreen enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus tiling",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus next sibling",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "fullscreen disable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "floating disable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]
