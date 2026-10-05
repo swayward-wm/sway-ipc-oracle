@@ -1735,7 +1735,8 @@ def random_capture_in(args, objects, sequences, scratch):
                 adapter.stop()
         if observations is not None:
             sequences.append({"seed": seed, "commands": commands, "observations": observations,
-                              **({"outputs": gen.outputs, "recipes": gen.started} if gen else {})})
+                              **({"outputs": gen.outputs, "recipes": gen.started,
+                                 "triggered": gen.triggered} if gen else {})})
         shutil.rmtree(run_dir)
         if (seed - args.seed + 1) % 25 == 0:
             print(f"captured {seed - args.seed + 1}/{args.seeds} seeds", flush=True)
@@ -2375,6 +2376,8 @@ def write_differential_results(path, args, rows):
     for row in rows:
         if "recorded" in row:
             lines += ["[[recorded]]", f"seed = {row['seed']}", f"outputs = {row['outputs']}",
+                      "recipes = [" + ", ".join(toml_string(x) for x in row["recipes"]) + "]",
+                      "triggered = [" + ", ".join(toml_string(x) for x in row["triggered"]) + "]",
                       "commands = [" + ", ".join(toml_string(x) for x in row["recorded"]) + "]", ""]
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines))
@@ -2393,6 +2396,9 @@ def differential_main(args):
     online = args.generator == "v3"
     if online:
         vocabulary, recipes = sway_ipc_v3.load_v3()
+    def recorded(commands):
+        return {"recorded": commands, "outputs": gen.outputs, "recipes": gen.started,
+                "triggered": gen.triggered}
     for seed in range(args.seed, args.seed + args.seeds):
         layout = None
         if online:
@@ -2403,14 +2409,14 @@ def differential_main(args):
                 divergence, _, commands = differential_online(args, gen, args.steps, layout, commands)
             except CompositorCrash as crash:
                 rows.append({"seed": seed, "verdict": "crash", "crashed": crash.labels,
-                             "error": str(crash), "recorded": commands, "outputs": gen.outputs})
+                             "error": str(crash), **recorded(commands)})
                 continue
         else:
             commands = GENERATORS[args.generator](seed, args.steps)
             divergence, _ = differential_once(args, commands)
         if divergence is None:
             rows.append({"seed": seed, "verdict": "match",
-                         **({"recorded": commands, "outputs": gen.outputs} if online else {})})
+                         **(recorded(commands) if online else {})})
             continue
         def reproduces(candidate):
             try:
@@ -2430,7 +2436,7 @@ def differential_main(args):
         rows.append({"seed": seed, "verdict": "mismatch", "commands": minimal,
                      "scenario": scenario, **{k: final[k] for k in
                      ("step", "request", "differences")},
-                     **({"recorded": commands, "outputs": gen.outputs} if online else {})})
+                     **(recorded(commands) if online else {})})
     if not args.out:
         raise RuntimeError("differential is a developer tool: pass --out outside the repository")
     out = Path(args.out)

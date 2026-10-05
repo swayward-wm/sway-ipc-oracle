@@ -1,5 +1,5 @@
 {
- "description": "random-v3 recipes: precondition builders that end at 1-3 trigger steps (see contrib/sway_ipc_v3.py). A step is a command template, a list of alternatives (null skips), or {do, guard, glue}. R14 (multi-output) is not implemented yet.",
+ "description": "random-v3 recipes: precondition builders that end at 1-3 trigger steps (see contrib/sway_ipc_v3.py). A step is a command template, a list of alternatives (null skips), or {do, guard, glue}. R14 (multi-output; outputs = 2) runs only on two-output seeds, where it is the primary recipe.",
  "recipes": [
   {
    "name": "R1-fs-then-structure",
@@ -434,6 +434,52 @@
     "[workspace=__focused__] move container to workspace 2",
     "[con_id={con_other}] kill"
    ]
+  },
+  {
+   "name": "R14-multi-output",
+   "axes": [
+    "multi_output"
+   ],
+   "min_views": 1,
+   "requires": [
+    "outputs>=2"
+   ],
+   "setups": [
+    [
+     "focus output right",
+     "@window",
+     "focus output left"
+    ],
+    [
+     "focus output right",
+     "@window",
+     "focus output left",
+     {
+      "do": "floating enable",
+      "guard": [
+       "focus_kind==view"
+      ]
+     }
+    ],
+    [
+     "focus output right",
+     "@window",
+     "@window",
+     "focus output left"
+    ]
+   ],
+   "triggers": [
+    "move container to output {o}",
+    "move workspace to output {o}",
+    "focus output {o}",
+    "move left",
+    "move right",
+    "focus left",
+    "focus right",
+    "workspace next",
+    "sticky enable; focus output {o}"
+   ],
+   "outputs": 2
   },
   {
    "name": "R15-map-under-rules",

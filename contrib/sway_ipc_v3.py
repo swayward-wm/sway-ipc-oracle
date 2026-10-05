@@ -275,7 +275,16 @@ class V3Generator:
         self.outputs = {"auto": 2 if draw < vocabulary["two_output_probability"] else 1,
                         "1": 1, "2": 2}[str(outputs)]
         self.queue = deque()
-        self.primary = recipes[seed % len(recipes)]
+        # Stratify over the one-output recipes. A two-output seed exists to test D1,
+        # and a run stops at its first divergence, so it starts R14 (the recipes
+        # with "outputs": 2) first and the stratified recipe right after it.
+        single = [recipe for recipe in recipes if recipe.get("outputs", 1) == 1]
+        stratified = single[seed % len(single)]
+        multi = [recipe for recipe in recipes if recipe.get("outputs", 1) == 2]
+        if self.outputs == 2 and multi:
+            self.primary, self.follow = multi[0], stratified
+        else:
+            self.primary, self.follow = stratified, None
         self.primary_step = None    # generator step (prelude excluded) that started it
         self.generated = 0
         self.next_window = 1
@@ -283,6 +292,7 @@ class V3Generator:
         self.glued = False
         self.axis_hits = Counter()
         self.started = []
+        self.triggered = []         # recipe names, one per trigger step emitted
         self.memory = {"has_prev_ws": False, "prev_layout": False}
         self.last_ws = None
         self.base = vocabulary["base_weights"]
@@ -391,7 +401,8 @@ class V3Generator:
         low, high = recipe.get("trigger_count", [1, 3])
         count = min(rng.randint(low, high), len(recipe["triggers"]))
         indices = sorted(rng.sample(range(len(recipe["triggers"])), count))
-        steps = [as_step(item) for item in setup] + [as_step(recipe["triggers"][i]) for i in indices]
+        steps = [as_step(item) for item in setup] + [
+            {**as_step(recipe["triggers"][i]), "trigger": recipe["name"]} for i in indices]
         for step in steps:
             command = self._choose_alternative(step["do"])
             if command is not None:
@@ -404,6 +415,8 @@ class V3Generator:
     def _pop(self, f):
         step = self.queue.popleft()
         self.glued = bool(step.get("glue"))
+        if "trigger" in step:
+            self.triggered.append(step["trigger"])
         return self._fill(step["do"], f)
 
     def _step_ok(self, step, values):
@@ -451,7 +464,7 @@ class V3Generator:
     def _next_primary(self, f):
         """Stratified schedule: plain windows up to min_views, then the seed's recipe.
 
-        Nothing random runs first, so every seed starts RECIPES[seed % 16] by
+        Nothing random runs first, so every seed starts its primary recipe by
         generator step min_views + 1 <= primary_deadline (prelude excluded).
         Windows are counted here, not read from the tree, so a slow map cannot
         push the start past the deadline.
@@ -477,6 +490,11 @@ class V3Generator:
         self.glued = False
         if self.primary_step is None:
             return self._next_primary(f)
+        if self.follow is not None and not self.queue:
+            if values["views"] < self.follow.get("min_views", 0):
+                return self._exec(self._ident())
+            recipe, self.follow = self.follow, None
+            return self._start(recipe, f)
         if self.rng["window"].random() < self.window_probability(f.views):
             return self._window()
         if self.queue:
@@ -501,8 +519,8 @@ class V3Generator:
 def self_test():
     """Pure checks: data parses, placeholders and conditions resolve, generation is deterministic."""
     vocabulary, recipes = load_v3()
-    assert len(recipes) == 16 and len({r["name"] for r in recipes}) == 16
-    assert not any(r["name"].startswith("R14") for r in recipes)
+    assert len(recipes) == 17 and len({r["name"] for r in recipes}) == 17
+    assert [r["name"] for r in recipes if r.get("outputs", 1) == 2] == ["R14-multi-output"]
     known = {"app", "other_app", "sibling", "inactive_tab", "hidden_app", "mark", "newmark", "dir",
              "o", "ws_other", "ws_new", "ws_focused", "next", "con_other", "con_focused", "con_parent"}
     templates = [entry["cmd"] for entry in vocabulary["commands"]] + vocabulary["map_rules"]
@@ -533,18 +551,24 @@ def self_test():
     for seed in (0, 7, 16):
         assert run(seed) == run(seed)
     assert run(0) != run(1)
-    # Stratified schedule (v3-design.md "Recipe schedule"): every seed starts
-    # RECIPES[seed % 16] first, within its first five generated steps, with
-    # the canned tree tracking the windows actually opened.
-    for seed in range(3 * len(recipes)):
-        gen = V3Generator(seed, vocabulary, recipes)
-        opened = 0
-        for step in range(1, vocabulary["primary_deadline"] + 1):
-            command = gen.next(features(tree(opened), workspaces), step)
-            opened += command.startswith(("exec ", "xdg-hinted "))
-            gen.observe_reply(command, [{"success": True}])
-        assert gen.started[:1] == [recipes[seed % len(recipes)]["name"]], (seed, gen.started)
-        assert gen.primary_step <= vocabulary["primary_deadline"], (seed, gen.primary_step)
+    # Stratified schedule (v3-design.md "Recipe schedule"): a one-output seed
+    # starts single[seed % 16] first, within its first five generated steps,
+    # with the canned tree tracking the windows actually opened. A two-output
+    # seed starts R14 there instead, then single[seed % 16] once R14 has drained.
+    single = [r["name"] for r in recipes if r.get("outputs", 1) == 1]
+    for outputs in ("1", "2"):
+        for seed in range(3 * len(single)):
+            gen = V3Generator(seed, vocabulary, recipes, outputs)
+            opened = 0
+            for step in range(1, 25):
+                command = gen.next(features(tree(opened), workspaces), step)
+                opened += command.startswith(("exec ", "xdg-hinted "))
+                gen.observe_reply(command, [{"success": True}])
+            expected = ([single[seed % len(single)]] if outputs == "1" else
+                        ["R14-multi-output", single[seed % len(single)]])
+            assert gen.started[:len(expected)] == expected, (outputs, seed, gen.started)
+            assert gen.primary_step <= vocabulary["primary_deadline"], (seed, gen.primary_step)
+            assert "R14-multi-output" in gen.triggered or outputs == "1", (seed, gen.triggered)
     sample = features(tree(3), workspaces)
     assert sample.views == 3 and sample.focus_kind == "view" and sample.siblings == (
         "fixture-diff-1", "fixture-diff-2")
