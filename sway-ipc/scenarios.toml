@@ -641,3 +641,13 @@ name = "focus_next_crosses_outputs"
 outputs = 2
 corpora = ["state"]
 actions = ["window:fixture-fn-1", "command:layout splith", "command:move workspace to output right", "command:focus output left", "window:fixture-fn-2", "window:fixture-fn-3", "command:layout splith", "capture:focus_next_crosses_outputs_before", "command:focus next", "capture:focus_next_crosses_outputs_next", "command:focus prev", "capture:focus_next_crosses_outputs_prev", "command:focus next sibling", "capture:focus_next_crosses_outputs_next_sibling", "command:focus prev sibling", "capture:focus_next_crosses_outputs_prev_sibling", "command:focus left", "command:focus prev", "capture:focus_next_crosses_outputs_edge_wraps"]
+
+[[scenario]]
+name = "floating_split_only_child_workspace_move"
+corpora = ["state"]
+actions = ["window:fixture-fsplit-1", "command:floating enable", "command:splitv", "command:move container to workspace 2", "capture:floating_split_only_child_workspace_move"]
+
+[[scenario]]
+name = "floating_split_child_move_to_current_workspace"
+corpora = ["state"]
+actions = ["window:fixture-fsplit-1", "window:fixture-fsplit-2", "command:floating enable", "command:split h", "command:move container to workspace next", "capture:floating_split_child_move_to_current_workspace"]
