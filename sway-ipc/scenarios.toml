@@ -458,3 +458,13 @@ actions = ["command:workspace alpha", "command:workspace 1", "window:fixture-1",
 name = "workspace_next_on_output_after_empty_destroyed"
 corpora = ["state"]
 actions = ["command:workspace number 3", "command:workspace next_on_output", "capture:workspace_next_on_output_after_empty_destroyed", "command:workspace prev_on_output", "command:workspace next", "command:workspace prev", "capture:workspace_next_on_output_after_empty_destroyed_relative"]
+
+[[scenario]]
+name = "fullscreen_focus_layer_tiled"
+corpora = ["state"]
+actions = ["window:fixture-fsfl-1", "command:fullscreen enable", "probe:fullscreen_focus_layer_tiled_tiling:focus tiling", "command:for_window [app_id=\"fixture-fsfl-float\"] floating enable", "window:fixture-fsfl-float", "probe:fullscreen_focus_layer_tiled_floating:focus floating", "window:fixture-fsfl-tail", "capture:fullscreen_focus_layer_tiled"]
+
+[[scenario]]
+name = "fullscreen_focus_layer_floating"
+corpora = ["state"]
+actions = ["window:fixture-fsfl-1", "command:floating toggle", "command:for_window [app_id=\"fixture-fsfl-float\"] floating enable", "command:fullscreen enable", "window:fixture-fsfl-float", "window:fixture-fsfl-tail", "probe:fullscreen_focus_layer_floating_floating:focus floating", "probe:fullscreen_focus_layer_floating_tiling:focus tiling", "capture:fullscreen_focus_layer_floating"]
