@@ -584,3 +584,18 @@ actions = ["window:fixture-1", "command:focus parent", "probe:no_container_title
 name = "fullscreen_split_global_coexist"
 corpora = ["state"]
 actions = ["window:fixture-1", "window:fixture-2", "command:fullscreen enable", "command:split toggle", "command:fullscreen toggle global", "capture:fullscreen_split_global_coexist"]
+
+[[scenario]]
+name = "floating_split_toggle_wraps"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating enable", "probe:floating_split_toggle_wraps_toggle:split toggle", "capture:floating_split_toggle_wraps"]
+
+[[scenario]]
+name = "floating_for_window_splitt_wraps"
+corpora = ["state"]
+actions = ["command:for_window [app_id=\"^fixture-1$\"] floating enable", "window:fixture-1", "probe:floating_for_window_splitt_wraps_splitt:splitt", "capture:floating_for_window_splitt_wraps"]
+
+[[scenario]]
+name = "floating_split_toggle_vertical_workspace"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:layout splitv", "window:fixture-2", "command:floating enable", "command:split toggle", "capture:floating_split_toggle_vertical_workspace"]
