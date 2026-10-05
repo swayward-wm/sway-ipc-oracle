@@ -498,3 +498,8 @@ actions = ["window:fixture-1", "window:fixture-2", "command:splitv", "window:fix
 name = "view_mapped_under_fullscreen_rects"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:fullscreen enable", "command:layout splitv", "window:fixture-2", "capture:view_mapped_under_fullscreen_rects_splitv", "command:layout stacking", "capture:view_mapped_under_fullscreen_rects_stacking", "command:layout tabbed", "window:fixture-3", "capture:view_mapped_under_fullscreen_rects_tabbed", "command:workspace 1", "capture:view_mapped_under_fullscreen_rects_rearranged"]
+
+[[scenario]]
+name = "stacked_move_down_shows_moved_split"
+corpora = ["state"]
+actions = ["window:fixture-2", "window:fixture-3", "command:move up", "command:layout stacking", "window:fixture-4", "probe:stacked_move_down_shows_moved_split:move down 30 px", "capture:stacked_move_down_shows_moved_split"]
