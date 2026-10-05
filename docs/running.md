@@ -143,3 +143,30 @@ other.
 
 `differential --generator v2` drives two compositors with the same generator
 and delta-debugs each divergence; pass `--out` outside the repository.
+
+### random-v3 (state-aware, differential and capture only)
+
+`--generator v3` picks each command after it reads sway's settled `get_tree`
+and `get_workspaces`, so it can build the state that sway's branches test
+(floating, fullscreen, tabbed parents, marks, the scratchpad, several
+workspaces) on purpose. The generator is `contrib/sway_ipc_v3.py`. Its data
+is `sway-ipc/random-v3/vocabulary.json` (base weights, state multipliers and
+preconditions) and `recipes.json` (precondition builders that end in trigger
+commands). Each purpose has its own RNG seeded from `random-v3:<seed>:<purpose>`,
+and the generator reads only stable fields, so the same seed against the
+same sway gives the same command list. `fuzz-self-test --binary <sway>`
+checks this on a live sway. Seed `s` starts recipe `s % 16` within its
+first five generated steps: it opens only the windows that recipe needs, then
+starts it before any random choice. The default is 40 steps. `--outputs auto` gives
+30% of seeds two outputs in an explicit layout, which both compositors check
+at step 0. `differential` records every seed's command list in a
+`[[recorded]]` table, and a compositor that stops answering IPC becomes a
+`crash` row. v3 has no committed corpus yet, so `random --capture` writes to
+`--out DIR`:
+
+```sh
+./contrib/sway-ipc-run differential --generator v3 --a-binary /path/to/sway \
+  --b-binary /path/to/swayward --seed 0 --seeds 20 --out target/v3.toml
+./contrib/sway-ipc-run random --generator v3 --capture --compositor sway \
+  --binary /path/to/sway --seeds 200 --out target/random-v3
+```

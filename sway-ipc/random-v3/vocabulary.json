@@ -1,0 +1,1892 @@
+{
+ "description": "random-v3 generator data: weighted command pool with state multipliers and preconditions (see contrib/sway_ipc_v3.py). Commands are runtime commands accepted by headless sway 1.12; {placeholders} are filled from the current sway state, @window opens the next fixture window.",
+ "sway_commit": "88869399f421d9180dd8b6ed0b5a1f4a3585d252",
+ "prelude": [
+  "force_display_urgency_hint 0 ms"
+ ],
+ "prelude_draws": [
+  {
+   "probability": 0.2,
+   "choices": [
+    "focus_wrapping no",
+    "focus_wrapping force",
+    "focus_wrapping workspace"
+   ]
+  },
+  {
+   "probability": 0.2,
+   "choices": [
+    "smart_gaps on",
+    "smart_gaps inverse_outer"
+   ]
+  },
+  {
+   "probability": 0.2,
+   "choices": [
+    "default_border pixel 1",
+    "default_border none",
+    "default_border normal 4"
+   ]
+  }
+ ],
+ "window": "exec foot --app-id={ident} --title={ident} sh -c 'sleep 300'",
+ "window_probability": [
+  [
+   0,
+   0.9
+  ],
+  [
+   1,
+   0.45
+  ],
+  [
+   2,
+   0.2
+  ],
+  [
+   5,
+   0.1
+  ],
+  [
+   8,
+   0.04
+  ],
+  [
+   12,
+   0.0
+  ]
+ ],
+ "window_cap": 12,
+ "hinted_fraction": 0.1,
+ "hinted_shapes": [
+  [
+   300,
+   200,
+   300,
+   200,
+   0
+  ],
+  [
+   0,
+   0,
+   0,
+   0,
+   1
+  ],
+  [
+   200,
+   150,
+   0,
+   0,
+   0
+  ],
+  [
+   400,
+   300,
+   400,
+   300,
+   1
+  ]
+ ],
+ "rule_fraction": 0.1,
+ "map_rules": [
+  "for_window [app_id=\"{next}\"] fullscreen enable",
+  "for_window [app_id=\"{next}\"] floating enable",
+  "for_window [app_id=\"{next}\"] move scratchpad",
+  "for_window [app_id=\"{next}\"] sticky enable",
+  "for_window [app_id=\"{next}\"] layout tabbed",
+  "for_window [app_id=\"{next}\"] split v",
+  "no_focus [app_id=\"{next}\"]",
+  "assign [app_id=\"{next}\"] workspace 2"
+ ],
+ "two_output_probability": 0.3,
+ "recipe_probability": 0.12,
+ "noise_probability": 0.15,
+ "primary_deadline": 5,
+ "precondition_factor": 0.05,
+ "base_weights": {
+  "core": 3.0,
+  "mid": 2.0,
+  "low": 1.0,
+  "knob": 0.15,
+  "dead": 0.03
+ },
+ "multipliers": [
+  {
+   "when": [
+    "focused_fs>0"
+   ],
+   "favour": [
+    "split",
+    "floating_toggle",
+    "exec",
+    "kill_crit",
+    "focus_tiling",
+    "focus_floating",
+    "focus_parent",
+    "move_ws",
+    "move_output",
+    "swap",
+    "layout_tabbed",
+    "ws_next"
+   ],
+   "disfavour": [
+    "fs_enable"
+   ]
+  },
+  {
+   "when": [
+    "global_fs"
+   ],
+   "favour": [
+    "ws_switch",
+    "move_ws_next",
+    "split",
+    "kill"
+   ]
+  },
+  {
+   "when": [
+    "focused_floating"
+   ],
+   "favour": [
+    "split",
+    "layout",
+    "fullscreen",
+    "border_csd",
+    "move_mark",
+    "swap",
+    "move_scratch",
+    "sticky",
+    "resize_ppt",
+    "focus_next",
+    "crit_floating",
+    "crit_tiling",
+    "floating_disable",
+    "move_pos"
+   ]
+  },
+  {
+   "when": [
+    "focused_in_floating_split"
+   ],
+   "favour": [
+    "move_ws",
+    "floating_toggle",
+    "layout",
+    "crit_floating",
+    "kill",
+    "focus_parent"
+   ]
+  },
+  {
+   "when": [
+    "focus_kind==split"
+   ],
+   "favour": [
+    "kill",
+    "floating_enable",
+    "fullscreen",
+    "border",
+    "mark",
+    "urgent",
+    "resize",
+    "sticky",
+    "move_ws",
+    "split_none"
+   ],
+   "disfavour": [
+    "focus_parent"
+   ]
+  },
+  {
+   "when": [
+    "focus_kind==workspace"
+   ],
+   "favour": [
+    "move_dir",
+    "move_ws",
+    "move_output",
+    "split",
+    "layout_default",
+    "floating_toggle",
+    "kill",
+    "gaps",
+    "fullscreen",
+    "layout",
+    "move_scratch"
+   ]
+  },
+  {
+   "when": [
+    "parent_tabbed"
+   ],
+   "favour": [
+    "move_dir",
+    "swap",
+    "split",
+    "focus_next",
+    "exec",
+    "kill",
+    "layout_toggle",
+    "crit_inactive"
+   ]
+  },
+  {
+   "when": [
+    "only_child"
+   ],
+   "favour": [
+    "split_none",
+    "layout",
+    "move_dir",
+    "split"
+   ]
+  },
+  {
+   "when": [
+    "scratch_hidden>0"
+   ],
+   "favour": [
+    "scratch_show",
+    "crit_scratch",
+    "move_mark"
+   ]
+  },
+  {
+   "when": [
+    "scratch_visible>0"
+   ],
+   "favour": [
+    "scratch_show",
+    "floating_disable",
+    "fullscreen",
+    "ws_switch"
+   ]
+  },
+  {
+   "when": [
+    "marks_other"
+   ],
+   "favour": [
+    "swap",
+    "move_mark",
+    "crit_mark"
+   ]
+  },
+  {
+   "when": [
+    "marks_self"
+   ],
+   "disfavour": [
+    "mark"
+   ]
+  },
+  {
+   "when": [
+    "outputs>=2"
+   ],
+   "favour": [
+    "move_output",
+    "focus_output",
+    "move_dir",
+    "ws_next",
+    "move_ws_output"
+   ]
+  },
+  {
+   "when": [
+    "shallow"
+   ],
+   "favour": [
+    "split",
+    "layout_tabbed",
+    "focus_parent"
+   ]
+  },
+  {
+   "when": [
+    "ws_empty"
+   ],
+   "favour": [
+    "empty_forms",
+    "gaps",
+    "ws_next"
+   ],
+   "disfavour": [
+    "kill",
+    "focus_dir"
+   ]
+  },
+  {
+   "when": [
+    "urgent>0"
+   ],
+   "favour": [
+    "crit_urgent",
+    "ws_switch",
+    "focus_parent"
+   ]
+  },
+  {
+   "when": [
+    "transient"
+   ],
+   "favour": [
+    "popup"
+   ],
+   "factor": 33.0
+  }
+ ],
+ "commands": [
+  {
+   "cmd": "splith",
+   "class": "core",
+   "tags": [
+    "split"
+   ]
+  },
+  {
+   "cmd": "splitv",
+   "class": "core",
+   "tags": [
+    "split"
+   ]
+  },
+  {
+   "cmd": "split h",
+   "class": "core",
+   "tags": [
+    "split"
+   ]
+  },
+  {
+   "cmd": "split v",
+   "class": "core",
+   "tags": [
+    "split"
+   ]
+  },
+  {
+   "cmd": "split toggle",
+   "class": "core",
+   "tags": [
+    "split"
+   ]
+  },
+  {
+   "cmd": "splitt",
+   "class": "core",
+   "tags": [
+    "split"
+   ]
+  },
+  {
+   "cmd": "split none",
+   "class": "core",
+   "tags": [
+    "split_none"
+   ],
+   "needs": [
+    "only_child"
+   ]
+  },
+  {
+   "cmd": "layout tabbed",
+   "class": "core",
+   "tags": [
+    "layout",
+    "layout_tabbed"
+   ]
+  },
+  {
+   "cmd": "layout stacking",
+   "class": "core",
+   "tags": [
+    "layout",
+    "layout_tabbed"
+   ]
+  },
+  {
+   "cmd": "layout splith",
+   "class": "core",
+   "tags": [
+    "layout"
+   ]
+  },
+  {
+   "cmd": "layout splitv",
+   "class": "core",
+   "tags": [
+    "layout"
+   ]
+  },
+  {
+   "cmd": "layout toggle",
+   "class": "core",
+   "tags": [
+    "layout",
+    "layout_toggle"
+   ]
+  },
+  {
+   "cmd": "layout toggle split",
+   "class": "core",
+   "tags": [
+    "layout",
+    "layout_toggle"
+   ]
+  },
+  {
+   "cmd": "layout toggle all",
+   "class": "core",
+   "tags": [
+    "layout",
+    "layout_toggle"
+   ]
+  },
+  {
+   "cmd": "layout toggle tabbed stacking split",
+   "class": "core",
+   "tags": [
+    "layout",
+    "layout_toggle"
+   ]
+  },
+  {
+   "cmd": "layout toggle splitv tabbed",
+   "class": "core",
+   "tags": [
+    "layout",
+    "layout_toggle"
+   ]
+  },
+  {
+   "cmd": "layout default",
+   "class": "core",
+   "tags": [
+    "layout",
+    "layout_default"
+   ],
+   "needs": [
+    "prev_layout"
+   ]
+  },
+  {
+   "cmd": "floating toggle",
+   "class": "core",
+   "tags": [
+    "floating_toggle",
+    "floating_enable"
+   ]
+  },
+  {
+   "cmd": "floating enable",
+   "class": "core",
+   "tags": [
+    "floating_enable"
+   ],
+   "needs": [
+    "!focused_floating"
+   ]
+  },
+  {
+   "cmd": "floating disable",
+   "class": "core",
+   "tags": [
+    "floating_disable"
+   ],
+   "needs": [
+    "focused_floating"
+   ]
+  },
+  {
+   "cmd": "fullscreen toggle",
+   "class": "core",
+   "tags": [
+    "fullscreen",
+    "fs_enable"
+   ]
+  },
+  {
+   "cmd": "fullscreen enable",
+   "class": "core",
+   "tags": [
+    "fullscreen",
+    "fs_enable"
+   ]
+  },
+  {
+   "cmd": "fullscreen disable",
+   "class": "core",
+   "tags": [
+    "fullscreen"
+   ],
+   "needs": [
+    "focused_fs>0"
+   ]
+  },
+  {
+   "cmd": "fullscreen toggle global",
+   "class": "core",
+   "tags": [
+    "fullscreen",
+    "fs_enable",
+    "fs_global"
+   ]
+  },
+  {
+   "cmd": "fullscreen enable global",
+   "class": "core",
+   "tags": [
+    "fullscreen",
+    "fs_enable",
+    "fs_global"
+   ]
+  },
+  {
+   "cmd": "fullscreen disable global",
+   "class": "core",
+   "tags": [
+    "fullscreen"
+   ],
+   "needs": [
+    "global_fs"
+   ]
+  },
+  {
+   "cmd": "focus {dir}",
+   "class": "core",
+   "tags": [
+    "focus_dir"
+   ]
+  },
+  {
+   "cmd": "focus parent",
+   "class": "core",
+   "tags": [
+    "focus_parent"
+   ]
+  },
+  {
+   "cmd": "focus child",
+   "class": "core",
+   "tags": [
+    "focus_child"
+   ],
+   "needs": [
+    "focus_kind!=view"
+   ]
+  },
+  {
+   "cmd": "focus next",
+   "class": "core",
+   "tags": [
+    "focus_next"
+   ]
+  },
+  {
+   "cmd": "focus prev",
+   "class": "core",
+   "tags": [
+    "focus_next"
+   ]
+  },
+  {
+   "cmd": "focus next sibling",
+   "class": "core",
+   "tags": [
+    "focus_next"
+   ]
+  },
+  {
+   "cmd": "focus prev sibling",
+   "class": "core",
+   "tags": [
+    "focus_next"
+   ]
+  },
+  {
+   "cmd": "focus tiling",
+   "class": "core",
+   "tags": [
+    "focus_tiling"
+   ]
+  },
+  {
+   "cmd": "focus floating",
+   "class": "core",
+   "tags": [
+    "focus_floating"
+   ],
+   "needs": [
+    "floaters_ws>0"
+   ]
+  },
+  {
+   "cmd": "focus mode_toggle",
+   "class": "core",
+   "tags": [
+    "focus_floating"
+   ],
+   "needs": [
+    "floaters_ws>0"
+   ]
+  },
+  {
+   "cmd": "focus output {o}",
+   "class": "core",
+   "tags": [
+    "focus_output"
+   ],
+   "needs": [
+    "outputs>=2"
+   ]
+  },
+  {
+   "cmd": "move {dir}",
+   "class": "core",
+   "tags": [
+    "move_dir"
+   ]
+  },
+  {
+   "cmd": "move {dir}",
+   "class": "core",
+   "tags": [
+    "move_dir"
+   ]
+  },
+  {
+   "cmd": "move left 20 px",
+   "class": "core",
+   "tags": [
+    "move_dir",
+    "move_pos"
+   ]
+  },
+  {
+   "cmd": "move container to workspace {ws_other}",
+   "class": "core",
+   "tags": [
+    "move_ws"
+   ]
+  },
+  {
+   "cmd": "move container to workspace {ws_new}",
+   "class": "core",
+   "tags": [
+    "move_ws"
+   ]
+  },
+  {
+   "cmd": "move container to workspace number 3",
+   "class": "core",
+   "tags": [
+    "move_ws"
+   ]
+  },
+  {
+   "cmd": "move container to workspace next",
+   "class": "core",
+   "tags": [
+    "move_ws",
+    "move_ws_next"
+   ]
+  },
+  {
+   "cmd": "move container to workspace prev",
+   "class": "core",
+   "tags": [
+    "move_ws"
+   ]
+  },
+  {
+   "cmd": "move container to workspace back_and_forth",
+   "class": "core",
+   "tags": [
+    "move_ws"
+   ],
+   "needs": [
+    "has_prev_ws"
+   ]
+  },
+  {
+   "cmd": "move --no-auto-back-and-forth container to workspace {ws_focused}",
+   "class": "core",
+   "tags": [
+    "move_ws"
+   ]
+  },
+  {
+   "cmd": "move scratchpad",
+   "class": "core",
+   "tags": [
+    "move_scratch"
+   ]
+  },
+  {
+   "cmd": "move container to output {o}",
+   "class": "core",
+   "tags": [
+    "move_output"
+   ],
+   "needs": [
+    "outputs>=2"
+   ]
+  },
+  {
+   "cmd": "move workspace to output {o}",
+   "class": "core",
+   "tags": [
+    "move_output",
+    "move_ws_output"
+   ],
+   "needs": [
+    "outputs>=2"
+   ]
+  },
+  {
+   "cmd": "move position center",
+   "class": "core",
+   "tags": [
+    "move_pos"
+   ],
+   "needs": [
+    "focused_floating"
+   ]
+  },
+  {
+   "cmd": "move position 100 px 80 px",
+   "class": "core",
+   "tags": [
+    "move_pos"
+   ],
+   "needs": [
+    "focused_floating"
+   ]
+  },
+  {
+   "cmd": "move absolute position 10 px 20 px",
+   "class": "core",
+   "tags": [
+    "move_pos"
+   ],
+   "needs": [
+    "focused_floating"
+   ]
+  },
+  {
+   "cmd": "move position 50 ppt 50 ppt",
+   "class": "core",
+   "tags": [
+    "move_pos"
+   ],
+   "needs": [
+    "focused_floating"
+   ]
+  },
+  {
+   "cmd": "swap container with mark {mark}",
+   "class": "core",
+   "tags": [
+    "swap"
+   ],
+   "needs": [
+    "marks_other"
+   ]
+  },
+  {
+   "cmd": "swap container with con_id {con_other}",
+   "class": "core",
+   "tags": [
+    "swap"
+   ],
+   "needs": [
+    "views>=2"
+   ]
+  },
+  {
+   "cmd": "kill",
+   "class": "core",
+   "tags": [
+    "kill"
+   ]
+  },
+  {
+   "cmd": "[app_id=\"{other_app}\"] focus",
+   "class": "core",
+   "tags": [
+    "crit_app"
+   ],
+   "needs": [
+    "views>=2"
+   ]
+  },
+  {
+   "cmd": "[app_id=\"{sibling}\"] kill",
+   "class": "core",
+   "tags": [
+    "kill_crit",
+    "crit_app"
+   ],
+   "needs": [
+    "has_siblings"
+   ]
+  },
+  {
+   "cmd": "[app_id=\"{other_app}\"] floating enable",
+   "class": "core",
+   "tags": [
+    "crit_app",
+    "floating_enable"
+   ],
+   "needs": [
+    "views>=2"
+   ]
+  },
+  {
+   "cmd": "[con_mark=\"{mark}\"] focus",
+   "class": "core",
+   "tags": [
+    "crit_mark"
+   ],
+   "needs": [
+    "marks_any"
+   ]
+  },
+  {
+   "cmd": "[con_mark=\"{mark}\"] kill",
+   "class": "core",
+   "tags": [
+    "crit_mark"
+   ],
+   "needs": [
+    "marks_any"
+   ]
+  },
+  {
+   "cmd": "[workspace=\"{ws_other}\"] move container to workspace {ws_focused}",
+   "class": "core",
+   "tags": [
+    "crit_ws"
+   ],
+   "needs": [
+    "two_ws"
+   ]
+  },
+  {
+   "cmd": "[floating] border pixel 4",
+   "class": "core",
+   "tags": [
+    "crit_floating"
+   ],
+   "needs": [
+    "floaters_any>0"
+   ]
+  },
+  {
+   "cmd": "[tiling] mark --add tiled",
+   "class": "core",
+   "tags": [
+    "crit_tiling"
+   ]
+  },
+  {
+   "cmd": "[urgent=latest] focus",
+   "class": "core",
+   "tags": [
+    "crit_urgent"
+   ],
+   "needs": [
+    "urgent>0"
+   ]
+  },
+  {
+   "cmd": "[urgent=oldest] focus",
+   "class": "core",
+   "tags": [
+    "crit_urgent"
+   ],
+   "needs": [
+    "urgent>0"
+   ]
+  },
+  {
+   "cmd": "[con_id=__focused__] mark --add z",
+   "class": "core",
+   "tags": [
+    "mark"
+   ]
+  },
+  {
+   "cmd": "[con_id={con_other}] focus",
+   "class": "core",
+   "tags": [
+    "crit_app"
+   ],
+   "needs": [
+    "views>=2"
+   ]
+  },
+  {
+   "cmd": "[app_id=nomatch] kill",
+   "class": "core",
+   "tags": [
+    "crit_app"
+   ]
+  },
+  {
+   "cmd": "[app_id=\"^fixture-diff-[23]$\"] floating enable",
+   "class": "core",
+   "tags": [
+    "crit_app",
+    "crit_floating"
+   ]
+  },
+  {
+   "cmd": "[app_id=\"{inactive_tab}\"] focus",
+   "class": "core",
+   "tags": [
+    "crit_inactive"
+   ],
+   "needs": [
+    "inactive_tab_count>0"
+   ]
+  },
+  {
+   "cmd": "[app_id=\"{hidden_app}\"] scratchpad show",
+   "class": "core",
+   "tags": [
+    "crit_scratch"
+   ],
+   "needs": [
+    "scratch_hidden>0"
+   ]
+  },
+  {
+   "cmd": "[app_id=\"{hidden_app}\"] focus",
+   "class": "core",
+   "tags": [
+    "crit_scratch"
+   ],
+   "needs": [
+    "scratch_hidden>0"
+   ]
+  },
+  {
+   "cmd": "[title=\"fixture-diff-2\"] focus",
+   "class": "core",
+   "tags": [
+    "crit_app"
+   ]
+  },
+  {
+   "cmd": "[workspace=__focused__] move container to workspace {ws_other}",
+   "class": "core",
+   "tags": [
+    "crit_ws",
+    "move_ws"
+   ]
+  },
+  {
+   "cmd": "[shell=\"xdg_shell\"] mark --add x",
+   "class": "core",
+   "tags": [
+    "crit_app"
+   ]
+  },
+  {
+   "cmd": "resize grow width 10 px",
+   "class": "mid",
+   "tags": [
+    "resize"
+   ]
+  },
+  {
+   "cmd": "resize shrink height 10 px",
+   "class": "mid",
+   "tags": [
+    "resize"
+   ]
+  },
+  {
+   "cmd": "resize grow height 10 ppt",
+   "class": "mid",
+   "tags": [
+    "resize"
+   ]
+  },
+  {
+   "cmd": "resize shrink width 5 ppt",
+   "class": "mid",
+   "tags": [
+    "resize"
+   ]
+  },
+  {
+   "cmd": "resize grow left 20 px",
+   "class": "mid",
+   "tags": [
+    "resize"
+   ]
+  },
+  {
+   "cmd": "resize set 400 300",
+   "class": "mid",
+   "tags": [
+    "resize"
+   ]
+  },
+  {
+   "cmd": "resize set 0 300",
+   "class": "mid",
+   "tags": [
+    "resize"
+   ]
+  },
+  {
+   "cmd": "resize grow width 10 px or 5 ppt",
+   "class": "mid",
+   "tags": [
+    "resize"
+   ]
+  },
+  {
+   "cmd": "resize set width 50 ppt",
+   "class": "mid",
+   "tags": [
+    "resize",
+    "resize_ppt"
+   ]
+  },
+  {
+   "cmd": "resize set width 30 ppt height 40 ppt",
+   "class": "mid",
+   "tags": [
+    "resize",
+    "resize_ppt"
+   ]
+  },
+  {
+   "cmd": "mark {newmark}",
+   "class": "mid",
+   "tags": [
+    "mark"
+   ]
+  },
+  {
+   "cmd": "mark --add {newmark}",
+   "class": "mid",
+   "tags": [
+    "mark"
+   ]
+  },
+  {
+   "cmd": "mark --toggle {newmark}",
+   "class": "mid",
+   "tags": [
+    "mark"
+   ]
+  },
+  {
+   "cmd": "mark --replace {newmark}",
+   "class": "mid",
+   "tags": [
+    "mark"
+   ]
+  },
+  {
+   "cmd": "unmark {mark}",
+   "class": "mid",
+   "tags": [
+    "unmark"
+   ],
+   "needs": [
+    "marks_any"
+   ]
+  },
+  {
+   "cmd": "unmark",
+   "class": "mid",
+   "tags": [
+    "unmark"
+   ]
+  },
+  {
+   "cmd": "scratchpad show",
+   "class": "mid",
+   "tags": [
+    "scratch_show"
+   ],
+   "needs": [
+    "scratch_any"
+   ]
+  },
+  {
+   "cmd": "sticky enable",
+   "class": "mid",
+   "tags": [
+    "sticky"
+   ],
+   "needs": [
+    "focused_floating"
+   ]
+  },
+  {
+   "cmd": "sticky toggle",
+   "class": "mid",
+   "tags": [
+    "sticky"
+   ],
+   "needs": [
+    "focused_floating"
+   ]
+  },
+  {
+   "cmd": "sticky disable",
+   "class": "mid",
+   "tags": [
+    "sticky"
+   ],
+   "needs": [
+    "sticky>0"
+   ]
+  },
+  {
+   "cmd": "workspace {ws_other}",
+   "class": "mid",
+   "tags": [
+    "ws_switch"
+   ]
+  },
+  {
+   "cmd": "workspace number 3",
+   "class": "mid",
+   "tags": [
+    "ws_switch"
+   ]
+  },
+  {
+   "cmd": "workspace --no-auto-back-and-forth 1",
+   "class": "mid",
+   "tags": [
+    "ws_switch"
+   ]
+  },
+  {
+   "cmd": "workspace {ws_new}",
+   "class": "mid",
+   "tags": [
+    "ws_switch",
+    "empty_forms"
+   ]
+  },
+  {
+   "cmd": "workspace next",
+   "class": "mid",
+   "tags": [
+    "ws_switch",
+    "ws_next"
+   ]
+  },
+  {
+   "cmd": "workspace prev",
+   "class": "mid",
+   "tags": [
+    "ws_switch",
+    "ws_next"
+   ]
+  },
+  {
+   "cmd": "workspace next_on_output",
+   "class": "mid",
+   "tags": [
+    "ws_next",
+    "empty_forms"
+   ]
+  },
+  {
+   "cmd": "workspace prev_on_output",
+   "class": "mid",
+   "tags": [
+    "ws_next",
+    "empty_forms"
+   ]
+  },
+  {
+   "cmd": "workspace back_and_forth",
+   "class": "mid",
+   "tags": [
+    "ws_switch"
+   ],
+   "needs": [
+    "has_prev_ws"
+   ]
+  },
+  {
+   "cmd": "move container to mark {mark}",
+   "class": "mid",
+   "tags": [
+    "move_mark"
+   ],
+   "needs": [
+    "marks_other"
+   ]
+  },
+  {
+   "cmd": "focus parent; kill",
+   "class": "mid",
+   "tags": [
+    "kill",
+    "chained"
+   ]
+  },
+  {
+   "cmd": "focus parent; floating toggle",
+   "class": "mid",
+   "tags": [
+    "floating_toggle",
+    "chained"
+   ]
+  },
+  {
+   "cmd": "focus parent; fullscreen toggle",
+   "class": "mid",
+   "tags": [
+    "fullscreen",
+    "chained"
+   ]
+  },
+  {
+   "cmd": "focus parent; mark {newmark}",
+   "class": "mid",
+   "tags": [
+    "mark",
+    "chained"
+   ]
+  },
+  {
+   "cmd": "focus parent; split v",
+   "class": "mid",
+   "tags": [
+    "split",
+    "chained"
+   ]
+  },
+  {
+   "cmd": "focus parent, focus child",
+   "class": "mid",
+   "tags": [
+    "chained"
+   ]
+  },
+  {
+   "cmd": "split h; layout default",
+   "class": "mid",
+   "tags": [
+    "empty_forms",
+    "layout_default",
+    "chained"
+   ]
+  },
+  {
+   "cmd": "fullscreen toggle; move scratchpad",
+   "class": "mid",
+   "tags": [
+    "move_scratch",
+    "chained"
+   ]
+  },
+  {
+   "cmd": "focus parent; [app_id=\"{other_app}\"] urgent enable",
+   "class": "mid",
+   "tags": [
+    "urgent",
+    "chained"
+   ]
+  },
+  {
+   "cmd": "border none",
+   "class": "low",
+   "tags": [
+    "border"
+   ]
+  },
+  {
+   "cmd": "border normal",
+   "class": "low",
+   "tags": [
+    "border"
+   ]
+  },
+  {
+   "cmd": "border normal 4",
+   "class": "low",
+   "tags": [
+    "border"
+   ]
+  },
+  {
+   "cmd": "border pixel 1",
+   "class": "low",
+   "tags": [
+    "border"
+   ]
+  },
+  {
+   "cmd": "border pixel 0",
+   "class": "low",
+   "tags": [
+    "border"
+   ]
+  },
+  {
+   "cmd": "border pixel 3",
+   "class": "low",
+   "tags": [
+    "border"
+   ]
+  },
+  {
+   "cmd": "border toggle",
+   "class": "low",
+   "tags": [
+    "border"
+   ]
+  },
+  {
+   "cmd": "border csd",
+   "class": "low",
+   "tags": [
+    "border",
+    "border_csd"
+   ]
+  },
+  {
+   "cmd": "gaps inner current set 10",
+   "class": "low",
+   "tags": [
+    "gaps",
+    "empty_forms"
+   ]
+  },
+  {
+   "cmd": "gaps top current set 15",
+   "class": "low",
+   "tags": [
+    "gaps",
+    "empty_forms"
+   ]
+  },
+  {
+   "cmd": "gaps outer current plus 5",
+   "class": "low",
+   "tags": [
+    "gaps"
+   ]
+  },
+  {
+   "cmd": "gaps inner all set 0",
+   "class": "low",
+   "tags": [
+    "gaps"
+   ]
+  },
+  {
+   "cmd": "gaps horizontal current toggle 8",
+   "class": "low",
+   "tags": [
+    "gaps"
+   ]
+  },
+  {
+   "cmd": "gaps inner current minus 20",
+   "class": "low",
+   "tags": [
+    "gaps"
+   ]
+  },
+  {
+   "cmd": "smart_gaps on",
+   "class": "low",
+   "tags": [
+    "gaps"
+   ]
+  },
+  {
+   "cmd": "smart_gaps off",
+   "class": "low",
+   "tags": [
+    "gaps"
+   ]
+  },
+  {
+   "cmd": "smart_gaps inverse_outer",
+   "class": "low",
+   "tags": [
+    "gaps"
+   ]
+  },
+  {
+   "cmd": "hide_edge_borders smart",
+   "class": "low",
+   "tags": [
+    "edge"
+   ]
+  },
+  {
+   "cmd": "hide_edge_borders smart_no_gaps",
+   "class": "low",
+   "tags": [
+    "edge"
+   ]
+  },
+  {
+   "cmd": "hide_edge_borders both",
+   "class": "low",
+   "tags": [
+    "edge"
+   ]
+  },
+  {
+   "cmd": "hide_edge_borders --i3 none",
+   "class": "low",
+   "tags": [
+    "edge"
+   ]
+  },
+  {
+   "cmd": "hide_edge_borders none",
+   "class": "low",
+   "tags": [
+    "edge"
+   ]
+  },
+  {
+   "cmd": "smart_borders on",
+   "class": "low",
+   "tags": [
+    "edge"
+   ]
+  },
+  {
+   "cmd": "smart_borders no_gaps",
+   "class": "low",
+   "tags": [
+    "edge"
+   ]
+  },
+  {
+   "cmd": "smart_borders off",
+   "class": "low",
+   "tags": [
+    "edge"
+   ]
+  },
+  {
+   "cmd": "rename workspace to {ws_new}",
+   "class": "low",
+   "tags": [
+    "rename"
+   ]
+  },
+  {
+   "cmd": "rename workspace {ws_other} to oracle-renamed",
+   "class": "low",
+   "tags": [
+    "rename"
+   ],
+   "needs": [
+    "two_ws"
+   ]
+  },
+  {
+   "cmd": "rename workspace to {ws_other}",
+   "class": "low",
+   "tags": [
+    "rename"
+   ],
+   "needs": [
+    "two_ws"
+   ]
+  },
+  {
+   "cmd": "urgent enable",
+   "class": "low",
+   "tags": [
+    "urgent"
+   ]
+  },
+  {
+   "cmd": "urgent disable",
+   "class": "low",
+   "tags": [
+    "urgent"
+   ]
+  },
+  {
+   "cmd": "[app_id=\"{other_app}\"] urgent enable",
+   "class": "low",
+   "tags": [
+    "urgent"
+   ],
+   "needs": [
+    "views>=2"
+   ]
+  },
+  {
+   "cmd": "title_format [%app_id] %title",
+   "class": "low",
+   "tags": [
+    "title"
+   ],
+   "needs": [
+    "focus_kind==split"
+   ]
+  },
+  {
+   "cmd": "output * scale 2",
+   "class": "low",
+   "tags": [
+    "output"
+   ]
+  },
+  {
+   "cmd": "output * scale 1",
+   "class": "low",
+   "tags": [
+    "output"
+   ]
+  },
+  {
+   "cmd": "output * transform 90",
+   "class": "low",
+   "tags": [
+    "output"
+   ]
+  },
+  {
+   "cmd": "output * transform normal",
+   "class": "low",
+   "tags": [
+    "output"
+   ]
+  },
+  {
+   "cmd": "@window",
+   "class": "low",
+   "tags": [
+    "exec"
+   ]
+  },
+  {
+   "cmd": "inhibit_idle focus",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "inhibit_idle none",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "max_render_time 5",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "max_render_time off",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "allow_tearing yes",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "allow_tearing no",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "focus_wrapping no",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "focus_wrapping yes",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "focus_wrapping force",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "focus_wrapping workspace",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "force_focus_wrapping yes",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "workspace_auto_back_and_forth yes",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "workspace_auto_back_and_forth no",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "default_border pixel 1",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "default_border normal 2",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "default_border none",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "default_floating_border pixel 3",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "default_floating_border normal 2",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "floating_minimum_size 100 x 100",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "floating_maximum_size 800 x 600",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "floating_maximum_size -1 x -1",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "titlebar_padding 4 3",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "titlebar_border_thickness 2",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "font monospace 14",
+   "class": "knob",
+   "tags": [
+    "knob"
+   ]
+  },
+  {
+   "cmd": "client.focused #4c7899 #285577 #ffffff #2e9ef4 #285577",
+   "class": "dead",
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "cmd": "bindsym Mod4+F12 nop oracle",
+   "class": "dead",
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "cmd": "unbindsym Mod4+F12",
+   "class": "dead",
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "cmd": "mouse_warping none",
+   "class": "dead",
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "cmd": "focus_follows_mouse yes",
+   "class": "dead",
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "cmd": "tiling_drag disable",
+   "class": "dead",
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "cmd": "floating_modifier Mod4 normal",
+   "class": "dead",
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "cmd": "title_align center",
+   "class": "dead",
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "cmd": "show_marks yes",
+   "class": "dead",
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "cmd": "bar mode hide",
+   "class": "dead",
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "cmd": "nop oracle",
+   "class": "dead",
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "cmd": "set $oracle value",
+   "class": "dead",
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "cmd": "mode default",
+   "class": "dead",
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "cmd": "opacity set 0.5",
+   "class": "dead",
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "cmd": "shortcuts_inhibitor enable",
+   "class": "dead",
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "cmd": "focus_on_window_activation focus",
+   "class": "dead",
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "cmd": "new_window pixel 2",
+   "class": "dead",
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "cmd": "new_float normal 1",
+   "class": "dead",
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "cmd": "popup_during_fullscreen leave_fullscreen",
+   "class": "dead",
+   "tags": [
+    "popup"
+   ]
+  },
+  {
+   "cmd": "popup_during_fullscreen smart",
+   "class": "dead",
+   "tags": [
+    "popup"
+   ]
+  }
+ ]
+}

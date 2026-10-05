@@ -33,6 +33,8 @@ def dependencies(result: Path, compositor: str) -> list[str]:
     stem = result.stem
     if stem.endswith("-i3-derived"):
         return paths + ["contrib/sway-ipc-run", "sway-ipc/i3-derived", "sway-ipc/applicability.toml"]
+    if stem.endswith("-random-v3"):
+        return paths + ["contrib/sway-ipc-run", "contrib/sway_ipc_v3.py", "sway-ipc/random-v3"]
     if stem.endswith("-random-v2"):
         # The replay config (DIFFERENTIAL_CONFIGS) lives in the runner.
         return paths + ["contrib/sway-ipc-run", "sway-ipc/random-v2"]

@@ -24,6 +24,7 @@ import tomllib
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "contrib"))
 import provenance  # noqa: E402
+import sway_ipc_v3  # noqa: E402
 FIXTURES = ROOT / "sway-ipc/fixtures"
 MAGIC = b"i3-ipc"
 TYPES = {"command": 0, "workspaces": 1, "subscribe": 2, "outputs": 3, "tree": 4, "marks": 5, "version": 7, "binding_modes": 8, "binding_state": 12, "inputs": 100, "seats": 101, "tick": 10}
@@ -38,8 +39,9 @@ I3_DERIVED = ROOT / "sway-ipc/i3-derived"
 RANDOM = ROOT / "sway-ipc/random"
 # random-v2 widens the generator; v1 stays byte-identical so its numbers stay comparable.
 RANDOM_V2 = ROOT / "sway-ipc/random-v2"
-RANDOM_ROOTS = {"v1": RANDOM, "v2": RANDOM_V2}
-RANDOM_SUFFIXES = {"v1": "-random", "v2": "-random-v2"}
+# random-v3 generates online from sway state (contrib/sway_ipc_v3.py); v2 stays byte-identical.
+RANDOM_ROOTS = {"v1": RANDOM, "v2": RANDOM_V2, "v3": sway_ipc_v3.RANDOM_V3}
+RANDOM_SUFFIXES = {"v1": "-random", "v2": "-random-v2", "v3": "-random-v3"}
 FUZZ_FIXTURES = ROOT / "sway-ipc/fuzz"
 COMMAND_FAMILIES = FUZZ_FIXTURES / "command-families.json"
 FUZZ_BUDGETS = {"ci": (2, 10), "local": (None, 16)}
@@ -164,6 +166,8 @@ def generate_commands_v2(seed, steps):
 
 
 GENERATORS = {"v1": generate_commands, "v2": generate_commands_v2}
+# v3 is not a (seed, steps) -> commands function: it reads sway state between steps.
+GENERATOR_CHOICES = (*GENERATORS, "v3")
 
 
 def minimize_commands(commands, reproduces):
@@ -835,6 +839,8 @@ class Adapter:
                 return
 
     def command_reply(self, text):
+        if "@con:" in text:
+            text = sway_ipc_v3.resolve_con_tokens(ipc(self.socket, "tree"), text)
         return ipc(self.socket, "command", self.translate_command(text))
 
     def translate_command(self, text):
@@ -1131,7 +1137,31 @@ DIFFERENTIAL_CONFIGS = {
 }
 
 
+def differential_adapter(compositor, adapter_args, run_dir, scenario=None):
+    adapter = ADAPTERS[compositor](adapter_args, run_dir, scenario)
+    if compositor in DIFFERENTIAL_CONFIGS:
+        config = DIFFERENTIAL_CONFIGS[compositor]
+        if compositor == "swayward" and scenario and scenario.get("output_layout"):
+            # rendered_config emits every declared output; a fixed headless-1 would duplicate one.
+            config = "".join(line + "\n" for line in config.splitlines()
+                             if not line.startswith('output "headless-1"'))
+        adapter.config_text = config
+    return adapter
+
+
+def output_rects(adapter):
+    """Active output rectangles in position order, plus the focused one's rectangle."""
+    outputs = [item for item in ipc(adapter.socket, "outputs") if item.get("active")]
+    rect = lambda item: tuple(item["rect"][key] for key in ("x", "y", "width", "height"))
+    return sorted(map(rect, outputs)), [rect(item) for item in outputs if item.get("focused")]
+
+
 def differential_action(adapter, text):
+    if text.startswith("xdg-hinted "):
+        ident, *values = text.split()[1:]
+        min_width, min_height, max_width, max_height, parent = map(int, values)
+        adapter.open_hinted_window(ident, min_width, min_height, max_width, max_height, bool(parent))
+        return [{"success": True}]
     before = fixture_window_count(ipc(adapter.socket, "tree"))
     if isinstance(adapter, I3Adapter) and text.startswith("exec foot --app-id="):
         ident = text.split("--app-id=", 1)[1].split(" ", 1)[0]
@@ -1146,7 +1176,109 @@ def differential_action(adapter, text):
     return reply
 
 
-def differential_once(args, commands, keep_state=False):
+def start_differential(args, base, adapters, versions, logs, scenario=None):
+    for label, compositor, binary in (
+        ("a", args.a, args.a_binary), ("b", args.b, args.b_binary)
+    ):
+        run_dir = base / label
+        run_dir.mkdir()
+        adapter_args = argparse.Namespace(binary=binary, timeout=args.timeout)
+        adapter = differential_adapter(compositor, adapter_args, run_dir, scenario)
+        log = open(run_dir / "compositor.log", "w")
+        logs.append(log)
+        versions.append(adapter.start(log))
+        adapters.append(adapter)
+        reply = adapter.command_reply("output * mode --custom 1280x720@60Hz")
+        if not reply or not reply[0].get("success"):
+            raise RuntimeError(f"could not set differential output mode: {reply}")
+    if scenario and scenario.get("output_layout"):
+        layouts = [output_rects(adapter) for adapter in adapters]
+        if layouts[0] != layouts[1]:
+            raise RuntimeError(f"harness issue: output layouts differ at step 0: {layouts}")
+
+
+def differential_step(adapters, text, settle):
+    if settle:
+        states = [random_observation(adapter, text) for adapter in adapters]
+        return {request: [state[request] for state in states]
+                for request in ("command", "tree", "workspaces")}
+    observations = {"command": [differential_action(adapter, text) for adapter in adapters]}
+    for request in ("tree", "workspaces"):
+        observations[request] = [ipc(adapter.socket, request) for adapter in adapters]
+    return observations
+
+
+def first_difference(observations, rules):
+    for request, pair in observations.items():
+        differences = compare(pair[0], pair[1], request, rules)
+        if differences:
+            return request, differences
+    return None
+
+
+class CompositorCrash(RuntimeError):
+    """A compositor stopped answering IPC during a generated step: a finding, not a harness error."""
+    def __init__(self, labels, error):
+        super().__init__(f"{', '.join(labels)} stopped answering IPC: {error}")
+        self.labels = labels
+
+
+def unresponsive(adapters, labels):
+    dead = []
+    for adapter, label in zip(adapters, labels):
+        try:
+            ipc(adapter.socket, "version")
+        except (OSError, RuntimeError):
+            dead.append(label)
+    return dead
+
+
+def differential_online(args, gen, steps, scenario=None, commands=None):
+    """Like differential_once, but each command depends on sway's settled state.
+
+    Returns (divergence or None, versions, commands): commands is the emitted
+    list up to and including the divergent step, so the seed replays without
+    the generator. It fills in place, so the caller keeps it if a step raises;
+    a compositor that stops answering raises CompositorCrash.
+    """
+    with tempfile.TemporaryDirectory(prefix="sio-") as directory:
+        adapters, versions, logs = [], [], []
+        commands = [] if commands is None else commands
+        try:
+            start_differential(args, Path(directory), adapters, versions, logs, scenario)
+            rules = load_rules()
+            prelude = gen.prelude()
+            state = {"tree": ipc(adapters[0].socket, "tree"),
+                     "workspaces": ipc(adapters[0].socket, "workspaces")}
+            for step in range(1, steps + 1):
+                if step <= len(prelude):
+                    text = prelude[step - 1]
+                else:
+                    text = gen.next(sway_ipc_v3.features(state["tree"], state["workspaces"]), step)
+                commands.append(text)
+                try:
+                    observations = differential_step(adapters, text, settle=True)
+                except (OSError, RuntimeError) as error:
+                    time.sleep(0.5)
+                    dead = unresponsive(adapters, (args.a, args.b))
+                    if dead:
+                        raise CompositorCrash(dead, error) from error
+                    raise
+                gen.observe_reply(text, observations["command"][0])
+                state = {request: observations[request][0] for request in ("tree", "workspaces")}
+                found = first_difference(observations, rules)
+                if found:
+                    return {"step": step, "command": text, "request": found[0],
+                            "differences": found[1]}, versions, commands
+            return None, versions, commands
+        finally:
+            for adapter in reversed(adapters):
+                adapter.stop()
+            for log in logs:
+                log.close()
+
+
+def differential_once(args, commands, keep_state=False, scenario=None, settle=False):
     """Run one sequence on fresh compositors and return its first divergence."""
     with tempfile.TemporaryDirectory(prefix="sio-") as directory:
         base = Path(directory)
@@ -1154,43 +1286,25 @@ def differential_once(args, commands, keep_state=False):
         versions = []
         logs = []
         try:
-            for label, compositor, binary in (
-                ("a", args.a, args.a_binary), ("b", args.b, args.b_binary)
-            ):
-                run_dir = base / label
-                run_dir.mkdir()
-                adapter_args = argparse.Namespace(binary=binary, timeout=args.timeout)
-                adapter = ADAPTERS[compositor](adapter_args, run_dir)
-                if compositor in DIFFERENTIAL_CONFIGS:
-                    adapter.config_text = DIFFERENTIAL_CONFIGS[compositor]
-                log = open(run_dir / "compositor.log", "w")
-                logs.append(log)
-                versions.append(adapter.start(log))
-                adapters.append(adapter)
-                reply = adapter.command_reply("output * mode --custom 1280x720@60Hz")
-                if not reply or not reply[0].get("success"):
-                    raise RuntimeError(f"could not set differential output mode: {reply}")
+            start_differential(args, base, adapters, versions, logs, scenario)
             rules = load_rules()
             for step, text in enumerate(commands, 1):
-                replies = [differential_action(adapter, text) for adapter in adapters]
-                observations = {"command": replies}
-                for request in ("tree", "workspaces"):
-                    observations[request] = [ipc(adapter.socket, request) for adapter in adapters]
-                for request, pair in observations.items():
-                    differences = compare(pair[0], pair[1], request, rules)
-                    if differences:
-                        result = {
-                            "step": step, "command": text, "request": request,
-                            "differences": differences,
+                observations = differential_step(adapters, text, settle)
+                found = first_difference(observations, rules)
+                if found:
+                    request, differences = found
+                    result = {
+                        "step": step, "command": text, "request": request,
+                        "differences": differences,
+                    }
+                    if keep_state:
+                        result["sway_state"] = {
+                            "command": observations["command"][0],
+                            "tree": observations["tree"][0],
+                            "workspaces": observations["workspaces"][0],
+                            "outputs": ipc(adapters[0].socket, "outputs"),
                         }
-                        if keep_state:
-                            result["sway_state"] = {
-                                "command": observations["command"][0],
-                                "tree": observations["tree"][0],
-                                "workspaces": observations["workspaces"][0],
-                                "outputs": ipc(adapters[0].socket, "outputs"),
-                            }
-                        return result, versions
+                    return result, versions
             return None, versions
         finally:
             for adapter in reversed(adapters):
@@ -1199,7 +1313,7 @@ def differential_once(args, commands, keep_state=False):
                 log.close()
 
 
-def append_regression_scenario(seed, commands, state):
+def append_regression_scenario(seed, commands, state, scenario=None):
     name = f"differential_seed_{seed}"
     scenario_path = ROOT / "sway-ipc/scenarios.toml"
     existing = tomllib.loads(scenario_path.read_text())["scenario"]
@@ -1209,6 +1323,8 @@ def append_regression_scenario(seed, commands, state):
             if text.startswith("exec foot --app-id=fixture-diff-"):
                 ident = text.split("--app-id=", 1)[1].split(" ", 1)[0]
                 actions.append(f"window:{ident}")
+            elif text.startswith("xdg-hinted "):
+                actions.append("hint_window:" + "|".join(text.split()[1:]))
             elif index == len(commands) - 1:
                 actions.append(f"probe:{name}:{text}")
             else:
@@ -1216,6 +1332,13 @@ def append_regression_scenario(seed, commands, state):
         actions.append(f"capture:{name}")
         with open(scenario_path, "a") as file:
             file.write(f"\n[[scenario]]\nname = {toml_string(name)}\n")
+            if scenario and scenario.get("output_layout"):
+                file.write(f"outputs = {len(scenario['output_layout'])}\n")
+                file.write("output_layout = " + json.dumps(scenario["output_layout"]) + "\n")
+                file.write('requires = ["xdg-toplevel-size-hints"]\n' if any(
+                    text.startswith("xdg-hinted ") for text in commands) else "")
+            elif any(text.startswith("xdg-hinted ") for text in commands):
+                file.write('requires = ["xdg-toplevel-size-hints"]\n')
             file.write("actions = [" + ", ".join(toml_string(item) for item in actions) + "]\n")
     has_probe = any(action.startswith(f"probe:{name}:") for action in actions)
     for request, value in state.items():
@@ -1553,13 +1676,40 @@ def random_capture(args, parser):
         return random_capture_in(args, objects, sequences, Path(directory))
 
 
+def v3_online_observations(adapter, gen, steps, objects, commands=None, digests=None):
+    """Drive one sway adapter with the online v3 generator; return (commands, digests).
+
+    The lists fill in place, so a caller sees the prefix when a step raises.
+    """
+    commands = [] if commands is None else commands
+    digests = [] if digests is None else digests
+    prelude = gen.prelude()
+    state = {request: ipc(adapter.socket, request) for request in ("tree", "workspaces")}
+    for step in range(1, steps + 1):
+        text = prelude[step - 1] if step <= len(prelude) else gen.next(
+            sway_ipc_v3.features(state["tree"], state["workspaces"]), step)
+        commands.append(text)
+        state = random_observation(adapter, text)
+        gen.observe_reply(text, state["command"])
+        digests.append(store_random_object(objects, state))
+    return commands, digests
+
+
 def random_capture_in(args, objects, sequences, scratch):
+    excluded = []
+    if args.generator == "v3":
+        vocabulary, recipes = sway_ipc_v3.load_v3()
     for seed in range(args.seed, args.seed + args.seeds):
-        commands = GENERATORS[args.generator](seed, args.steps)
+        gen = layout = None
+        if args.generator == "v3":
+            gen = sway_ipc_v3.V3Generator(seed, vocabulary, recipes, args.outputs, args.steps)
+            layout = gen.scenario()
+        else:
+            commands = GENERATORS[args.generator](seed, args.steps)
         run_dir = scratch / str(seed)
         shutil.rmtree(run_dir, ignore_errors=True)
         run_dir.mkdir()
-        adapter = SwayAdapter(args, run_dir)
+        adapter = SwayAdapter(args, run_dir, layout)
         adapter.config_text = DIFFERENTIAL_CONFIGS["sway"]
         with open(run_dir / "compositor.log", "w") as log:
             try:
@@ -1567,16 +1717,30 @@ def random_capture_in(args, objects, sequences, scratch):
                 reply = adapter.command_reply("output * mode --custom 1280x720@60Hz")
                 if not reply or not reply[0].get("success"):
                     raise RuntimeError(f"could not set random output mode: {reply}")
-                observations = [store_random_object(objects, random_observation(adapter, text))
-                                for text in commands]
+                if gen is not None:
+                    commands, observations = [], []
+                    try:
+                        v3_online_observations(adapter, gen, args.steps, objects, commands, observations)
+                    except (OSError, RuntimeError) as error:
+                        # A crash or hang in sway is a finding: record it and keep capturing.
+                        process = adapter.process.poll() if adapter.process else None
+                        excluded.append({"seed": seed, "reason": f"{type(error).__name__}: {error}",
+                                         "sway_exit": process, "commands": commands})
+                        print(f"seed {seed}: excluded ({error}; sway exit {process})", flush=True)
+                        observations = None
+                else:
+                    observations = [store_random_object(objects, random_observation(adapter, text))
+                                    for text in commands]
             finally:
                 adapter.stop()
-        sequences.append({"seed": seed, "commands": commands,
-                          "observations": observations})
+        if observations is not None:
+            sequences.append({"seed": seed, "commands": commands, "observations": observations,
+                              **({"outputs": gen.outputs, "recipes": gen.started} if gen else {})})
         shutil.rmtree(run_dir)
         if (seed - args.seed + 1) % 25 == 0:
             print(f"captured {seed - args.seed + 1}/{args.seeds} seeds", flush=True)
-    root = RANDOM_ROOTS[args.generator]
+    # v3 captures are measurement inputs, not a committed corpus yet: --out names a directory.
+    root = Path(args.out) if args.generator == "v3" and args.out else RANDOM_ROOTS[args.generator]
     object_dir = root / "objects"
     # Only captured data is replaced; random-v2 keeps its vocabulary file.
     shutil.rmtree(object_dir, ignore_errors=True)
@@ -1587,8 +1751,10 @@ def random_capture_in(args, objects, sequences, scratch):
         "description": "Seeded command sequences and per-step replies captured from sway 1.12",
         "sway_commit": PINS["sway"], "seed_start": args.seed,
         "seeds": args.seeds, "steps": args.steps, "sequences": sequences,
-        "excluded": [],
+        "excluded": excluded,
     }
+    if args.generator == "v3":
+        manifest["generator_sha256"] = sway_ipc_v3.v3_sha256()
     if args.generator != "v1":
         manifest["generator"] = args.generator
         # Seeds whose repeated sway replays disagreed with this capture.
@@ -1665,6 +1831,8 @@ def random_main(args, parser):
     if args.capture:
         args.seeds = int(args.seeds or 5)
         return random_capture(args, parser)
+    if args.generator == "v3":
+        parser.error("random --generator v3 has no committed corpus yet; use --capture --out DIR")
     require_clean_binary(args.binary, args.compositor)
     manifest, objects = random_manifest(RANDOM_ROOTS[args.generator])
     args.steps = manifest["steps"]
@@ -1679,9 +1847,9 @@ def random_sequence_run(args, sequence, scratch, suffix="", objects=None):
     run_dir = scratch / f"{sequence['seed']}{suffix}"
     shutil.rmtree(run_dir, ignore_errors=True)
     run_dir.mkdir()
-    adapter = ADAPTERS[args.compositor](args, run_dir)
-    if args.compositor in DIFFERENTIAL_CONFIGS:
-        adapter.config_text = DIFFERENTIAL_CONFIGS[args.compositor]
+    layout = ({"outputs": 2, "output_layout": sway_ipc_v3.TWO_OUTPUT_LAYOUT}
+              if sequence.get("outputs") == 2 else None)
+    adapter = differential_adapter(args.compositor, args, run_dir, layout)
     actual = []
     with open(run_dir / "compositor.log", "w") as log:
         try:
@@ -2065,7 +2233,38 @@ def fuzz_main(args, parser):
     return write_fuzz_results(out, args.compositor, corpus, rows, args.seed, args.budget)
 
 
-def fuzz_self_test():
+def v3_determinism_self_test(binary, seeds=(3, 16), steps=40):
+    """Generate each seed twice against a live sway: the command lists must be equal."""
+    vocabulary, recipes = sway_ipc_v3.load_v3()
+    args = argparse.Namespace(binary=binary, timeout=120)
+    for seed in seeds:
+        lists = []
+        for attempt in range(2):
+            gen = sway_ipc_v3.V3Generator(seed, vocabulary, recipes, "auto", steps)
+            with tempfile.TemporaryDirectory(prefix="sio-") as directory:
+                adapter = SwayAdapter(args, Path(directory), gen.scenario())
+                adapter.config_text = DIFFERENTIAL_CONFIGS["sway"]
+                with open(Path(directory) / "compositor.log", "w") as log:
+                    try:
+                        adapter.start(log)
+                        adapter.command_reply("output * mode --custom 1280x720@60Hz")
+                        commands, _ = v3_online_observations(adapter, gen, steps, {})
+                    finally:
+                        adapter.stop()
+            lists.append(commands)
+        if lists[0] != lists[1]:
+            first = next(i for i, (a, b) in enumerate(zip(*lists)) if a != b)
+            raise AssertionError(f"random-v3 seed {seed} is not deterministic against sway: step "
+                                 f"{first + 1}: {lists[0][first]!r} != {lists[1][first]!r}")
+        print(f"random-v3 seed {seed}: {len(lists[0])} commands, identical on two sway runs")
+
+
+def fuzz_self_test(binary=None):
+    sway_ipc_v3.self_test()
+    if binary is not None:
+        v3_determinism_self_test(binary)
+    else:
+        print("random-v3 live determinism check skipped (pass --binary <pinned sway>)")
     assert command_fuzz_cases(7) == command_fuzz_cases(7)
     assert command_fuzz_cases(7) != command_fuzz_cases(8)
     names = {name for name, _ in command_fuzz_cases()}
@@ -2124,12 +2323,13 @@ def fuzz_self_test():
 def write_differential_results(path, args, rows):
     counts = {"match": sum(row["verdict"] == "match" for row in rows),
               "mismatch": sum(row["verdict"] == "mismatch" for row in rows)}
+    crashes = [row for row in rows if row["verdict"] == "crash"]
     rules = load_rules()
     difference_fields = len({difference_path(item) for row in rows
                              for item in row.get("differences", [])})
     grouped = []
     for row in rows:
-        if row["verdict"] == "match":
+        if row["verdict"] in ("match", "crash"):
             grouped.append(row)
             continue
         key = (tuple(row["commands"]), row["request"], tuple(row["differences"]))
@@ -2152,7 +2352,10 @@ def write_differential_results(path, args, rows):
         'normalization = "sway-ipc/normalize.toml"',
         "normalization_rules = [" + ", ".join(toml_string(name) for name in rule_names(rules)) + "]",
         f"difference_fields = {difference_fields}",
-        f"match = {counts['match']}", f"mismatch = {counts['mismatch']}", "",
+        f"match = {counts['match']}", f"mismatch = {counts['mismatch']}",
+        *([f"crash = {len(crashes)}"] if crashes else []),
+        *([f"generator_sha256 = {toml_string(sway_ipc_v3.v3_sha256())}"]
+          if args.generator == "v3" else []), "",
     ]
     for row in grouped:
         lines += ["[[result]]", f"seed = {row['seed']}",
@@ -2163,12 +2366,22 @@ def write_differential_results(path, args, rows):
                       "commands = [" + ", ".join(toml_string(x) for x in row["commands"]) + "]",
                       "differences = [" + ", ".join(toml_string(x) for x in row["differences"]) + "]",
                       f"scenario = {toml_string(row['scenario'])}"]
+        if row["verdict"] == "crash":
+            lines += ["crashed = [" + ", ".join(toml_string(x) for x in row["crashed"]) + "]",
+                      f"error = {toml_string(row['error'])}"]
         lines.append("")
+    # v3 commands depend on sway's state: record every seed's list (match rows included)
+    # so it replays without the generator.
+    for row in rows:
+        if "recorded" in row:
+            lines += ["[[recorded]]", f"seed = {row['seed']}", f"outputs = {row['outputs']}",
+                      "commands = [" + ", ".join(toml_string(x) for x in row["recorded"]) + "]", ""]
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines))
     print(f"match: {counts['match']}; mismatch: {counts['mismatch']}; "
+          + (f"crash: {len(crashes)}; " if crashes else "") +
           f"difference fields: {difference_fields}")
-    return bool(counts["mismatch"])
+    return bool(counts["mismatch"] or crashes)
 
 
 def differential_main(args):
@@ -2177,25 +2390,47 @@ def differential_main(args):
     require_clean_binary(args.a_binary, args.a)
     require_clean_binary(args.b_binary, args.b)
     rows = []
+    online = args.generator == "v3"
+    if online:
+        vocabulary, recipes = sway_ipc_v3.load_v3()
     for seed in range(args.seed, args.seed + args.seeds):
-        commands = GENERATORS[args.generator](seed, args.steps)
-        divergence, _ = differential_once(args, commands)
+        layout = None
+        if online:
+            gen = sway_ipc_v3.V3Generator(seed, vocabulary, recipes, args.outputs, args.steps)
+            layout = gen.scenario()
+            commands = []
+            try:
+                divergence, _, commands = differential_online(args, gen, args.steps, layout, commands)
+            except CompositorCrash as crash:
+                rows.append({"seed": seed, "verdict": "crash", "crashed": crash.labels,
+                             "error": str(crash), "recorded": commands, "outputs": gen.outputs})
+                continue
+        else:
+            commands = GENERATORS[args.generator](seed, args.steps)
+            divergence, _ = differential_once(args, commands)
         if divergence is None:
-            rows.append({"seed": seed, "verdict": "match"})
+            rows.append({"seed": seed, "verdict": "match",
+                         **({"recorded": commands, "outputs": gen.outputs} if online else {})})
             continue
         def reproduces(candidate):
-            found, _ = differential_once(args, candidate)
+            try:
+                found, _ = differential_once(args, candidate, scenario=layout, settle=online)
+            except (OSError, RuntimeError):
+                if not online:
+                    raise
+                return False  # the candidate crashed a compositor instead
             return found is not None
         minimal = minimize_commands(commands[:divergence["step"]], reproduces)
-        final, _ = differential_once(args, minimal, keep_state=True)
+        final, _ = differential_once(args, minimal, keep_state=True, scenario=layout, settle=online)
         if final is None:
             raise RuntimeError(f"seed {seed} stopped reproducing during shrink")
         scenario = f"differential_seed_{seed}"
         if args.save_scenarios:
-            scenario = append_regression_scenario(seed, minimal, final["sway_state"])
+            scenario = append_regression_scenario(seed, minimal, final["sway_state"], layout)
         rows.append({"seed": seed, "verdict": "mismatch", "commands": minimal,
                      "scenario": scenario, **{k: final[k] for k in
-                     ("step", "request", "differences")}})
+                     ("step", "request", "differences")},
+                     **({"recorded": commands, "outputs": gen.outputs} if online else {})})
     if not args.out:
         raise RuntimeError("differential is a developer tool: pass --out outside the repository")
     out = Path(args.out)
@@ -2224,10 +2459,13 @@ def main():
     parser.add_argument("--b-binary", type=Path)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--seeds", help="seed count, or random replay seed numbers separated by commas")
-    parser.add_argument("--steps", type=int, default=10)
-    parser.add_argument("--generator", choices=GENERATORS, default="v1",
-                        help="random/differential command generator: v1 (sway-ipc/random) or "
-                             "v2 (sway-ipc/random-v2, widened vocabulary)")
+    parser.add_argument("--steps", type=int, help="steps per seed (default 10; 40 for v3)")
+    parser.add_argument("--generator", choices=GENERATOR_CHOICES, default="v1",
+                        help="random/differential command generator: v1 (sway-ipc/random), "
+                             "v2 (sway-ipc/random-v2, widened vocabulary) or v3 (state-aware, "
+                             "online; sway-ipc/random-v3)")
+    parser.add_argument("--outputs", choices=("auto", "1", "2"), default="auto",
+                        help="v3 output count (auto: the seed gives 2 outputs to 30%% of seeds)")
     parser.add_argument("--budget", choices=FUZZ_BUDGETS, default="ci",
                         help="fuzz case budget (ci uses two generated variants per command family)")
     parser.add_argument("--save-scenarios", action="store_true",
@@ -2237,8 +2475,10 @@ def main():
     parser.add_argument("--finding", help="task ID or documented deviation name")
     parser.add_argument("--source", help="source citation supporting the triage")
     args = parser.parse_args()
+    if args.steps is None:
+        args.steps = 40 if args.generator == "v3" else 10
     if args.mode == "fuzz-self-test":
-        return fuzz_self_test()
+        return fuzz_self_test(args.binary)
     if args.mode in ("command-fuzz", "wire-fuzz"):
         return fuzz_main(args, parser)
     if args.mode == "differential":
