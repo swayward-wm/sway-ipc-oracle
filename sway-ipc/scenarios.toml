@@ -312,6 +312,11 @@ corpora = ["state"]
 actions = ["command:layout stacking", "command:layout default", "command:workspace 2", "window:fixture-layout-default-1", "command:move down", "command:layout default", "command:workspace 3", "window:fixture-layout-default-2", "command:layout stacking", "command:layout default", "capture:layout_default_prev_split"]
 
 [[scenario]]
+name = "split_empty_ws_layout_default"
+corpora = ["state"]
+actions = ["command:split h", "command:layout default", "command:layout tabbed", "command:split v", "command:layout default", "capture:split_empty_ws_layout_default"]
+
+[[scenario]]
 name = "foreign_toplevel_set_minimized"
 corpora = ["state"]
 requires = ["wlr-foreign-toplevel-management"]
