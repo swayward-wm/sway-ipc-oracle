@@ -304,3 +304,13 @@ actions = ["command:splith", "window:fixture-move-one", "window:fixture-move-two
 name = "command_parser_errors"
 corpora = ["state"]
 actions = ["command:focus", "command:layout default", "command:layout stacked", "command:resize nonsense", "capture:command_parser_errors"]
+
+[[scenario]]
+name = "floating_split_keeps_rect"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating enable", "probe:floating_split_keeps_rect_splith:splith", "capture:floating_split_keeps_rect"]
+
+[[scenario]]
+name = "floating_border_split_keeps_content"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating toggle", "command:border pixel 3", "command:split v", "capture:floating_border_split_keeps_content"]
