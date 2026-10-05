@@ -418,3 +418,13 @@ actions = ["window:fixture-1", "command:floating enable", "command:focus prev", 
 name = "focus_prev_next_two_floating"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:floating enable", "command:resize set 400 px 300 px", "command:move position 0 px 0 px", "window:fixture-2", "command:floating enable", "command:resize set 400 px 300 px", "command:move position 600 px 600 px", "command:focus next", "capture:focus_prev_next_two_floating_next_stays", "command:focus prev", "capture:focus_prev_next_two_floating_prev_moves", "command:focus prev", "capture:focus_prev_next_two_floating_prev_stays", "command:focus next", "capture:focus_prev_next_two_floating_next_moves"]
+
+[[scenario]]
+name = "resize_snaps_fractions_before_new_view"
+corpora = ["state"]
+actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2", "window:fixture-1", "window:fixture-2", "window:fixture-3", "command:resize grow width 10 px", "window:fixture-4", "capture:resize_snaps_fractions_before_new_view"]
+
+[[scenario]]
+name = "new_view_under_fullscreen_keeps_whole_pixel_fractions"
+corpora = ["state"]
+actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2", "window:fixture-1", "window:fixture-2", "window:fixture-3", "command:fullscreen toggle", "window:fixture-4", "capture:new_view_under_fullscreen_keeps_whole_pixel_fractions"]
