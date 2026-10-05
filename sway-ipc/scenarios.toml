@@ -533,3 +533,8 @@ actions = ["command:smart_gaps on", "window:fixture-gaps-solo", "command:gaps ho
 name = "smart_gaps_survive_output_mode"
 corpora = ["state"]
 actions = ["command:smart_gaps on", "window:fixture-gaps-resize", "command:gaps inner current set 10", "probe:smart_gaps_survive_output_mode:output HEADLESS-1 mode --custom 1200x1000@60Hz", "capture:smart_gaps_survive_output_mode"]
+
+[[scenario]]
+name = "swap_focused_tab_keeps_focus"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:mark oracle", "command:layout tabbed", "window:fixture-2", "probe:swap_focused_tab_keeps_focus:swap container with mark oracle", "capture:swap_focused_tab_keeps_focus"]
