@@ -498,3 +498,8 @@ actions = ["window:fixture-1", "window:fixture-2", "command:splitv", "window:fix
 name = "focus_stack_singletons"
 corpora = ["state"]
 actions = ["window:fixture-fs-1", "window:fixture-fs-2", "command:no_focus [app_id=\"^fixture-fs-3$\"]", "window:fixture-fs-3", "capture:focus_stack_no_focus_tail", "command:[app_id=\"^fixture-fs-2$\"] kill", "capture:focus_stack_kill_skips_unfocused", "command:focus parent", "command:workspace 1", "capture:focus_stack_workspace_switch_descends", "command:fullscreen enable", "command:focus tiling", "command:focus next sibling", "capture:focus_stack_fullscreen_holds_focus", "command:fullscreen disable", "command:focus parent", "command:floating disable", "capture:focus_stack_floating_disable_wraps"]
+
+[[scenario]]
+name = "focus_stack_fresh_wrapper_tail"
+corpora = ["state"]
+actions = ["window:fixture-fw-1", "command:fullscreen enable", "command:for_window [app_id=\"^fixture-fw-2$\"] floating enable", "window:fixture-fw-2", "command:layout tabbed", "capture:focus_stack_fresh_wrapper_tail"]
