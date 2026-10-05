@@ -1,0 +1,10 @@
+[
+  {
+    "success": true
+  },
+  {
+    "error": "Only containers can have marks",
+    "parse_error": true,
+    "success": false
+  }
+]

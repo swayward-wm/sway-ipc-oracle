@@ -584,3 +584,8 @@ actions = ["window:fixture-1", "command:focus parent", "probe:no_container_title
 name = "fullscreen_split_global_coexist"
 corpora = ["state"]
 actions = ["window:fixture-1", "window:fixture-2", "command:fullscreen enable", "command:split toggle", "command:fullscreen toggle global", "capture:fullscreen_split_global_coexist"]
+
+[[scenario]]
+name = "error_precedence"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "probe:criteria_scratchpad_show_empty:[app_id=\"^fixture-2$\"] scratchpad show", "command:focus parent", "probe:workspace_focused_mark:focus parent; mark m", "probe:workspace_focused_urgent:urgent enable", "command:focus child", "command:[app_id=\"^fixture-2$\"] move scratchpad", "probe:criteria_scratchpad_show_not_in_scratchpad:[app_id=\"^fixture-1$\"] scratchpad show", "capture:error_precedence"]
