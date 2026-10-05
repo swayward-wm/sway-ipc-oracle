@@ -453,3 +453,8 @@ actions = ["window:fixture-1", "command:border toggle", "command:move scratchpad
 name = "move_container_back_and_forth_recreates_previous"
 corpora = ["state"]
 actions = ["command:workspace alpha", "command:workspace 1", "window:fixture-1", "command:move container to workspace back_and_forth", "capture:move_container_back_and_forth_recreates_previous"]
+
+[[scenario]]
+name = "workspace_next_on_output_after_empty_destroyed"
+corpora = ["state"]
+actions = ["command:workspace number 3", "command:workspace next_on_output", "capture:workspace_next_on_output_after_empty_destroyed", "command:workspace prev_on_output", "command:workspace next", "command:workspace prev", "capture:workspace_next_on_output_after_empty_destroyed_relative"]
