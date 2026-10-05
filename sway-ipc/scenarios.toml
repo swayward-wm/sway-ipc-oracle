@@ -448,3 +448,8 @@ actions = ["window:fixture-1", "command:floating enable", "probe:floating_window
 name = "scratchpad_tiled_csd_reports_csd"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:border toggle", "command:move scratchpad", "capture:scratchpad_tiled_csd_reports_csd", "command:scratchpad show", "capture:scratchpad_tiled_csd_reports_csd_shown", "command:floating toggle", "capture:scratchpad_tiled_csd_reports_csd_retiled"]
+
+[[scenario]]
+name = "move_container_back_and_forth_recreates_previous"
+corpora = ["state"]
+actions = ["command:workspace alpha", "command:workspace 1", "window:fixture-1", "command:move container to workspace back_and_forth", "capture:move_container_back_and_forth_recreates_previous"]
