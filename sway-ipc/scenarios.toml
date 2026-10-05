@@ -599,3 +599,18 @@ actions = ["window:fixture-1", "window:fixture-2", "window:fixture-3", "command:
 name = "kill_then_map_under_fullscreen_keeps_sibling_percent"
 corpora = ["state"]
 actions = ["window:fixture-1", "window:fixture-2", "window:fixture-3", "command:fullscreen toggle", "command:[app_id=\"^fixture-1$\"] kill", "capture:kill_then_map_under_fullscreen_keeps_sibling_percent_killed", "window:fixture-4", "capture:kill_then_map_under_fullscreen_keeps_sibling_percent"]
+
+[[scenario]]
+name = "floating_split_toggle_wraps"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating enable", "probe:floating_split_toggle_wraps_toggle:split toggle", "capture:floating_split_toggle_wraps"]
+
+[[scenario]]
+name = "floating_for_window_splitt_wraps"
+corpora = ["state"]
+actions = ["command:for_window [app_id=\"^fixture-1$\"] floating enable", "window:fixture-1", "probe:floating_for_window_splitt_wraps_splitt:splitt", "capture:floating_for_window_splitt_wraps"]
+
+[[scenario]]
+name = "floating_split_toggle_vertical_workspace"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:layout splitv", "window:fixture-2", "command:floating enable", "command:split toggle", "capture:floating_split_toggle_vertical_workspace"]
