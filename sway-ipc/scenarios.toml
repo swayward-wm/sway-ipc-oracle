@@ -197,6 +197,12 @@ outputs = 2
 actions = ["window:fixture-1", "command:move workspace to output right", "command:workspace 2", "window:fixture-2", "command:focus output left", "capture:two_outputs"]
 
 [[scenario]]
+name = "two_output_edge_move"
+outputs = 2
+corpora = ["state"]
+actions = ["command:focus output left", "window:fixture-1", "command:move left", "capture:two_output_edge_move_no_wrap", "command:fullscreen toggle", "command:move right", "capture:two_output_edge_move_fullscreen"]
+
+[[scenario]]
 name = "scratchpad"
 actions = ["window:fixture-1", "command:move scratchpad", "capture:scratchpad_hidden", "command:scratchpad show", "capture:scratchpad_shown"]
 
