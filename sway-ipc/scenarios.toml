@@ -671,3 +671,8 @@ actions = ["window:fixture-wsgf-3", "command:fullscreen toggle global", "command
 name = "floating_global_fullscreen"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:floating toggle", "command:fullscreen toggle global", "capture:floating_global_fullscreen"]
+
+[[scenario]]
+name = "move_workspace_children_keeps_source_layout"
+corpora = ["state"]
+actions = ["command:splitv", "window:fixture-1", "window:fixture-2", "command:focus parent", "probe:move_workspace_children_keeps_source_layout_move:move container to workspace 2", "capture:move_workspace_children_keeps_source_layout"]
