@@ -456,6 +456,11 @@ corpora = ["state"]
 actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2", "window:fixture-1", "window:fixture-2", "window:fixture-3", "command:resize grow width 10 px", "window:fixture-4", "capture:resize_snaps_fractions_before_new_view"]
 
 [[scenario]]
+name = "move_wrap_after_resize_keeps_whole_pixel_fractions"
+corpora = ["state"]
+actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2", "window:fixture-1", "window:fixture-2", "window:fixture-3", "command:resize grow left 20 px", "command:focus next sibling", "command:move down", "capture:move_wrap_after_resize_keeps_whole_pixel_fractions"]
+
+[[scenario]]
 name = "new_view_under_fullscreen_keeps_whole_pixel_fractions"
 corpora = ["state"]
 actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2", "window:fixture-1", "window:fixture-2", "window:fixture-3", "command:fullscreen toggle", "window:fixture-4", "capture:new_view_under_fullscreen_keeps_whole_pixel_fractions"]
