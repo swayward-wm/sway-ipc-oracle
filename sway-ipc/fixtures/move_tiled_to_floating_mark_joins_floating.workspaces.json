@@ -1,0 +1,179 @@
+[
+  {
+    "border": "none",
+    "current_border_width": 0,
+    "deco_rect": {
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "floating": null,
+    "floating_nodes": [
+      {
+        "allow_tearing": false,
+        "app_id": "fixture-fmark-2",
+        "border": "normal",
+        "current_border_width": 2,
+        "deco_rect": {
+          "height": 27,
+          "width": 700,
+          "x": 285,
+          "y": 431
+        },
+        "floating": "user_on",
+        "floating_nodes": [],
+        "focus": [],
+        "focused": false,
+        "foreign_toplevel_identifier": "af5ee23cb3541dc8b322ffddbf0f37a9",
+        "fullscreen_mode": 0,
+        "geometry": {
+          "height": 491,
+          "width": 696,
+          "x": 0,
+          "y": 0
+        },
+        "id": 8,
+        "idle_inhibitors": {
+          "application": "none",
+          "user": "none"
+        },
+        "inhibit_idle": false,
+        "layout": "none",
+        "marks": [
+          "m"
+        ],
+        "max_render_time": 0,
+        "name": "fixture-fmark-2",
+        "nodes": [],
+        "orientation": "none",
+        "percent": 0.20356120257695062,
+        "pid": 4170629,
+        "rect": {
+          "height": 493,
+          "width": 700,
+          "x": 285,
+          "y": 458
+        },
+        "sandbox_app_id": null,
+        "sandbox_engine": null,
+        "sandbox_instance_id": null,
+        "scratchpad_state": "none",
+        "shell": "xdg_shell",
+        "sticky": false,
+        "tag": null,
+        "type": "floating_con",
+        "urgent": false,
+        "visible": true,
+        "window": null,
+        "window_rect": {
+          "height": 491,
+          "width": 696,
+          "x": 2,
+          "y": 0
+        }
+      },
+      {
+        "allow_tearing": false,
+        "app_id": "fixture-fmark-1",
+        "border": "normal",
+        "current_border_width": 2,
+        "deco_rect": {
+          "height": 27,
+          "width": 1270,
+          "x": 0,
+          "y": 0
+        },
+        "floating": "user_on",
+        "floating_nodes": [],
+        "focus": [],
+        "focused": true,
+        "foreign_toplevel_identifier": "2dbb0d2645fac1f0be2d6c31b01f6e75",
+        "fullscreen_mode": 0,
+        "geometry": {
+          "height": 491,
+          "width": 696,
+          "x": 0,
+          "y": 0
+        },
+        "id": 7,
+        "idle_inhibitors": {
+          "application": "none",
+          "user": "none"
+        },
+        "inhibit_idle": false,
+        "layout": "none",
+        "marks": [],
+        "max_render_time": 0,
+        "name": "fixture-fmark-1",
+        "nodes": [],
+        "orientation": "none",
+        "percent": 1.0,
+        "pid": 4170600,
+        "rect": {
+          "height": 1381,
+          "width": 1270,
+          "x": 0,
+          "y": 27
+        },
+        "sandbox_app_id": null,
+        "sandbox_engine": null,
+        "sandbox_instance_id": null,
+        "scratchpad_state": "none",
+        "shell": "xdg_shell",
+        "sticky": false,
+        "tag": null,
+        "type": "floating_con",
+        "urgent": false,
+        "visible": true,
+        "window": null,
+        "window_rect": {
+          "height": 1379,
+          "width": 1266,
+          "x": 2,
+          "y": 0
+        }
+      }
+    ],
+    "focus": [
+      7,
+      8
+    ],
+    "focused": true,
+    "fullscreen_mode": 1,
+    "geometry": {
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "id": 6,
+    "layout": "splitv",
+    "marks": [],
+    "name": "1",
+    "nodes": [],
+    "num": 1,
+    "orientation": "vertical",
+    "output": "HEADLESS-1",
+    "percent": null,
+    "rect": {
+      "height": 1408,
+      "width": 1270,
+      "x": 0,
+      "y": 0
+    },
+    "representation": "V[]",
+    "scratchpad_state": null,
+    "sticky": false,
+    "type": "workspace",
+    "urgent": false,
+    "visible": true,
+    "window": null,
+    "window_rect": {
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    }
+  }
+]
