@@ -413,3 +413,8 @@ actions = ["window:fixture-1", "command:workspace 2", "window:fixture-2", "windo
 name = "focus_prev_next_lone_floating"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:floating enable", "command:focus prev", "command:focus next", "capture:focus_prev_next_lone_floating"]
+
+[[scenario]]
+name = "focus_prev_next_two_floating"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating enable", "command:resize set 400 px 300 px", "command:move position 0 px 0 px", "window:fixture-2", "command:floating enable", "command:resize set 400 px 300 px", "command:move position 600 px 600 px", "command:focus next", "capture:focus_prev_next_two_floating_next_stays", "command:focus prev", "capture:focus_prev_next_two_floating_prev_moves", "command:focus prev", "capture:focus_prev_next_two_floating_prev_stays", "command:focus next", "capture:focus_prev_next_two_floating_next_moves"]
