@@ -1,0 +1,26 @@
+[
+  {
+    "command": "smart_gaps on",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-gaps-solo --title=fixture-gaps-solo sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "gaps horizontal current toggle 8",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

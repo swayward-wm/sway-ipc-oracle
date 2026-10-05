@@ -503,3 +503,28 @@ actions = ["window:fixture-1", "command:fullscreen enable", "command:layout spli
 name = "stacked_move_down_shows_moved_split"
 corpora = ["state"]
 actions = ["window:fixture-2", "window:fixture-3", "command:move up", "command:layout stacking", "window:fixture-4", "probe:stacked_move_down_shows_moved_split:move down 30 px", "capture:stacked_move_down_shows_moved_split"]
+
+[[scenario]]
+name = "gaps_inner_current_empty_workspace_rect"
+corpora = ["state"]
+actions = ["probe:gaps_inner_current_empty_workspace_rect:gaps inner current set 10", "capture:gaps_inner_current_empty_workspace_rect"]
+
+[[scenario]]
+name = "gaps_current_leaves_other_workspace_rect"
+corpora = ["state"]
+actions = ["window:fixture-gaps-other", "command:workspace number 3", "probe:gaps_current_leaves_other_workspace_rect:gaps horizontal current toggle 8", "capture:gaps_current_leaves_other_workspace_rect"]
+
+[[scenario]]
+name = "gaps_inner_fullscreen_percent"
+corpora = ["state"]
+actions = ["window:fixture-gaps-full", "command:fullscreen enable", "probe:gaps_inner_fullscreen_percent:gaps inner current set 10", "capture:gaps_inner_fullscreen_percent"]
+
+[[scenario]]
+name = "gaps_global_fullscreen_tile_slot"
+corpora = ["state"]
+actions = ["window:fixture-gaps-global", "command:fullscreen toggle global", "probe:gaps_global_fullscreen_tile_slot:gaps horizontal current toggle 8", "capture:gaps_global_fullscreen_tile_slot"]
+
+[[scenario]]
+name = "smart_gaps_return_when_view_floats"
+corpora = ["state"]
+actions = ["command:smart_gaps on", "window:fixture-gaps-solo", "command:gaps horizontal current toggle 8", "probe:smart_gaps_return_when_view_floats:floating enable", "capture:smart_gaps_return_when_view_floats"]
