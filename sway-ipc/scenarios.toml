@@ -676,3 +676,8 @@ actions = ["window:fixture-1", "command:floating toggle", "command:fullscreen to
 name = "move_workspace_children_keeps_source_layout"
 corpora = ["state"]
 actions = ["command:splitv", "window:fixture-1", "window:fixture-2", "command:focus parent", "probe:move_workspace_children_keeps_source_layout_move:move container to workspace 2", "capture:move_workspace_children_keeps_source_layout"]
+
+[[scenario]]
+name = "resize_set_ppt_singleton_split"
+corpora = ["state"]
+actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2", "window:fixture-1", "window:fixture-2", "command:split h", "command:resize set width 50 ppt", "capture:resize_set_ppt_singleton_split"]
