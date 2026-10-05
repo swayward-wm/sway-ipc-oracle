@@ -589,3 +589,13 @@ actions = ["window:fixture-1", "window:fixture-2", "command:fullscreen enable", 
 name = "error_precedence"
 corpora = ["state"]
 actions = ["window:fixture-1", "window:fixture-2", "probe:criteria_scratchpad_show_empty:[app_id=\"^fixture-2$\"] scratchpad show", "command:focus parent", "probe:workspace_focused_mark:focus parent; mark m", "probe:workspace_focused_urgent:urgent enable", "command:focus child", "command:[app_id=\"^fixture-2$\"] move scratchpad", "probe:criteria_scratchpad_show_not_in_scratchpad:[app_id=\"^fixture-1$\"] scratchpad show", "capture:error_precedence"]
+
+[[scenario]]
+name = "kill_under_fullscreen_keeps_sibling_percent"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "window:fixture-3", "command:fullscreen toggle", "command:[app_id=\"^fixture-1$\"] kill", "capture:kill_under_fullscreen_keeps_sibling_percent"]
+
+[[scenario]]
+name = "kill_then_map_under_fullscreen_keeps_sibling_percent"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "window:fixture-3", "command:fullscreen toggle", "command:[app_id=\"^fixture-1$\"] kill", "capture:kill_then_map_under_fullscreen_keeps_sibling_percent_killed", "window:fixture-4", "capture:kill_then_map_under_fullscreen_keeps_sibling_percent"]
