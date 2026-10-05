@@ -335,6 +335,11 @@ corpora = ["state"]
 actions = ["command:move container to output right", "command:move container to output HEADLESS-9", "command:move container to mark oracle", "capture:empty_workspace_move_to_output_or_mark"]
 
 [[scenario]]
+name = "workspace_move_to_missing_mark_or_output_wraps_children"
+corpora = ["state"]
+actions = ["window:fixture-wrap-1", "command:focus parent", "command:move container to mark oracle", "capture:workspace_move_to_missing_mark_wraps_children", "command:move container to output HEADLESS-9", "capture:workspace_move_to_missing_mark_or_output_wraps_children"]
+
+[[scenario]]
 name = "inhibit_idle_tree_reports_policy_result"
 corpora = ["state"]
 actions = ["command:layout tabbed", "window:fixture-inhibit-idle-1", "command:inhibit_idle visible", "window:fixture-inhibit-idle-2", "command:inhibit_idle focus", "command:focus parent", "capture:inhibit_idle_tree_reports_policy_result"]

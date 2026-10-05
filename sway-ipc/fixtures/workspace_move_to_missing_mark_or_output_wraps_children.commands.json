@@ -1,0 +1,38 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-wrap-1 --title=fixture-wrap-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move container to mark oracle",
+    "reply": [
+      {
+        "error": "Mark 'oracle' not found",
+        "parse_error": false,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "move container to output HEADLESS-9",
+    "reply": [
+      {
+        "error": "Can't find output with name/direction 'HEADLESS-9'",
+        "parse_error": false,
+        "success": false
+      }
+    ]
+  }
+]
