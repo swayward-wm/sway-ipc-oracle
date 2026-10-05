@@ -614,3 +614,8 @@ actions = ["command:for_window [app_id=\"^fixture-1$\"] floating enable", "windo
 name = "floating_split_toggle_vertical_workspace"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:layout splitv", "window:fixture-2", "command:floating enable", "command:split toggle", "capture:floating_split_toggle_vertical_workspace"]
+
+[[scenario]]
+name = "move_workspace_children_keeps_source_layout"
+corpora = ["state"]
+actions = ["command:splitv", "window:fixture-1", "window:fixture-2", "command:focus parent", "probe:move_workspace_children_keeps_source_layout_move:move container to workspace 2", "capture:move_workspace_children_keeps_source_layout"]
