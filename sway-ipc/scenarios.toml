@@ -493,3 +493,8 @@ actions = ["window:fixture-global-one", "window:fixture-global-two", "command:fu
 name = "urgent_enable_under_focused_parent"
 corpora = ["state"]
 actions = ["window:fixture-1", "window:fixture-2", "command:splitv", "window:fixture-3", "command:[app_id=\"^fixture-3$\"] urgent enable", "command:focus parent", "command:[app_id=\"^fixture-3$\"] urgent enable", "command:focus parent", "command:[app_id=\"^fixture-1$\"] urgent enable", "capture:urgent_enable_under_focused_parent"]
+
+[[scenario]]
+name = "view_mapped_under_fullscreen_rects"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:fullscreen enable", "command:layout splitv", "window:fixture-2", "capture:view_mapped_under_fullscreen_rects_splitv", "command:layout stacking", "capture:view_mapped_under_fullscreen_rects_stacking", "command:layout tabbed", "window:fixture-3", "capture:view_mapped_under_fullscreen_rects_tabbed", "command:workspace 1", "capture:view_mapped_under_fullscreen_rects_rearranged"]
