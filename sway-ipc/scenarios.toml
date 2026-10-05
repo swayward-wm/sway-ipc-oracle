@@ -563,3 +563,8 @@ actions = ["window:fixture-fs-1", "window:fixture-fs-2", "command:no_focus [app_
 name = "focus_stack_fresh_wrapper_tail"
 corpora = ["state"]
 actions = ["window:fixture-fw-1", "command:fullscreen enable", "command:for_window [app_id=\"^fixture-fw-2$\"] floating enable", "window:fixture-fw-2", "command:layout tabbed", "capture:focus_stack_fresh_wrapper_tail"]
+
+[[scenario]]
+name = "no_container_title_format_urgent"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus parent", "probe:no_container_title_format:title_format %title", "probe:no_container_urgent:urgent toggle", "command:focus child", "window:fixture-2", "command:splitv", "command:focus parent", "probe:split_container_urgent:urgent toggle", "capture:no_container_title_format_urgent"]
