@@ -443,3 +443,8 @@ actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2"
 name = "floating_window_ppt_resize_rejected"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:floating enable", "probe:floating_window_ppt_resize_width:resize shrink width 5 ppt", "probe:floating_window_ppt_resize_edge:resize grow left 5 ppt", "capture:floating_window_ppt_resize_rejected"]
+
+[[scenario]]
+name = "urgent_enable_under_focused_parent"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:splitv", "window:fixture-3", "command:[app_id=\"^fixture-3$\"] urgent enable", "command:focus parent", "command:[app_id=\"^fixture-3$\"] urgent enable", "command:focus parent", "command:[app_id=\"^fixture-1$\"] urgent enable", "capture:urgent_enable_under_focused_parent"]
