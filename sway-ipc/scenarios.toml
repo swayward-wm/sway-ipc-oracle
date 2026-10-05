@@ -528,3 +528,8 @@ actions = ["window:fixture-gaps-global", "command:fullscreen toggle global", "pr
 name = "smart_gaps_return_when_view_floats"
 corpora = ["state"]
 actions = ["command:smart_gaps on", "window:fixture-gaps-solo", "command:gaps horizontal current toggle 8", "probe:smart_gaps_return_when_view_floats:floating enable", "capture:smart_gaps_return_when_view_floats"]
+
+[[scenario]]
+name = "smart_gaps_survive_output_mode"
+corpora = ["state"]
+actions = ["command:smart_gaps on", "window:fixture-gaps-resize", "command:gaps inner current set 10", "probe:smart_gaps_survive_output_mode:output HEADLESS-1 mode --custom 1200x1000@60Hz", "capture:smart_gaps_survive_output_mode"]
