@@ -388,3 +388,8 @@ actions = ["window:fixture-1", "command:fullscreen toggle global", "window:fixtu
 name = "new_view_beside_focus_inactive"
 corpora = ["state"]
 actions = ["window:fixture-1", "window:fixture-2", "command:move up", "command:focus parent", "window:fixture-3", "capture:new_view_beside_focus_inactive"]
+
+[[scenario]]
+name = "floating_window_ppt_resize_rejected"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating enable", "probe:floating_window_ppt_resize_width:resize shrink width 5 ppt", "probe:floating_window_ppt_resize_edge:resize grow left 5 ppt", "capture:floating_window_ppt_resize_rejected"]
