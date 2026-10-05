@@ -348,3 +348,8 @@ actions = ["window:fixture-1", "command:focus parent; allow_tearing yes", "comma
 name = "tiled_border_csd"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:border csd", "capture:tiled_border_csd"]
+
+[[scenario]]
+name = "tiled_border_toggle_csd"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:border toggle", "capture:tiled_border_toggle_csd", "command:floating toggle", "capture:tiled_border_toggle_csd_floating", "command:floating toggle", "capture:tiled_border_toggle_csd_retiled", "command:border toggle", "capture:tiled_border_toggle_csd_none"]
