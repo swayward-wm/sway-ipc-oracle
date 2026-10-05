@@ -568,3 +568,9 @@ actions = ["window:fixture-fw-1", "command:fullscreen enable", "command:for_wind
 name = "no_container_title_format_urgent"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:focus parent", "probe:no_container_title_format:title_format %title", "probe:no_container_urgent:urgent toggle", "command:focus child", "window:fixture-2", "command:splitv", "command:focus parent", "probe:split_container_urgent:urgent toggle", "capture:no_container_title_format_urgent"]
+
+[[scenario]]
+name = "focus_next_crosses_outputs"
+outputs = 2
+corpora = ["state"]
+actions = ["window:fixture-fn-1", "command:layout splith", "command:move workspace to output right", "command:focus output left", "window:fixture-fn-2", "window:fixture-fn-3", "command:layout splith", "capture:focus_next_crosses_outputs_before", "command:focus next", "capture:focus_next_crosses_outputs_next", "command:focus prev", "capture:focus_next_crosses_outputs_prev", "command:focus next sibling", "capture:focus_next_crosses_outputs_next_sibling", "command:focus prev sibling", "capture:focus_next_crosses_outputs_prev_sibling", "command:focus left", "command:focus prev", "capture:focus_next_crosses_outputs_edge_wraps"]
