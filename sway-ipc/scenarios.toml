@@ -443,3 +443,8 @@ actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2"
 name = "floating_window_ppt_resize_rejected"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:floating enable", "probe:floating_window_ppt_resize_width:resize shrink width 5 ppt", "probe:floating_window_ppt_resize_edge:resize grow left 5 ppt", "capture:floating_window_ppt_resize_rejected"]
+
+[[scenario]]
+name = "scratchpad_tiled_csd_reports_csd"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:border toggle", "command:move scratchpad", "capture:scratchpad_tiled_csd_reports_csd", "command:scratchpad show", "capture:scratchpad_tiled_csd_reports_csd_shown", "command:floating toggle", "capture:scratchpad_tiled_csd_reports_csd_retiled"]
