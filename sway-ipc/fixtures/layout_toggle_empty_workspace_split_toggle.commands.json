@@ -1,0 +1,26 @@
+[
+  {
+    "command": "layout toggle split",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "split toggle",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "split toggle",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

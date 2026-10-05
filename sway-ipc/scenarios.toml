@@ -368,3 +368,8 @@ actions = ["command:assign [app_id=\"^fixture-assigned\"] workspace 2", "window:
 name = "scratchpad_border_none_keeps_thickness"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:border none", "command:move scratchpad", "capture:scratchpad_border_none_keeps_thickness"]
+
+[[scenario]]
+name = "layout_toggle_empty_workspace"
+corpora = ["state"]
+actions = ["command:layout toggle split", "capture:layout_toggle_empty_workspace", "command:split toggle", "command:split toggle", "capture:layout_toggle_empty_workspace_split_toggle", "command:layout splith", "window:fixture-1", "command:splitt", "capture:layout_toggle_empty_workspace_splitt_single"]
