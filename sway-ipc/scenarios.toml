@@ -666,3 +666,8 @@ actions = ["window:fixture-wsgf-1", "command:workspace 2", "window:fixture-wsgf-
 name = "workspace_baf_without_history_refused_under_global_fullscreen"
 corpora = ["state"]
 actions = ["window:fixture-wsgf-3", "command:fullscreen toggle global", "command:workspace back_and_forth", "capture:workspace_baf_without_history_refused_under_global_fullscreen"]
+
+[[scenario]]
+name = "floating_global_fullscreen"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating toggle", "command:fullscreen toggle global", "capture:floating_global_fullscreen"]
