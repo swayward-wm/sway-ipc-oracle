@@ -373,3 +373,8 @@ actions = ["window:fixture-1", "command:border none", "command:move scratchpad",
 name = "layout_toggle_empty_workspace"
 corpora = ["state"]
 actions = ["command:layout toggle split", "capture:layout_toggle_empty_workspace", "command:split toggle", "command:split toggle", "capture:layout_toggle_empty_workspace_split_toggle", "command:layout splith", "window:fixture-1", "command:splitt", "capture:layout_toggle_empty_workspace_splitt_single"]
+
+[[scenario]]
+name = "transformed_output_new_workspace_layout"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:output * mode --custom 1280x720@60Hz", "command:workspace 4", "capture:transformed_output_new_workspace_layout_landscape", "command:workspace 1", "command:output * transform 90", "command:move container to workspace 2", "command:workspace 3", "capture:transformed_output_new_workspace_layout"]
