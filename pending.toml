@@ -69,7 +69,7 @@ reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percen
 
 [[pending]]
 path = "sway-ipc/results/swayward-ec03e0af-random.toml"
-reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container."
+reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container. The swayward differential config lost its forced default_orientation horizontal (56a301f9)."
 
 [[pending]]
 path = "sway-ipc/results/swayward-ec03e0af-wire-fuzz.toml"
