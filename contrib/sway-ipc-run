@@ -1127,7 +1127,7 @@ class I3Adapter(Adapter):
 ADAPTERS = {"sway": SwayAdapter, "swayward": SwaywardAdapter, "i3": I3Adapter}
 DIFFERENTIAL_CONFIGS = {
     "sway": "font monospace 10\ndefault_border normal 2\noutput * mode 1280x720\noutput * bg #000000 solid_color\n",
-    "swayward": "output \"headless-1\" { mode custom=true \"1280x720@60\"; scale 1; }\nlayout { default-orientation \"horizontal\"; default-border \"normal\" width=2; default-floating-border \"normal\" width=2; border { on; width 2; }; }\n",
+    "swayward": "output \"headless-1\" { mode custom=true \"1280x720@60\"; scale 1; }\nlayout { default-border \"normal\" width=2; default-floating-border \"normal\" width=2; border { on; width 2; }; }\n",
 }
 
 
