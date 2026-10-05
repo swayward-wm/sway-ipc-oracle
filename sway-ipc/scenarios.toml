@@ -635,3 +635,8 @@ actions = ["window:fixture-fmark-1", "window:fixture-fmark-2", "command:floating
 name = "move_tiled_to_floating_mark_stacks_above_mark"
 corpora = ["state"]
 actions = ["window:fixture-fmark-1", "command:splitv", "window:fixture-fmark-2", "window:fixture-fmark-3", "command:floating enable", "command:mark m", "window:fixture-fmark-4", "command:floating enable", "command:[app_id=\"^fixture-fmark-2$\"] focus", "command:move container to mark m", "capture:move_tiled_to_floating_mark_stacks_above_mark"]
+
+[[scenario]]
+name = "floating_csd_split_keeps_content"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating enable", "command:border csd", "command:split v", "capture:floating_csd_split_keeps_content"]
