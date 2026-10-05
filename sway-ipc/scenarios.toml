@@ -345,6 +345,11 @@ corpora = ["state"]
 actions = ["command:allow_tearing no", "command:max_render_time 5", "command:max_render_time off", "command:shortcuts_inhibitor disable", "command:inhibit_idle none", "command:opacity minus 0.2", "window:fixture-1", "command:focus parent", "command:shortcuts_inhibitor enable", "command:inhibit_idle visible", "command:opacity minus 0.2", "capture:view_commands_without_view"]
 
 [[scenario]]
+name = "per_view_render_with_view"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:allow_tearing yes", "command:max_render_time 5", "capture:per_view_render_with_view_set", "command:allow_tearing toggle", "command:max_render_time 0", "command:max_render_time off", "capture:per_view_render_with_view"]
+
+[[scenario]]
 name = "criteria_no_match_border_and_scratchpad"
 corpora = ["state"]
 actions = ["probe:criteria_no_match_border_empty:[floating] border pixel 4", "window:fixture-criteria-hidden", "command:move scratchpad", "probe:criteria_no_match_tiling_hidden:[tiling] mark --add oracle-tiled", "probe:criteria_match_floating_hidden:[floating] mark --add oracle-floated", "capture:criteria_no_match_border_and_scratchpad"]
