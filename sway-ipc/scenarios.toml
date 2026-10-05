@@ -333,3 +333,8 @@ actions = ["command:allow_tearing no", "command:max_render_time 5", "command:max
 name = "criteria_no_match_border_and_scratchpad"
 corpora = ["state"]
 actions = ["probe:criteria_no_match_border_empty:[floating] border pixel 4", "window:fixture-criteria-hidden", "command:move scratchpad", "probe:criteria_no_match_tiling_hidden:[tiling] mark --add oracle-tiled", "probe:criteria_match_floating_hidden:[floating] mark --add oracle-floated", "capture:criteria_no_match_border_and_scratchpad"]
+
+[[scenario]]
+name = "urgent_view_marks_its_split_urgent"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:layout stacking", "window:fixture-2", "command:splitv", "window:fixture-3", "command:[app_id=\"^fixture-1$\"] urgent enable", "command:[app_id=\"^fixture-3$\"] urgent enable", "command:[app_id=\"^fixture-3$\"] urgent disable", "window:fixture-4", "command:[app_id=\"^fixture-3$\"] urgent enable", "capture:urgent_view_marks_its_split_urgent"]
