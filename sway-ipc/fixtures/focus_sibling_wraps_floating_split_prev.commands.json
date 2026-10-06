@@ -1,0 +1,50 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-fsf-1 --title=fixture-fsf-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "floating toggle",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "splitv",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-fsf-2 --title=fixture-fsf-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus next sibling",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus prev sibling",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

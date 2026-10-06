@@ -707,3 +707,8 @@ actions = ["window:fixture-wsfp-1", "command:focus parent", "capture:workspace_s
 name = "no_focus_view_ranks_last"
 corpora = ["state"]
 actions = ["window:fixture-nf-1", "command:focus parent", "command:no_focus [app_id=\"^fixture-nf-(2|5)$\"]", "window:fixture-nf-2", "capture:no_focus_view_ranks_last_parent_focused", "command:focus child", "command:[workspace=__focused__] move container to workspace 2", "capture:no_focus_view_ranks_last_multi_match_move", "command:workspace 3", "window:fixture-nf-3", "window:fixture-nf-4", "command:layout tabbed", "window:fixture-nf-5", "capture:no_focus_view_ranks_last_tabbed"]
+
+[[scenario]]
+name = "focus_sibling_wraps_floating_split"
+corpora = ["state"]
+actions = ["window:fixture-fsf-1", "command:floating toggle", "command:splitv", "window:fixture-fsf-2", "command:focus next sibling", "capture:focus_sibling_wraps_floating_split_next", "command:focus prev sibling", "capture:focus_sibling_wraps_floating_split_prev"]
