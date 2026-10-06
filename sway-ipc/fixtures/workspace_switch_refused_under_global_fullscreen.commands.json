@@ -1,0 +1,84 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-wsgf-1 --title=fixture-wsgf-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace 2",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-wsgf-2 --title=fixture-wsgf-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "fullscreen toggle global",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace next",
+    "reply": [
+      {
+        "error": "Can't switch workspaces while fullscreen global",
+        "parse_error": false,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "workspace prev_on_output",
+    "reply": [
+      {
+        "error": "Can't switch workspaces while fullscreen global",
+        "parse_error": false,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "workspace back_and_forth",
+    "reply": [
+      {
+        "error": "Can't switch workspaces while fullscreen global",
+        "parse_error": false,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "workspace oracle",
+    "reply": [
+      {
+        "error": "Can't switch workspaces while fullscreen global",
+        "parse_error": false,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "workspace number 1",
+    "reply": [
+      {
+        "error": "Can't switch workspaces while fullscreen global",
+        "parse_error": false,
+        "success": false
+      }
+    ]
+  }
+]

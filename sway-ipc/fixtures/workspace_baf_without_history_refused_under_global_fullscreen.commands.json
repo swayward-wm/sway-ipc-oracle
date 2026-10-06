@@ -1,0 +1,28 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-wsgf-3 --title=fixture-wsgf-3 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "fullscreen toggle global",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace back_and_forth",
+    "reply": [
+      {
+        "error": "Can't switch workspaces while fullscreen global",
+        "parse_error": false,
+        "success": false
+      }
+    ]
+  }
+]
