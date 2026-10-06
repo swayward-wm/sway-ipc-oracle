@@ -1,0 +1,106 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-tosf-1 --title=fixture-tosf-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus output right",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-tosf-2 --title=fixture-tosf-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move container to output left",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus output left",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move container to output right",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus output right",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "floating enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus left",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus output left",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus right",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus output left",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace back_and_forth",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]
