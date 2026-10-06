@@ -832,3 +832,8 @@ actions = ["command:default_border pixel 1", "window:fixture-sbfs-1", "window:fi
 name = "move_global_fullscreen_error_precedence"
 corpora = ["state"]
 actions = ["window:fixture-mgfe-1", "window:fixture-mgfe-2", "command:fullscreen toggle global", "probe:move_global_fullscreen_error_precedence_mark:move container to mark oracle", "probe:move_global_fullscreen_error_precedence_workspace:move container to workspace number 3", "probe:move_global_fullscreen_error_precedence_output:move window to output nope", "probe:move_global_fullscreen_error_precedence_criteria:[app_id=\"fixture-mgfe-2\"] move container to mark oracle", "probe:move_global_fullscreen_error_precedence_other:[app_id=\"fixture-mgfe-1\"] move container to mark oracle", "capture:move_global_fullscreen_error_precedence", "command:split v", "probe:move_global_fullscreen_error_precedence_split_child:move container to workspace number 3"]
+
+[[scenario]]
+name = "swap_fullscreen_focuses_new_holder"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:mark --add oracle", "window:fixture-2", "command:fullscreen toggle", "probe:swap_fullscreen_focuses_new_holder:swap container with mark oracle", "capture:swap_fullscreen_focuses_new_holder"]
