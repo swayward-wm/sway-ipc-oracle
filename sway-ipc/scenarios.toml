@@ -873,3 +873,8 @@ actions = ["command:splith", "window:fixture-1", "window:fixture-2", "command:fu
 name = "global_fullscreen_layout_wrap_new_view_focus"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:fullscreen toggle global", "command:layout stacking", "window:fixture-2", "capture:global_fullscreen_layout_wrap_new_view_focus", "probe:global_fullscreen_layout_wrap_workspace_switch:workspace number 3"]
+
+[[scenario]]
+name = "resize_width_then_layout_flip"
+corpora = ["state"]
+actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2", "window:fixture-1", "window:fixture-2", "command:resize grow width 10 px or 5 ppt", "command:layout toggle split", "capture:resize_width_then_layout_flip"]
