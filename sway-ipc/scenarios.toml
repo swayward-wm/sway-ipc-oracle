@@ -863,3 +863,13 @@ actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2"
 name = "resize_set_with_workspace_focus_reports_nothing"
 corpora = ["state"]
 actions = ["window:fixture-rswf-1", "window:fixture-rswf-2", "command:focus parent", "probe:resize_set_with_workspace_focus_reports_nothing:resize set 0 300", "capture:resize_set_with_workspace_focus_reports_nothing"]
+
+[[scenario]]
+name = "global_fullscreen_layout_wrap_shows_siblings"
+corpora = ["state"]
+actions = ["command:splith", "window:fixture-1", "window:fixture-2", "command:fullscreen toggle global", "command:layout splitv", "capture:global_fullscreen_layout_wrap_shows_siblings", "probe:global_fullscreen_layout_wrap_move_refused:move container to workspace next"]
+
+[[scenario]]
+name = "global_fullscreen_layout_wrap_new_view_focus"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:fullscreen toggle global", "command:layout stacking", "window:fixture-2", "capture:global_fullscreen_layout_wrap_new_view_focus", "probe:global_fullscreen_layout_wrap_workspace_switch:workspace number 3"]
