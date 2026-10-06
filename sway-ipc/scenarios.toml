@@ -908,3 +908,23 @@ actions = ["window:fixture-sso-1", "command:move scratchpad", "window:fixture-ss
 name = "sticky_fullscreen_floating_workspace_switch"
 corpora = ["state"]
 actions = ["window:fixture-sffs-1", "command:fullscreen enable", "command:floating enable", "command:sticky enable", "command:workspace 2", "capture:sticky_fullscreen_floating_workspace_switch"]
+
+[[scenario]]
+name = "fullscreen_layout_toggle_split_under_view"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:fullscreen toggle", "command:layout toggle split", "window:fixture-2", "command:splith", "capture:fullscreen_layout_toggle_split_under_view"]
+
+[[scenario]]
+name = "fullscreen_split_move_scratchpad"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:fullscreen toggle", "window:fixture-2", "command:split h", "command:move scratchpad", "capture:fullscreen_split_move_scratchpad"]
+
+[[scenario]]
+name = "fullscreen_tabbed_move_workspace_next"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:fullscreen toggle", "command:layout tabbed", "command:move container to workspace next", "capture:fullscreen_tabbed_move_workspace_next"]
+
+[[scenario]]
+name = "scratchpad_show_fullscreen_enable"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:move scratchpad", "window:fixture-2", "command:scratchpad show", "command:fullscreen enable", "capture:scratchpad_show_fullscreen_enable"]
