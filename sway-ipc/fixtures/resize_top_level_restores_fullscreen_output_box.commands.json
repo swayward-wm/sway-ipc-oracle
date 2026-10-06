@@ -1,0 +1,52 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-rzfs-13 --title=fixture-rzfs-13 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-rzfs-14 --title=fixture-rzfs-14 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "splitt",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "fullscreen toggle",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-rzfs-15 --title=fixture-rzfs-15 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "resize shrink height 5 ppt",
+    "reply": [
+      {
+        "error": "Cannot resize any further",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  }
+]
