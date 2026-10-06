@@ -1,0 +1,66 @@
+[
+  {
+    "command": "output * mode --custom 1280x720@60Hz",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace 2",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-1 --title=fixture-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-2 --title=fixture-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "resize set width 30 ppt height 40 ppt",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "layout splitv",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "resize set height 25 ppt",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "layout splith",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

@@ -853,3 +853,8 @@ name = "two_output_move_keeps_arrival_order"
 outputs = 2
 corpora = ["state"]
 actions = ["command:focus output left", "window:fixture-1", "command:focus output right", "window:fixture-2", "window:fixture-3", "command:focus output left", "window:fixture-4", "command:move container to output right", "capture:two_output_move_keeps_arrival_order", "command:assign [app_id=\"^fixture-5$\"] workspace 1", "window:fixture-5", "window:fixture-6", "command:move container to output right", "capture:two_output_move_after_assigned_view"]
+
+[[scenario]]
+name = "resize_set_ppt_latent_axis_layout_change"
+corpora = ["state"]
+actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2", "window:fixture-1", "window:fixture-2", "command:resize set width 30 ppt height 40 ppt", "capture:resize_set_ppt_latent_axis_layout_change_resized", "command:layout splitv", "capture:resize_set_ppt_latent_axis_layout_change_splitv", "command:resize set height 25 ppt", "command:layout splith", "capture:resize_set_ppt_latent_axis_layout_change"]
