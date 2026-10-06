@@ -707,3 +707,8 @@ actions = ["window:fixture-wsfp-1", "command:focus parent", "capture:workspace_s
 name = "no_focus_view_ranks_last"
 corpora = ["state"]
 actions = ["window:fixture-nf-1", "command:focus parent", "command:no_focus [app_id=\"^fixture-nf-(2|5)$\"]", "window:fixture-nf-2", "capture:no_focus_view_ranks_last_parent_focused", "command:focus child", "command:[workspace=__focused__] move container to workspace 2", "capture:no_focus_view_ranks_last_multi_match_move", "command:workspace 3", "window:fixture-nf-3", "window:fixture-nf-4", "command:layout tabbed", "window:fixture-nf-5", "capture:no_focus_view_ranks_last_tabbed"]
+
+[[scenario]]
+name = "swap_fullscreen_focuses_new_holder"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:mark --add oracle", "window:fixture-2", "command:fullscreen toggle", "probe:swap_fullscreen_focuses_new_holder:swap container with mark oracle", "capture:swap_fullscreen_focuses_new_holder"]
