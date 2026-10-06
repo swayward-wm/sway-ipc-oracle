@@ -573,3 +573,8 @@ actions = ["window:fixture-1", "command:focus parent", "probe:no_container_title
 name = "fullscreen_split_global_coexist"
 corpora = ["state"]
 actions = ["window:fixture-1", "window:fixture-2", "command:fullscreen enable", "command:split toggle", "command:fullscreen toggle global", "capture:fullscreen_split_global_coexist"]
+
+[[scenario]]
+name = "workspace_focused_criteria_move"
+corpora = ["state"]
+actions = ["window:fixture-wfc-1", "window:fixture-wfc-2", "command:focus parent", "probe:workspace_focused_criteria_move_split_focused:[workspace=__focused__] move container to workspace 2", "command:focus child", "command:[workspace=__focused__] move container to workspace 1", "capture:workspace_focused_criteria_move_own_workspace", "command:workspace 2", "command:[workspace=\"1\"] move container to workspace 2", "capture:workspace_focused_criteria_move_workspace_focused", "command:[app_id=\"^fixture-wfc-1$\"] focus", "command:fullscreen enable global", "probe:workspace_focused_criteria_move_global_fullscreen:[app_id=\"^fixture-wfc-1$\"] move container to workspace 3", "capture:workspace_focused_criteria_move_global_fullscreen_refused"]
