@@ -641,3 +641,8 @@ name = "focus_next_crosses_outputs"
 outputs = 2
 corpora = ["state"]
 actions = ["window:fixture-fn-1", "command:layout splith", "command:move workspace to output right", "command:focus output left", "window:fixture-fn-2", "window:fixture-fn-3", "command:layout splith", "capture:focus_next_crosses_outputs_before", "command:focus next", "capture:focus_next_crosses_outputs_next", "command:focus prev", "capture:focus_next_crosses_outputs_prev", "command:focus next sibling", "capture:focus_next_crosses_outputs_next_sibling", "command:focus prev sibling", "capture:focus_next_crosses_outputs_prev_sibling", "command:focus left", "command:focus prev", "capture:focus_next_crosses_outputs_edge_wraps"]
+
+[[scenario]]
+name = "no_focus_view_ranks_last"
+corpora = ["state"]
+actions = ["window:fixture-nf-1", "command:focus parent", "command:no_focus [app_id=\"^fixture-nf-(2|5)$\"]", "window:fixture-nf-2", "capture:no_focus_view_ranks_last_parent_focused", "command:focus child", "command:[workspace=__focused__] move container to workspace 2", "capture:no_focus_view_ranks_last_multi_match_move", "command:workspace 3", "window:fixture-nf-3", "window:fixture-nf-4", "command:layout tabbed", "window:fixture-nf-5", "capture:no_focus_view_ranks_last_tabbed"]
