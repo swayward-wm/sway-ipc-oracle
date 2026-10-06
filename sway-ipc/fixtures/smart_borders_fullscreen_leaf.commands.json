@@ -1,0 +1,42 @@
+[
+  {
+    "command": "default_border pixel 1",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-sbfs-1 --title=fixture-sbfs-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-sbfs-2 --title=fixture-sbfs-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "smart_borders on",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "fullscreen toggle",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

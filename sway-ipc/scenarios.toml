@@ -822,3 +822,8 @@ actions = ["window:fixture-1", "window:fixture-2", "command:focus parent", "comm
 name = "floating_enable_workspace_resets_splith"
 corpora = ["state"]
 actions = ["window:fixture-1", "window:fixture-2", "command:focus parent", "command:floating enable", "capture:floating_enable_workspace_resets_splith"]
+
+[[scenario]]
+name = "smart_borders_fullscreen_split_child"
+corpora = ["state"]
+actions = ["command:default_border pixel 1", "window:fixture-sbfs-1", "window:fixture-sbfs-2", "command:smart_borders on", "command:fullscreen toggle", "capture:smart_borders_fullscreen_leaf", "command:split toggle", "capture:smart_borders_fullscreen_split_child"]
