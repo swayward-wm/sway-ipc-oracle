@@ -822,3 +822,8 @@ actions = ["window:fixture-1", "window:fixture-2", "command:focus parent", "comm
 name = "floating_enable_workspace_resets_splith"
 corpora = ["state"]
 actions = ["window:fixture-1", "window:fixture-2", "command:focus parent", "command:floating enable", "capture:floating_enable_workspace_resets_splith"]
+
+[[scenario]]
+name = "resize_width_then_layout_flip"
+corpora = ["state"]
+actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2", "window:fixture-1", "window:fixture-2", "command:resize grow width 10 px or 5 ppt", "command:layout toggle split", "capture:resize_width_then_layout_flip"]
