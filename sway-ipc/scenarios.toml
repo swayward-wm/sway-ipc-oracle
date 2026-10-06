@@ -671,3 +671,9 @@ actions = ["window:fixture-wsgf-3", "command:fullscreen toggle global", "command
 name = "floating_global_fullscreen"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:floating toggle", "command:fullscreen toggle global", "capture:floating_global_fullscreen"]
+
+[[scenario]]
+name = "two_output_seat_focus"
+outputs = 2
+corpora = ["state"]
+actions = ["window:fixture-tosf-1", "command:focus output right", "window:fixture-tosf-2", "command:move container to output left", "command:focus output left", "capture:two_output_seat_focus_moved_view_ranks", "command:move container to output right", "command:focus output right", "command:floating enable", "command:focus left", "capture:two_output_seat_focus_float_stays", "command:focus output left", "command:focus right", "capture:two_output_seat_focus_enters_floating_only", "command:focus output left", "command:workspace back_and_forth", "capture:two_output_seat_focus_back_and_forth"]
