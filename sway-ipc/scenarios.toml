@@ -427,6 +427,11 @@ corpora = ["state"]
 actions = ["window:fixture-1", "window:fixture-2", "command:move up", "command:focus parent", "window:fixture-3", "capture:new_view_beside_focus_inactive"]
 
 [[scenario]]
+name = "new_view_beside_floating_fullscreen"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:fullscreen toggle", "command:floating toggle", "window:fixture-2", "window:fixture-3", "capture:new_view_beside_floating_fullscreen"]
+
+[[scenario]]
 name = "bar_runtime_without_bars"
 corpora = ["state"]
 actions = ["probe:bar_runtime_hidden_state:bar hidden_state show", "probe:bar_runtime_mode:bar mode hide", "probe:bar_runtime_no_bar:bar position top", "capture:bar_runtime_without_bars"]
