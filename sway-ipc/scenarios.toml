@@ -747,3 +747,8 @@ actions = ["window:fixture-rzfs-13", "window:fixture-rzfs-14", "command:splitt",
 name = "resize_fullscreen_split_wrapper_refused"
 corpora = ["state"]
 actions = ["window:fixture-rzfs-16", "window:fixture-rzfs-17", "command:fullscreen enable", "command:splitv", "window:fixture-rzfs-18", "command:[app_id=\"fixture-rzfs-17\"] kill", "capture:resize_fullscreen_split_wrapper_before", "command:resize grow height 10 ppt", "command:resize grow up 20 px", "capture:resize_fullscreen_split_wrapper_refused"]
+
+[[scenario]]
+name = "criteria_focused_con_id_empty"
+corpora = ["state"]
+actions = ["probe:criteria_focused_con_id_empty_unfocused:[con_id=__focused__] mark --add z", "probe:criteria_focused_con_id_empty_zero:[con_id=0] mark --add z", "window:fixture-cfe-1", "probe:criteria_focused_con_id_empty_view:[con_id=__focused__] mark --add y", "command:focus parent", "probe:criteria_focused_con_id_empty_workspace:[con_id=__focused__] mark --add x", "capture:criteria_focused_con_id_empty"]
