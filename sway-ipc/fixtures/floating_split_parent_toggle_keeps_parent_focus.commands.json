@@ -1,0 +1,37 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-fsp-9 --title=fixture-fsp-9 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "floating enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "splith",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent; floating toggle",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "success": true
+      }
+    ]
+  }
+]

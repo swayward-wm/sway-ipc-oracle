@@ -752,3 +752,28 @@ actions = ["window:fixture-rzfs-16", "window:fixture-rzfs-17", "command:fullscre
 name = "criteria_focused_con_id_empty"
 corpora = ["state"]
 actions = ["probe:criteria_focused_con_id_empty_unfocused:[con_id=__focused__] mark --add z", "probe:criteria_focused_con_id_empty_zero:[con_id=0] mark --add z", "window:fixture-cfe-1", "probe:criteria_focused_con_id_empty_view:[con_id=__focused__] mark --add y", "command:focus parent", "probe:criteria_focused_con_id_empty_workspace:[con_id=__focused__] mark --add x", "capture:criteria_focused_con_id_empty"]
+
+[[scenario]]
+name = "kill_split_parent_focuses_sibling"
+corpora = ["state"]
+actions = ["window:fixture-kfs-1", "window:fixture-kfs-2", "command:split toggle", "command:focus parent", "command:kill", "capture:kill_split_parent_focuses_sibling"]
+
+[[scenario]]
+name = "kill_after_move_down_focuses_sibling"
+corpora = ["state"]
+actions = ["window:fixture-kfs-3", "window:fixture-kfs-4", "command:move down", "command:focus prev sibling", "command:kill", "capture:kill_after_move_down_focuses_sibling"]
+
+[[scenario]]
+name = "criteria_floating_enable_under_focused_workspace"
+corpora = ["state"]
+actions = ["window:fixture-cfw-2", "command:focus parent", "command:[app_id=\"^fixture-cfw-[23]$\"] floating enable", "capture:criteria_floating_enable_under_focused_workspace"]
+
+[[scenario]]
+name = "floating_split_parent_toggle_keeps_parent_focus"
+corpora = ["state"]
+actions = ["window:fixture-fsp-9", "command:floating enable", "command:splith", "command:focus parent; floating toggle", "capture:floating_split_parent_toggle_keeps_parent_focus"]
+
+[[scenario]]
+name = "scratchpad_fullscreen_floating_refocuses_tiled_view"
+corpora = ["state"]
+actions = ["window:fixture-sff-4", "window:fixture-sff-5", "command:layout toggle split", "command:move scratchpad", "command:scratchpad show", "command:fullscreen toggle; move scratchpad", "capture:scratchpad_fullscreen_floating_refocuses_tiled_view"]

@@ -1,0 +1,42 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-kfs-1 --title=fixture-kfs-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-kfs-2 --title=fixture-kfs-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "split toggle",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "kill",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]
