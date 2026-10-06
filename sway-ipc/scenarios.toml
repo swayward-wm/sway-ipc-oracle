@@ -807,3 +807,8 @@ actions = ["window:fixture-mtm-1", "command:floating enable", "command:mark m", 
 name = "floating_container_move_to_own_mark_is_noop"
 corpora = ["state"]
 actions = ["window:fixture-mtm-1", "command:focus parent", "command:floating enable", "command:mark m", "command:move container to mark m", "capture:floating_container_move_to_own_mark_is_noop"]
+
+[[scenario]]
+name = "workspace_focused_criteria_move"
+corpora = ["state"]
+actions = ["window:fixture-wfc-1", "window:fixture-wfc-2", "command:focus parent", "probe:workspace_focused_criteria_move_split_focused:[workspace=__focused__] move container to workspace 2", "command:focus child", "command:[workspace=__focused__] move container to workspace 1", "capture:workspace_focused_criteria_move_own_workspace", "command:workspace 2", "command:[workspace=\"1\"] move container to workspace 2", "capture:workspace_focused_criteria_move_workspace_focused", "command:[app_id=\"^fixture-wfc-1$\"] focus", "command:fullscreen enable global", "probe:workspace_focused_criteria_move_global_fullscreen:[app_id=\"^fixture-wfc-1$\"] move container to workspace 3", "capture:workspace_focused_criteria_move_global_fullscreen_refused"]
