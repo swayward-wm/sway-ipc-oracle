@@ -1,0 +1,7 @@
+[
+  {
+    "error": "Expected 'layout default|tabbed|stacking|splitv|splith' or 'layout toggle [split|all]' or 'layout toggle [split|tabbed|stacking|splitv|splith] [split|tabbed|stacking|splitv|splith]...'",
+    "parse_error": true,
+    "success": false
+  }
+]
