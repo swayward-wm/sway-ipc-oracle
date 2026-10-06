@@ -1,0 +1,42 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-mtm-1 --title=fixture-mtm-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "floating enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "mark m",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move container to mark m",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

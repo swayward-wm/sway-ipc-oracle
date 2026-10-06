@@ -777,3 +777,33 @@ actions = ["window:fixture-fsp-9", "command:floating enable", "command:splith", 
 name = "scratchpad_fullscreen_floating_refocuses_tiled_view"
 corpora = ["state"]
 actions = ["window:fixture-sff-4", "window:fixture-sff-5", "command:layout toggle split", "command:move scratchpad", "command:scratchpad show", "command:fullscreen toggle; move scratchpad", "capture:scratchpad_fullscreen_floating_refocuses_tiled_view"]
+
+[[scenario]]
+name = "move_to_mark_in_split_focuses_moved_first"
+corpora = ["state"]
+actions = ["window:fixture-mtm-1", "window:fixture-mtm-2", "command:split v", "command:mark m", "command:[app_id=\"^fixture-mtm-1$\"] focus", "command:move container to mark m", "capture:move_to_mark_in_split_focuses_moved_first"]
+
+[[scenario]]
+name = "tabbed_workspace_move_to_missing_mark_wraps_unarranged"
+corpora = ["state"]
+actions = ["window:fixture-mtm-1", "command:focus parent", "command:layout tabbed", "command:move container to mark m", "capture:tabbed_workspace_move_to_missing_mark_wraps_unarranged"]
+
+[[scenario]]
+name = "move_to_mark_from_split_focuses_old_sibling"
+corpora = ["state"]
+actions = ["window:fixture-mtm-1", "command:mark m", "window:fixture-mtm-2", "command:split v", "window:fixture-mtm-3", "command:move container to mark m", "capture:move_to_mark_from_split_focuses_old_sibling"]
+
+[[scenario]]
+name = "workspace_move_to_own_mark_wraps_children"
+corpora = ["state"]
+actions = ["window:fixture-mtm-1", "command:mark m", "window:fixture-mtm-2", "command:focus parent", "command:layout tabbed", "command:move container to mark m", "capture:workspace_move_to_own_mark_wraps_children"]
+
+[[scenario]]
+name = "move_to_floating_mark_keeps_seat_recency"
+corpora = ["state"]
+actions = ["window:fixture-mtm-1", "command:floating enable", "command:mark m", "window:fixture-mtm-2", "window:fixture-mtm-3", "command:move container to mark m", "capture:move_to_floating_mark_keeps_seat_recency"]
+
+[[scenario]]
+name = "floating_container_move_to_own_mark_is_noop"
+corpora = ["state"]
+actions = ["window:fixture-mtm-1", "command:focus parent", "command:floating enable", "command:mark m", "command:move container to mark m", "capture:floating_container_move_to_own_mark_is_noop"]
