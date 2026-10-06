@@ -696,3 +696,9 @@ actions = ["command:layout splith", "window:fixture-fwl-0", "command:floating en
 name = "criteria_layout_wraps_workspace"
 corpora = ["state"]
 actions = ["command:layout splith", "window:fixture-cl-1", "window:fixture-cl-2", "probe:criteria_layout_wraps_workspace_tabbed:[app_id=\"^fixture-cl-1$\"] layout tabbed", "probe:criteria_layout_wraps_workspace_default:[app_id=\"^fixture-cl-1$\"] layout default", "probe:criteria_layout_wraps_workspace_toggle_all:[app_id=\"^fixture-cl-1$\"] layout toggle all", "capture:criteria_layout_wraps_workspace"]
+
+[[scenario]]
+name = "workspace_switch_after_focus_parent"
+outputs = 2
+corpora = ["state"]
+actions = ["window:fixture-wsfp-1", "command:focus parent", "capture:workspace_switch_after_focus_parent_before", "command:workspace prev_on_output", "capture:workspace_switch_after_focus_parent_prev_on_output", "command:focus parent", "command:workspace next_on_output", "capture:workspace_switch_after_focus_parent_next_on_output", "command:focus parent", "command:workspace current", "capture:workspace_switch_after_focus_parent_current"]
