@@ -878,3 +878,8 @@ actions = ["window:fixture-1", "command:fullscreen toggle global", "command:layo
 name = "resize_width_then_layout_flip"
 corpora = ["state"]
 actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2", "window:fixture-1", "window:fixture-2", "command:resize grow width 10 px or 5 ppt", "command:layout toggle split", "capture:resize_width_then_layout_flip"]
+
+[[scenario]]
+name = "move_scratchpad_from_fullscreen_wrapper_percent"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:fullscreen toggle", "window:fixture-2", "command:layout toggle", "probe:move_scratchpad_from_fullscreen_wrapper_percent:move scratchpad", "capture:move_scratchpad_from_fullscreen_wrapper_percent"]
