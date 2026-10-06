@@ -837,3 +837,19 @@ actions = ["window:fixture-mgfe-1", "window:fixture-mgfe-2", "command:fullscreen
 name = "swap_fullscreen_focuses_new_holder"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:mark --add oracle", "window:fixture-2", "command:fullscreen toggle", "probe:swap_fullscreen_focuses_new_holder:swap container with mark oracle", "capture:swap_fullscreen_focuses_new_holder"]
+
+[[scenario]]
+name = "layout_on_focused_stacked_workspace"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus parent", "command:layout stacking", "command:layout splith", "capture:layout_on_focused_stacked_workspace"]
+
+[[scenario]]
+name = "split_toggle_lone_container_sets_parent_layout"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:splitv", "command:focus parent", "command:split v", "command:splitt", "capture:split_toggle_lone_container_sets_parent_layout"]
+
+[[scenario]]
+name = "two_output_move_keeps_arrival_order"
+outputs = 2
+corpora = ["state"]
+actions = ["command:focus output left", "window:fixture-1", "command:focus output right", "window:fixture-2", "window:fixture-3", "command:focus output left", "window:fixture-4", "command:move container to output right", "capture:two_output_move_keeps_arrival_order", "command:assign [app_id=\"^fixture-5$\"] workspace 1", "window:fixture-5", "window:fixture-6", "command:move container to output right", "capture:two_output_move_after_assigned_view"]
