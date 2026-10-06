@@ -203,6 +203,13 @@ corpora = ["state"]
 actions = ["command:focus output left", "window:fixture-1", "command:move left", "capture:two_output_edge_move_no_wrap", "command:fullscreen toggle", "command:move right", "capture:two_output_edge_move_fullscreen"]
 
 [[scenario]]
+name = "two_output_edge_move_from_split"
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+corpora = ["state"]
+actions = ["command:move workspace to output right", "window:fixture-1", "command:split toggle", "command:move left", "capture:two_output_edge_move_from_split"]
+
+[[scenario]]
 name = "scratchpad"
 actions = ["window:fixture-1", "command:move scratchpad", "capture:scratchpad_hidden", "command:scratchpad show", "capture:scratchpad_shown"]
 
