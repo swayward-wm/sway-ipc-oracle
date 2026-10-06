@@ -641,3 +641,9 @@ name = "focus_next_crosses_outputs"
 outputs = 2
 corpora = ["state"]
 actions = ["window:fixture-fn-1", "command:layout splith", "command:move workspace to output right", "command:focus output left", "window:fixture-fn-2", "window:fixture-fn-3", "command:layout splith", "capture:focus_next_crosses_outputs_before", "command:focus next", "capture:focus_next_crosses_outputs_next", "command:focus prev", "capture:focus_next_crosses_outputs_prev", "command:focus next sibling", "capture:focus_next_crosses_outputs_next_sibling", "command:focus prev sibling", "capture:focus_next_crosses_outputs_prev_sibling", "command:focus left", "command:focus prev", "capture:focus_next_crosses_outputs_edge_wraps"]
+
+[[scenario]]
+name = "workspace_switch_after_focus_parent"
+outputs = 2
+corpora = ["state"]
+actions = ["window:fixture-wsfp-1", "command:focus parent", "capture:workspace_switch_after_focus_parent_before", "command:workspace prev_on_output", "capture:workspace_switch_after_focus_parent_prev_on_output", "command:focus parent", "command:workspace next_on_output", "capture:workspace_switch_after_focus_parent_next_on_output", "command:focus parent", "command:workspace current", "capture:workspace_switch_after_focus_parent_current"]
