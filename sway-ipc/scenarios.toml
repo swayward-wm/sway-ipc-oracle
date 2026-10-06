@@ -666,3 +666,38 @@ actions = ["window:fixture-wsgf-1", "command:workspace 2", "window:fixture-wsgf-
 name = "workspace_baf_without_history_refused_under_global_fullscreen"
 corpora = ["state"]
 actions = ["window:fixture-wsgf-3", "command:fullscreen toggle global", "command:workspace back_and_forth", "capture:workspace_baf_without_history_refused_under_global_fullscreen"]
+
+[[scenario]]
+name = "resize_under_workspace_fullscreen_keeps_sibling_percent"
+corpora = ["state"]
+actions = ["window:fixture-rzfs-1", "window:fixture-rzfs-2", "command:fullscreen enable", "command:resize grow up 20 px", "capture:resize_under_workspace_fullscreen_keeps_sibling_percent", "command:fullscreen disable", "capture:resize_under_workspace_fullscreen_after_disable"]
+
+[[scenario]]
+name = "resize_ppt_under_workspace_fullscreen_keeps_sibling_percent"
+corpora = ["state"]
+actions = ["window:fixture-rzfs-3", "window:fixture-rzfs-4", "command:fullscreen toggle", "command:resize shrink height 5 ppt", "capture:resize_ppt_under_workspace_fullscreen_keeps_sibling_percent", "command:fullscreen toggle", "capture:resize_ppt_under_workspace_fullscreen_after_disable"]
+
+[[scenario]]
+name = "resize_under_workspace_fullscreen_beside_mapped_view"
+corpora = ["state"]
+actions = ["window:fixture-rzfs-5", "window:fixture-rzfs-6", "command:fullscreen enable", "window:fixture-rzfs-7", "command:resize grow up 20 px", "capture:resize_under_workspace_fullscreen_beside_mapped_view"]
+
+[[scenario]]
+name = "resize_under_workspace_fullscreen_in_wrapper"
+corpora = ["state"]
+actions = ["window:fixture-rzfs-8", "window:fixture-rzfs-9", "command:layout splith", "command:fullscreen enable", "command:resize grow left 20 px", "capture:resize_under_workspace_fullscreen_in_wrapper"]
+
+[[scenario]]
+name = "resize_beside_tile_slot_under_workspace_fullscreen"
+corpora = ["state"]
+actions = ["window:fixture-rzfs-10", "window:fixture-rzfs-11", "command:splitt", "command:fullscreen toggle", "window:fixture-rzfs-12", "command:resize shrink width 5 ppt", "capture:resize_beside_tile_slot_under_workspace_fullscreen"]
+
+[[scenario]]
+name = "resize_top_level_restores_fullscreen_output_box"
+corpora = ["state"]
+actions = ["window:fixture-rzfs-13", "window:fixture-rzfs-14", "command:splitt", "command:fullscreen toggle", "window:fixture-rzfs-15", "command:resize shrink height 5 ppt", "capture:resize_top_level_restores_fullscreen_output_box"]
+
+[[scenario]]
+name = "resize_fullscreen_split_wrapper_refused"
+corpora = ["state"]
+actions = ["window:fixture-rzfs-16", "window:fixture-rzfs-17", "command:fullscreen enable", "command:splitv", "window:fixture-rzfs-18", "command:[app_id=\"fixture-rzfs-17\"] kill", "capture:resize_fullscreen_split_wrapper_before", "command:resize grow height 10 ppt", "command:resize grow up 20 px", "capture:resize_fullscreen_split_wrapper_refused"]

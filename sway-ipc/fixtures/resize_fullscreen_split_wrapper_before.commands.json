@@ -1,0 +1,50 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-rzfs-16 --title=fixture-rzfs-16 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-rzfs-17 --title=fixture-rzfs-17 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "fullscreen enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "splitv",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-rzfs-18 --title=fixture-rzfs-18 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "[app_id=\"fixture-rzfs-17\"] kill",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]
