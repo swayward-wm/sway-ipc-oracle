@@ -1,0 +1,69 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-1 --title=fixture-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-2 --title=fixture-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "mark m",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move container to workspace oracle",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "layout tabbed",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent; fullscreen toggle",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-3 --title=fixture-3 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "swap container with mark m",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

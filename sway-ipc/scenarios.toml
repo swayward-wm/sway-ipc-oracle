@@ -975,3 +975,58 @@ actions = ["window:fixture-1", "command:mark tiled", "window:fixture-2", "window
 name = "swap_tiled_with_floating_mark_maps_beside_focus_inactive"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:mark --add floater", "window:fixture-2", "command:splith", "command:focus prev", "command:floating enable", "window:fixture-4", "command:swap container with mark floater", "capture:swap_tiled_with_floating_mark", "window:fixture-5", "capture:swap_tiled_with_floating_mark_maps_beside_focus_inactive"]
+
+[[scenario]]
+name = "fullscreen_layout_toggle_keeps_mapped_view_box"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:split v", "command:fullscreen enable", "window:fixture-3", "command:layout toggle split", "capture:fullscreen_layout_toggle_keeps_mapped_view_box"]
+
+[[scenario]]
+name = "fullscreen_tab_split_reports_output_box"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:layout toggle tabbed stacking split", "command:fullscreen toggle", "command:splith", "capture:fullscreen_tab_split_reports_output_box"]
+
+[[scenario]]
+name = "move_to_mark_on_fullscreen_view_zeroes_view"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:fullscreen toggle", "command:mark m", "command:move container to workspace oracle", "window:fixture-2", "command:move container to mark m", "capture:move_to_mark_on_fullscreen_view_zeroes_view"]
+
+[[scenario]]
+name = "swap_fullscreen_container_keeps_hidden_view"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:mark m", "command:move container to workspace oracle", "command:layout tabbed", "command:focus parent; fullscreen toggle", "window:fixture-3", "command:swap container with mark m", "capture:swap_fullscreen_container_keeps_hidden_view"]
+
+[[scenario]]
+name = "swap_fullscreen_view_with_hidden_view"
+corpora = ["state"]
+actions = ["command:for_window [app_id=\"^fixture-1$\"] fullscreen enable", "window:fixture-1", "window:fixture-2", "command:[app_id=\"^fixture-2$\"] mark m", "command:swap container with mark m", "capture:swap_fullscreen_view_with_hidden_view"]
+
+[[scenario]]
+name = "map_fullscreen_over_fullscreen_keeps_old_box"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:fullscreen toggle", "command:for_window [app_id=\"^fixture-2$\"] fullscreen enable", "window:fixture-2", "capture:map_fullscreen_over_fullscreen_keeps_old_box"]
+
+[[scenario]]
+name = "swap_hidden_view_into_fullscreen_split"
+corpora = ["state"]
+actions = ["command:for_window [app_id=\"fixture-diff-2\"] fullscreen enable", "window:fixture-diff-2", "window:fixture-diff-3", "command:split toggle", "command:swap container with con_id @con:fixture-diff-3", "capture:swap_hidden_view_into_fullscreen_split"]
+
+[[scenario]]
+name = "map_fullscreen_keeps_hidden_view_uncommitted"
+corpora = ["state"]
+actions = ["window:fixture-diff-2", "command:fullscreen toggle", "window:fixture-diff-3", "command:for_window [app_id=\"fixture-diff-4\"] fullscreen enable", "window:fixture-diff-4", "capture:map_fullscreen_keeps_hidden_view_uncommitted"]
+
+[[scenario]]
+name = "fullscreen_leaves_layout_wrapper_arranges"
+corpora = ["state"]
+actions = ["command:workspace oracle", "window:fixture-diff-6", "window:fixture-diff-7", "command:fullscreen enable", "command:layout toggle", "command:move container to workspace back_and_forth", "capture:fullscreen_leaves_layout_wrapper_arranges"]
+
+[[scenario]]
+name = "map_fullscreen_into_layout_wrapper_unarranged"
+corpora = ["state"]
+actions = ["window:fixture-diff-2", "command:fullscreen toggle", "command:layout tabbed", "command:for_window [app_id=\"fixture-diff-4\"] fullscreen enable", "window:fixture-diff-4", "capture:map_fullscreen_into_layout_wrapper_unarranged"]
+
+[[scenario]]
+name = "map_into_fullscreen_split_in_layout_wrapper"
+corpora = ["state"]
+actions = ["window:fixture-diff-2", "command:fullscreen toggle", "command:layout tabbed", "command:splitt", "window:fixture-diff-5", "capture:map_into_fullscreen_split_in_layout_wrapper"]

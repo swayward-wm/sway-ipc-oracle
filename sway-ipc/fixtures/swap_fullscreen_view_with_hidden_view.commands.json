@@ -1,0 +1,42 @@
+[
+  {
+    "command": "for_window [app_id=\"^fixture-1$\"] fullscreen enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-1 --title=fixture-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-2 --title=fixture-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "[app_id=\"^fixture-2$\"] mark m",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "swap container with mark m",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]
