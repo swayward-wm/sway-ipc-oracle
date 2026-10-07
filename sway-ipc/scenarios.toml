@@ -451,6 +451,11 @@ corpora = ["state"]
 actions = ["window:fixture-1", "command:output * mode --custom 1280x720@60Hz", "command:workspace 4", "capture:transformed_output_new_workspace_layout_landscape", "command:workspace 1", "command:output * transform 90", "command:move container to workspace 2", "command:workspace 3", "capture:transformed_output_new_workspace_layout"]
 
 [[scenario]]
+name = "layout_toggle_rotated_prev_split"
+corpora = ["state"]
+actions = ["command:output * mode --custom 1280x720@60Hz", "command:output * transform 90", "window:fixture-1", "command:layout tabbed", "capture:layout_toggle_rotated_prev_split_tabbed", "command:layout toggle", "capture:layout_toggle_rotated_prev_split"]
+
+[[scenario]]
 name = "new_view_global_fullscreen"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:fullscreen toggle global", "window:fixture-2", "capture:new_view_global_fullscreen"]
