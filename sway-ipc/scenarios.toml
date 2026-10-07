@@ -1066,3 +1066,8 @@ actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2"
 name = "tabbed_split_border_none_percent"
 corpora = ["state"]
 actions = ["window:fixture-diff-1", "command:layout tabbed", "command:split v", "capture:tabbed_split_border_none_percent_split", "command:border none", "capture:tabbed_split_border_none_percent"]
+
+[[scenario]]
+name = "split_none_flattens_every_singleton_ancestor"
+corpora = ["state"]
+actions = ["window:fixture-diff-6", "command:layout stacking", "command:splith", "command:split none", "capture:split_none_flattens_every_singleton_ancestor"]
