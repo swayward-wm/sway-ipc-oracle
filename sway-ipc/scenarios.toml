@@ -903,3 +903,8 @@ actions = ["window:fixture-1", "command:fullscreen toggle", "window:fixture-2", 
 name = "scratchpad_split_after_bare_window_order"
 corpora = ["state"]
 actions = ["window:fixture-sso-1", "command:move scratchpad", "window:fixture-sso-2", "command:floating enable", "command:splitv", "command:move scratchpad", "capture:scratchpad_split_after_bare_window_order", "command:scratchpad show", "capture:scratchpad_split_after_bare_window_order_show"]
+
+[[scenario]]
+name = "sticky_fullscreen_floating_workspace_switch"
+corpora = ["state"]
+actions = ["window:fixture-sffs-1", "command:fullscreen enable", "command:floating enable", "command:sticky enable", "command:workspace 2", "capture:sticky_fullscreen_floating_workspace_switch"]
