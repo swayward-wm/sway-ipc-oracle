@@ -1121,3 +1121,13 @@ actions = ["window:fixture-fwcm-5", "window:fixture-fwcm-6", "command:focus pare
 name = "sticky_floating_workspace_switch_kill_workspace"
 corpora = ["state"]
 actions = ["window:fixture-skw-1", "command:floating enable", "command:sticky enable", "command:workspace 3", "command:focus parent; kill", "capture:sticky_floating_workspace_switch_kill_workspace"]
+
+[[scenario]]
+name = "floating_hidden_scratchpad_is_invalid"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:move scratchpad", "probe:floating_hidden_scratchpad_enable:[app_id=\"^fixture-2$\"] floating enable", "probe:floating_hidden_scratchpad_toggle:[app_id=\"fixture-[2]\"] floating toggle", "capture:floating_hidden_scratchpad_is_invalid"]
+
+[[scenario]]
+name = "floating_enable_in_hidden_scratchpad_group"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:layout tabbed", "window:fixture-3", "command:focus parent", "command:move scratchpad", "probe:floating_enable_in_hidden_scratchpad_group_child:[app_id=\"^fixture-[23]$\"] floating enable", "capture:floating_enable_in_hidden_scratchpad_group"]
