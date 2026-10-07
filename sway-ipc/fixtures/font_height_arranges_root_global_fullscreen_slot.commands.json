@@ -1,0 +1,34 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-global-one --title=fixture-global-one sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-global-two --title=fixture-global-two sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "fullscreen toggle global",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "titlebar_padding 1",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]
