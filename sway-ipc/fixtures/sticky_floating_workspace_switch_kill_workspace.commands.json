@@ -1,0 +1,45 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-skw-1 --title=fixture-skw-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "floating enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "sticky enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace 3",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent; kill",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "success": true
+      }
+    ]
+  }
+]

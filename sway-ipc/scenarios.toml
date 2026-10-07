@@ -1116,3 +1116,8 @@ actions = ["window:fixture-fwcm-5", "window:fixture-fwcm-6", "command:focus pare
 name = "floated_wrapper_child_move_to_current_workspace_focus_split"
 corpora = ["state"]
 actions = ["window:fixture-fwcm-5", "window:fixture-fwcm-6", "command:focus parent; floating toggle", "window:fixture-fwcm-9", "command:[app_id=\"fixture-fwcm-6\"] focus", "command:split h", "command:move --no-auto-back-and-forth container to workspace 1", "capture:floated_wrapper_child_move_to_current_workspace_focus_split"]
+
+[[scenario]]
+name = "sticky_floating_workspace_switch_kill_workspace"
+corpora = ["state"]
+actions = ["window:fixture-skw-1", "command:floating enable", "command:sticky enable", "command:workspace 3", "command:focus parent; kill", "capture:sticky_floating_workspace_switch_kill_workspace"]
