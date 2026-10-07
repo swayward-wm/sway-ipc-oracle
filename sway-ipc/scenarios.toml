@@ -1061,3 +1061,8 @@ actions = ["window:fixture-global-one", "window:fixture-global-two", "command:fu
 name = "empty_workspace_transform_keeps_layout"
 corpora = ["state"]
 actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2", "command:output * transform 90", "capture:empty_workspace_transform_keeps_layout"]
+
+[[scenario]]
+name = "tabbed_split_border_none_percent"
+corpora = ["state"]
+actions = ["window:fixture-diff-1", "command:layout tabbed", "command:split v", "capture:tabbed_split_border_none_percent_split", "command:border none", "capture:tabbed_split_border_none_percent"]
