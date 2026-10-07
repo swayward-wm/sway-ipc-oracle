@@ -1030,3 +1030,9 @@ actions = ["window:fixture-diff-2", "command:fullscreen toggle", "command:layout
 name = "map_into_fullscreen_split_in_layout_wrapper"
 corpora = ["state"]
 actions = ["window:fixture-diff-2", "command:fullscreen toggle", "command:layout tabbed", "command:splitt", "window:fixture-diff-5", "capture:map_into_fullscreen_split_in_layout_wrapper"]
+
+[[scenario]]
+name = "swap_across_outputs_into_tabbed_visible"
+outputs = 2
+corpora = ["state"]
+actions = ["window:fixture-sat-1", "command:focus output right", "window:fixture-sat-2", "command:focus output left", "command:mark m", "command:layout tabbed", "window:fixture-sat-3", "command:focus right", "probe:swap_across_outputs_into_tabbed_visible:swap container with mark m", "capture:swap_across_outputs_into_tabbed_visible"]
