@@ -1141,3 +1141,9 @@ actions = ["window:fixture-1", "window:fixture-2", "command:layout tabbed", "win
 name = "floating_fullscreen_split_wraps"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:fullscreen toggle", "command:floating enable", "probe:floating_fullscreen_split_wraps_splith:splith", "capture:floating_fullscreen_split_wraps"]
+
+[[scenario]]
+name = "move_workspace_back_shows_recent_workspace"
+outputs = 2
+corpora = ["state"]
+actions = ["command:focus output right", "window:fixture-back-2", "command:focus output left", "window:fixture-back-1", "command:move workspace to output right", "command:workspace oracle", "command:move workspace to output left", "capture:move_workspace_back_shows_recent_workspace"]
