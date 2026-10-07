@@ -898,3 +898,8 @@ actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2"
 name = "move_scratchpad_from_fullscreen_wrapper_percent"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:fullscreen toggle", "window:fixture-2", "command:layout toggle", "probe:move_scratchpad_from_fullscreen_wrapper_percent:move scratchpad", "capture:move_scratchpad_from_fullscreen_wrapper_percent"]
+
+[[scenario]]
+name = "scratchpad_split_after_bare_window_order"
+corpora = ["state"]
+actions = ["window:fixture-sso-1", "command:move scratchpad", "window:fixture-sso-2", "command:floating enable", "command:splitv", "command:move scratchpad", "capture:scratchpad_split_after_bare_window_order", "command:scratchpad show", "capture:scratchpad_split_after_bare_window_order_show"]

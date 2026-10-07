@@ -1,0 +1,58 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-sso-1 --title=fixture-sso-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move scratchpad",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-sso-2 --title=fixture-sso-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "floating enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "splitv",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move scratchpad",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "scratchpad show",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]
