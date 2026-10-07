@@ -928,3 +928,15 @@ actions = ["window:fixture-1", "command:fullscreen toggle", "command:layout tabb
 name = "scratchpad_show_fullscreen_enable"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:move scratchpad", "window:fixture-2", "command:scratchpad show", "command:fullscreen enable", "capture:scratchpad_show_fullscreen_enable"]
+
+[[scenario]]
+name = "workspace_back_and_forth_after_focus_output"
+outputs = 2
+corpora = ["state"]
+actions = ["command:focus output left", "command:focus output right", "command:workspace back_and_forth", "capture:workspace_back_and_forth_after_focus_output", "window:fixture-1", "command:focus output right", "command:focus output left", "command:move container to workspace back_and_forth", "capture:move_back_and_forth_after_focus_output"]
+
+[[scenario]]
+name = "workspace_auto_back_and_forth_two_outputs"
+outputs = 2
+corpora = ["state"]
+actions = ["command:focus output left", "command:workspace next", "command:workspace 1", "command:workspace_auto_back_and_forth yes; workspace 1", "capture:workspace_auto_back_and_forth_two_outputs"]

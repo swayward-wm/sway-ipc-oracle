@@ -1,0 +1,26 @@
+[
+  {
+    "command": "focus output left",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus output right",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace back_and_forth",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]
