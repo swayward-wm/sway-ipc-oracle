@@ -232,6 +232,11 @@ corpora = ["state"]
 actions = ["command:focus output down", "window:fixture-1", "window:fixture-2", "window:fixture-3", "command:focus left", "command:focus output up", "window:fixture-4", "command:move down", "capture:cross_output_move_insert_order_perpendicular_reoriented", "command:move down", "capture:cross_output_move_insert_order_perpendicular"]
 
 [[scenario]]
+name = "split_on_split_focused_workspace_wrapper"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:split v", "command:focus parent", "command:split h", "capture:split_on_split_focused_workspace_wrapper_stale", "command:splith", "capture:split_on_split_focused_workspace_wrapper"]
+
+[[scenario]]
 name = "scratchpad"
 actions = ["window:fixture-1", "command:move scratchpad", "capture:scratchpad_hidden", "command:scratchpad show", "capture:scratchpad_shown"]
 
