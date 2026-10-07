@@ -1076,3 +1076,23 @@ actions = ["window:fixture-diff-1", "command:layout tabbed", "command:split v", 
 name = "split_none_flattens_every_singleton_ancestor"
 corpora = ["state"]
 actions = ["window:fixture-diff-6", "command:layout stacking", "command:splith", "command:split none", "capture:split_none_flattens_every_singleton_ancestor"]
+
+[[scenario]]
+name = "kill_orphaned_global_fullscreen_focuses_sibling"
+corpora = ["state"]
+actions = ["window:fixture-kog-1", "window:fixture-kog-2", "command:fullscreen toggle global", "command:layout tabbed", "command:kill", "capture:kill_orphaned_global_fullscreen_focuses_sibling"]
+
+[[scenario]]
+name = "kill_global_fullscreen_refuses_floating_sibling"
+corpora = ["state"]
+actions = ["window:fixture-kog-3", "command:floating enable", "window:fixture-kog-4", "command:fullscreen toggle global", "command:kill", "capture:kill_global_fullscreen_refuses_floating_sibling"]
+
+[[scenario]]
+name = "kill_global_fullscreen_split_wrapper_keeps_workspace_focus"
+corpora = ["state"]
+actions = ["window:fixture-kog-5", "window:fixture-kog-6", "command:fullscreen toggle global", "command:split toggle", "command:kill", "capture:kill_global_fullscreen_split_wrapper_keeps_workspace_focus"]
+
+[[scenario]]
+name = "kill_scratchpad_global_fullscreen_focuses_sibling"
+corpora = ["state"]
+actions = ["window:fixture-kog-7", "command:move scratchpad", "window:fixture-kog-8", "command:[app_id=\"fixture-kog-7\"] focus", "command:fullscreen toggle global", "command:kill", "capture:kill_scratchpad_global_fullscreen_focuses_sibling"]
