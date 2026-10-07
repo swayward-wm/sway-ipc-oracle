@@ -858,3 +858,8 @@ actions = ["command:focus output left", "window:fixture-1", "command:focus outpu
 name = "resize_set_ppt_latent_axis_layout_change"
 corpora = ["state"]
 actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2", "window:fixture-1", "window:fixture-2", "command:resize set width 30 ppt height 40 ppt", "capture:resize_set_ppt_latent_axis_layout_change_resized", "command:layout splitv", "capture:resize_set_ppt_latent_axis_layout_change_splitv", "command:resize set height 25 ppt", "command:layout splith", "capture:resize_set_ppt_latent_axis_layout_change"]
+
+[[scenario]]
+name = "resize_set_with_workspace_focus_reports_nothing"
+corpora = ["state"]
+actions = ["window:fixture-rswf-1", "window:fixture-rswf-2", "command:focus parent", "probe:resize_set_with_workspace_focus_reports_nothing:resize set 0 300", "capture:resize_set_with_workspace_focus_reports_nothing"]
