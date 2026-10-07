@@ -1,0 +1,26 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-1 --title=fixture-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "allow_tearing yes",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "max_render_time 5",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

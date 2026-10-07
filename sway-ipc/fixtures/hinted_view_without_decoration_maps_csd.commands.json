@@ -1,0 +1,10 @@
+[
+  {
+    "command": "xdg-toplevel-fixture fixture-hinted 400 300 400 300 0",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-cfw-2 --title=fixture-cfw-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "[app_id=\"^fixture-cfw-[23]$\"] floating enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

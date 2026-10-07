@@ -1,0 +1,242 @@
+[
+  {
+    "border": "none",
+    "current_border_width": 0,
+    "deco_rect": {
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "floating": null,
+    "floating_nodes": [
+      {
+        "allow_tearing": false,
+        "app_id": "fixture-fmark-3",
+        "border": "normal",
+        "current_border_width": 2,
+        "deco_rect": {
+          "height": 27,
+          "width": 700,
+          "x": 285,
+          "y": 431
+        },
+        "floating": "user_on",
+        "floating_nodes": [],
+        "focus": [],
+        "focused": false,
+        "foreign_toplevel_identifier": "887dd75f5a3f770baeb39d80cf074c81",
+        "fullscreen_mode": 0,
+        "geometry": {
+          "height": 491,
+          "width": 696,
+          "x": 0,
+          "y": 0
+        },
+        "id": 9,
+        "idle_inhibitors": {
+          "application": "none",
+          "user": "none"
+        },
+        "inhibit_idle": false,
+        "layout": "none",
+        "marks": [
+          "m"
+        ],
+        "max_render_time": 0,
+        "name": "fixture-fmark-3",
+        "nodes": [],
+        "orientation": "none",
+        "percent": 0.20356120257695062,
+        "pid": 353930,
+        "rect": {
+          "height": 493,
+          "width": 700,
+          "x": 285,
+          "y": 458
+        },
+        "sandbox_app_id": null,
+        "sandbox_engine": null,
+        "sandbox_instance_id": null,
+        "scratchpad_state": "none",
+        "shell": "xdg_shell",
+        "sticky": false,
+        "tag": null,
+        "type": "floating_con",
+        "urgent": false,
+        "visible": true,
+        "window": null,
+        "window_rect": {
+          "height": 491,
+          "width": 696,
+          "x": 2,
+          "y": 0
+        }
+      },
+      {
+        "allow_tearing": false,
+        "app_id": "fixture-fmark-2",
+        "border": "normal",
+        "current_border_width": 2,
+        "deco_rect": {
+          "height": 27,
+          "width": 1270,
+          "x": 0,
+          "y": 704
+        },
+        "floating": "user_on",
+        "floating_nodes": [],
+        "focus": [],
+        "focused": true,
+        "foreign_toplevel_identifier": "443aaf995f676daf4068b7588cda493e",
+        "fullscreen_mode": 0,
+        "geometry": {
+          "height": 491,
+          "width": 696,
+          "x": 0,
+          "y": 0
+        },
+        "id": 8,
+        "idle_inhibitors": {
+          "application": "none",
+          "user": "none"
+        },
+        "inhibit_idle": false,
+        "layout": "none",
+        "marks": [],
+        "max_render_time": 0,
+        "name": "fixture-fmark-2",
+        "nodes": [],
+        "orientation": "none",
+        "percent": 0.5,
+        "pid": 353890,
+        "rect": {
+          "height": 677,
+          "width": 1270,
+          "x": 0,
+          "y": 731
+        },
+        "sandbox_app_id": null,
+        "sandbox_engine": null,
+        "sandbox_instance_id": null,
+        "scratchpad_state": "none",
+        "shell": "xdg_shell",
+        "sticky": false,
+        "tag": null,
+        "type": "floating_con",
+        "urgent": false,
+        "visible": true,
+        "window": null,
+        "window_rect": {
+          "height": 675,
+          "width": 1266,
+          "x": 2,
+          "y": 0
+        }
+      },
+      {
+        "allow_tearing": false,
+        "app_id": "fixture-fmark-4",
+        "border": "normal",
+        "current_border_width": 2,
+        "deco_rect": {
+          "height": 27,
+          "width": 700,
+          "x": 285,
+          "y": 431
+        },
+        "floating": "user_on",
+        "floating_nodes": [],
+        "focus": [],
+        "focused": false,
+        "foreign_toplevel_identifier": "949d918f19c508c7d4a76aa7332db81e",
+        "fullscreen_mode": 0,
+        "geometry": {
+          "height": 491,
+          "width": 696,
+          "x": 0,
+          "y": 0
+        },
+        "id": 10,
+        "idle_inhibitors": {
+          "application": "none",
+          "user": "none"
+        },
+        "inhibit_idle": false,
+        "layout": "none",
+        "marks": [],
+        "max_render_time": 0,
+        "name": "fixture-fmark-4",
+        "nodes": [],
+        "orientation": "none",
+        "percent": 0.20356120257695062,
+        "pid": 353981,
+        "rect": {
+          "height": 493,
+          "width": 700,
+          "x": 285,
+          "y": 458
+        },
+        "sandbox_app_id": null,
+        "sandbox_engine": null,
+        "sandbox_instance_id": null,
+        "scratchpad_state": "none",
+        "shell": "xdg_shell",
+        "sticky": false,
+        "tag": null,
+        "type": "floating_con",
+        "urgent": false,
+        "visible": true,
+        "window": null,
+        "window_rect": {
+          "height": 491,
+          "width": 696,
+          "x": 2,
+          "y": 0
+        }
+      }
+    ],
+    "focus": [
+      8,
+      10,
+      9,
+      7
+    ],
+    "focused": true,
+    "fullscreen_mode": 1,
+    "geometry": {
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "id": 6,
+    "layout": "splitv",
+    "marks": [],
+    "name": "1",
+    "nodes": [],
+    "num": 1,
+    "orientation": "vertical",
+    "output": "HEADLESS-1",
+    "percent": null,
+    "rect": {
+      "height": 1408,
+      "width": 1270,
+      "x": 0,
+      "y": 0
+    },
+    "representation": "V[fixture-fmark-1]",
+    "scratchpad_state": null,
+    "sticky": false,
+    "type": "workspace",
+    "urgent": false,
+    "visible": true,
+    "window": null,
+    "window_rect": {
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    }
+  }
+]

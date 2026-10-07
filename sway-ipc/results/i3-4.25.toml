@@ -13,9 +13,9 @@ normalization = "sway-ipc/normalize.toml"
 normalization_rules = ["runtime-identifiers", "focus-by-child-position", "rectangle-semantics", "backend-output-reference", "backend-output-properties", "backend-output-capabilities", "version-runtime-identity", "backend-output-name", "floating-rect-run-variance", "tree-rect-tolerance", "floating-percent-run-variance", "floating-descendant-percent-run-variance", "tree-percent-tolerance", "focus-child-position-comparison", "backend-mode-array-length"]
 scenario_isolation = "fresh compositor per scenario"
 difference_fields = 126
-match = 242
-differs = 246
-not_applicable = 540
+match = 245
+differs = 251
+not_applicable = 546
 
 [[result]]
 scenario = "empty"
@@ -3459,6 +3459,87 @@ reason = "i3 has no GET_SEATS request; i3/docs/ipc request table (lines 62-77), 
 
 [[result]]
 scenario = "empty_named"
+request = "inputs"
+verdict = "not applicable"
+reason = "i3 has no GET_INPUTS request; i3/docs/ipc request table (lines 62-77), pinned at 9be3249ac5b377ed3270e36bca83df53d8023337"
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "tree"
+verdict = "differs"
+differences = ["$tree: keys differ", "$tree.border: 'none' != 'normal'", "$tree.current_border_width: 0 != -1", "$tree.floating: type NoneType != str", "$tree.nodes: length 3 != 2", "$tree.nodes[0]: keys differ", "$tree.nodes[0].border: 'none' != 'normal'", "$tree.nodes[0].current_border_width: 0 != -1", "$tree.nodes[0].floating: type NoneType != str", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].border: 'none' != 'normal'", "$tree.nodes[0].nodes[0].current_border_width: 0 != -1", "$tree.nodes[0].nodes[0].floating: type NoneType != str", "$tree.nodes[0].nodes[0].fullscreen_mode: 1 != 0", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != 'content'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].scratchpad_state: type NoneType != str", "$tree.nodes[0].nodes[0].type: 'workspace' != 'con'", "$tree.nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].percent: type NoneType != float", "$tree.nodes[0].scratchpad_state: type NoneType != str", "$tree.nodes[1]: keys differ", "$tree.nodes[1].border: 'none' != 'normal'", "$tree.nodes[1].current_border_width: 0 != -1", "$tree.nodes[1].floating: type NoneType != str", "$tree.nodes[1].nodes: length 1 != 3", "$tree.nodes[1].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].border: 'none' != 'normal'", "$tree.nodes[1].nodes[0].current_border_width: 0 != -1", "$tree.nodes[1].nodes[0].floating: type NoneType != str", "$tree.nodes[1].nodes[0].fullscreen_mode: 1 != 0", "$tree.nodes[1].nodes[0].layout: 'splitv' != 'dockarea'", "$tree.nodes[1].nodes[0].name: '1' != 'topdock'", "$tree.nodes[1].nodes[0].nodes: length 1 != 0", "$tree.nodes[1].nodes[0].orientation: 'vertical' != 'none'", "$tree.nodes[1].nodes[0].scratchpad_state: type NoneType != str", "$tree.nodes[1].nodes[0].type: 'workspace' != 'dockarea'", "$tree.nodes[1].scratchpad_state: type NoneType != str", "$tree.scratchpad_state: type NoneType != str"]
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "tree"
+verdict = "not applicable"
+reason = "sway extension fields: active, adaptive_sync_status, allow_tearing, app_id, current_mode, current_workspace, dpms, features, foreign_toplevel_identifier, hdr, idle_inhibitors, inhibit_idle, make, max_render_time, model, modes, non_desktop, pid, power, primary, representation, sandbox_app_id, sandbox_engine, sandbox_instance_id, scale, scale_filter, serial, shell, tag, transform, visible; source: sway/sway/ipc-json.c:299-412,502-523,582-667, pinned at 88869399f421d9180dd8b6ed0b5a1f4a3585d252"
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "workspaces"
+verdict = "differs"
+differences = ["$workspaces: length 2 != 1"]
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "workspaces"
+verdict = "not applicable"
+reason = "sway extension fields: border, current_border_width, deco_rect, floating, floating_nodes, focus, fullscreen_mode, geometry, layout, marks, nodes, orientation, percent, representation, scratchpad_state, sticky, type, window, window_rect; source: sway/sway/ipc-json.c:502-540,582-667 and sway/sway/ipc-server.c:584-601, pinned at 88869399f421d9180dd8b6ed0b5a1f4a3585d252"
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "outputs"
+verdict = "differs"
+differences = ["$outputs[0].active: True != False", "$outputs[0].current_workspace: type str != NoneType", "$outputs[0].name: 'HEADLESS-2' != 'xroot-0'", "$outputs[1].current_workspace: '2' != '1'", "$outputs[1].name: 'HEADLESS-1' != 'screen'"]
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "outputs"
+verdict = "not applicable"
+reason = "sway extension fields: adaptive_sync_status, allow_tearing, border, current_border_width, current_mode, deco_rect, dpms, features, floating, floating_nodes, focus, focused, fullscreen_mode, geometry, hdr, id, layout, make, marks, max_render_time, model, modes, nodes, non_desktop, orientation, percent, power, scale, scale_filter, scratchpad_state, serial, sticky, subpixel_hinting, transform, type, urgent, window, window_rect; source: sway/sway/ipc-json.c:299-412 and sway/sway/ipc-server.c:676-704, pinned at 88869399f421d9180dd8b6ed0b5a1f4a3585d252"
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "binding_modes"
+verdict = "differs"
+differences = ["$binding_modes: length 2 != 1"]
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "version"
+verdict = "match"
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "version"
+verdict = "not applicable"
+reason = "sway extension fields: variant; source: sway/sway/ipc-json.c ipc_json_get_version, pinned at 88869399f421d9180dd8b6ed0b5a1f4a3585d252"
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "commands"
+verdict = "differs"
+differences = ["$commands[0].command: \"exec foot --app-id=fixture-1 --title=fixture-1 sh -c 'sleep 300'\" != 'exec --no-startup-id xterm -name fixture-1 -title fixture-1'"]
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
+request = "seats"
+verdict = "not applicable"
+reason = "i3 has no GET_SEATS request; i3/docs/ipc request table (lines 62-77), pinned at 9be3249ac5b377ed3270e36bca83df53d8023337"
+
+[[result]]
+scenario = "fullscreen_global_two_outputs"
 request = "inputs"
 verdict = "not applicable"
 reason = "i3 has no GET_INPUTS request; i3/docs/ipc request table (lines 62-77), pinned at 9be3249ac5b377ed3270e36bca83df53d8023337"

@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+"""Verify that a saved differential reproducer keeps its output layout."""
+
+import importlib.machinery
+from pathlib import Path
+import sys
+import tempfile
+import tomllib
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.dont_write_bytecode = True
+runner = importlib.machinery.SourceFileLoader(
+    "sway_ipc_run", str(ROOT / "contrib/sway-ipc-run")
+).load_module()
+layout = runner.sway_ipc_v3.TWO_OUTPUT_LAYOUT
+commands = ["exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'",
+            "xdg-hinted fixture-diff-2 300 200 300 200 0", "move container to output right"]
+with tempfile.TemporaryDirectory() as directory:
+    runner.ROOT = Path(directory)
+    runner.FIXTURES = Path(directory) / "sway-ipc/fixtures"
+    runner.FIXTURES.mkdir(parents=True)
+    (runner.ROOT / "sway-ipc/scenarios.toml").write_text('[[scenario]]\nname = "x"\nactions = []\n')
+    state = {"tree": {}, "command": [{"success": True}]}
+    runner.append_regression_scenario(7, commands, state, {"outputs": 2, "output_layout": layout})
+    runner.append_regression_scenario(8, commands[:1], state)
+    saved = {row["name"]: row for row in
+             tomllib.loads((runner.ROOT / "sway-ipc/scenarios.toml").read_text())["scenario"]}
+    two = saved["differential_seed_7"]
+    assert two["outputs"] == 2 and two["output_layout"] == layout, two
+    assert two["requires"] == ["xdg-toplevel-size-hints"], two
+    assert two["actions"] == ["window:fixture-diff-1", "hint_window:fixture-diff-2|300|200|300|200|0",
+                              "probe:differential_seed_7:move container to output right",
+                              "capture:differential_seed_7"], two
+    one = saved["differential_seed_8"]
+    assert "outputs" not in one and "output_layout" not in one, one
+    # The runner's adapters render the saved layout for both compositors.
+    for adapter in (runner.SwayAdapter, runner.SwaywardAdapter):
+        config = adapter(None, Path(directory), two).rendered_config()
+        assert config.count("1280") >= 2 and "headless-1" in config.lower(), config
+
+print("sway-ipc regression scenario self-test passed")

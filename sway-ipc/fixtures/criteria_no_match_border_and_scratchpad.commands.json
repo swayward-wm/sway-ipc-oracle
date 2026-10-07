@@ -1,0 +1,18 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-criteria-hidden --title=fixture-criteria-hidden sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move scratchpad",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

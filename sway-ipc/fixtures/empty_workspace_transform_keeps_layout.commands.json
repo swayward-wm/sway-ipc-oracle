@@ -1,0 +1,26 @@
+[
+  {
+    "command": "output * mode --custom 1280x720@60Hz",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace 2",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "output * transform 90",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

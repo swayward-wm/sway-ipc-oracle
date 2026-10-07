@@ -1,0 +1,10 @@
+[
+  {
+    "command": "layout toggle split",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]
