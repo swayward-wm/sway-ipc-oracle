@@ -1131,3 +1131,8 @@ actions = ["window:fixture-1", "window:fixture-2", "command:move scratchpad", "p
 name = "floating_enable_in_hidden_scratchpad_group"
 corpora = ["state"]
 actions = ["window:fixture-1", "window:fixture-2", "command:layout tabbed", "window:fixture-3", "command:focus parent", "command:move scratchpad", "probe:floating_enable_in_hidden_scratchpad_group_child:[app_id=\"^fixture-[23]$\"] floating enable", "capture:floating_enable_in_hidden_scratchpad_group"]
+
+[[scenario]]
+name = "floating_fullscreen_split_wraps"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:fullscreen toggle", "command:floating enable", "probe:floating_fullscreen_split_wraps_splith:splith", "capture:floating_fullscreen_split_wraps"]
