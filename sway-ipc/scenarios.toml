@@ -1096,3 +1096,23 @@ actions = ["window:fixture-kog-5", "window:fixture-kog-6", "command:fullscreen t
 name = "kill_scratchpad_global_fullscreen_focuses_sibling"
 corpora = ["state"]
 actions = ["window:fixture-kog-7", "command:move scratchpad", "window:fixture-kog-8", "command:[app_id=\"fixture-kog-7\"] focus", "command:fullscreen toggle global", "command:kill", "capture:kill_scratchpad_global_fullscreen_focuses_sibling"]
+
+[[scenario]]
+name = "floated_wrapper_child_move_to_current_workspace"
+corpora = ["state"]
+actions = ["window:fixture-fwcm-6", "command:focus parent; floating toggle", "window:fixture-fwcm-9", "command:[app_id=\"fixture-fwcm-6\"] focus", "command:move --no-auto-back-and-forth container to workspace 1", "capture:floated_wrapper_child_move_to_current_workspace"]
+
+[[scenario]]
+name = "floated_wrapper_child_move_to_empty_tiling_workspace"
+corpora = ["state"]
+actions = ["window:fixture-fwcm-1", "command:focus parent; floating toggle", "command:[app_id=\"fixture-fwcm-1\"] focus", "command:move --no-auto-back-and-forth container to workspace 1", "capture:floated_wrapper_child_move_to_empty_tiling_workspace"]
+
+[[scenario]]
+name = "floated_wrapper_child_move_to_current_workspace_focus"
+corpora = ["state"]
+actions = ["window:fixture-fwcm-5", "window:fixture-fwcm-6", "command:focus parent; floating toggle", "window:fixture-fwcm-9", "command:[app_id=\"fixture-fwcm-6\"] focus", "command:move --no-auto-back-and-forth container to workspace 1", "capture:floated_wrapper_child_move_to_current_workspace_focus"]
+
+[[scenario]]
+name = "floated_wrapper_child_move_to_current_workspace_focus_split"
+corpora = ["state"]
+actions = ["window:fixture-fwcm-5", "window:fixture-fwcm-6", "command:focus parent; floating toggle", "window:fixture-fwcm-9", "command:[app_id=\"fixture-fwcm-6\"] focus", "command:split h", "command:move --no-auto-back-and-forth container to workspace 1", "capture:floated_wrapper_child_move_to_current_workspace_focus_split"]
