@@ -566,6 +566,11 @@ corpora = ["state"]
 actions = ["window:fixture-1", "window:fixture-2", "command:splitv", "window:fixture-3", "command:[app_id=\"^fixture-3$\"] urgent enable", "command:focus parent", "command:[app_id=\"^fixture-3$\"] urgent enable", "command:focus parent", "command:[app_id=\"^fixture-1$\"] urgent enable", "capture:urgent_enable_under_focused_parent"]
 
 [[scenario]]
+name = "criteria_focus_clears_urgency_from_focused_workspace"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus parent; [app_id=\"^fixture-1$\"] urgent enable", "capture:criteria_focus_clears_urgency_from_focused_workspace_set", "command:[urgent=latest] focus", "capture:criteria_focus_clears_urgency_from_focused_workspace"]
+
+[[scenario]]
 name = "view_mapped_under_fullscreen_rects"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:fullscreen enable", "command:layout splitv", "window:fixture-2", "capture:view_mapped_under_fullscreen_rects_splitv", "command:layout stacking", "capture:view_mapped_under_fullscreen_rects_stacking", "command:layout tabbed", "window:fixture-3", "capture:view_mapped_under_fullscreen_rects_tabbed", "command:workspace 1", "capture:view_mapped_under_fullscreen_rects_rearranged"]
