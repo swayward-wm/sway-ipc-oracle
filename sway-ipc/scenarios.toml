@@ -1014,6 +1014,11 @@ corpora = ["state"]
 actions = ["window:fixture-1", "window:fixture-2", "command:fullscreen enable", "command:floating enable", "command:sticky enable", "command:workspace 2", "capture:sticky_fullscreen_floating_switch_keeps_source_unarranged"]
 
 [[scenario]]
+name = "sticky_fullscreen_floating_carry_keeps_mapped_view_unarranged"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:fullscreen enable", "command:floating enable", "command:sticky enable", "command:workspace 2", "window:fixture-3", "command:workspace 3", "capture:sticky_fullscreen_floating_carry_keeps_mapped_view_unarranged"]
+
+[[scenario]]
 name = "fullscreen_layout_toggle_split_under_view"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:fullscreen toggle", "command:layout toggle split", "window:fixture-2", "command:splith", "capture:fullscreen_layout_toggle_split_under_view"]
