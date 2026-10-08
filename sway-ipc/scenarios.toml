@@ -1222,3 +1222,8 @@ actions = ["window:fixture-1", "command:focus parent; floating toggle", "command
 name = "split_floated_wrapper_then_tile"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:focus parent", "command:floating enable", "command:splitt", "command:floating toggle", "capture:split_floated_wrapper_then_tile"]
+
+[[scenario]]
+name = "floating_resize_ppt_split_keeps_rect"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating enable", "command:resize set width 30 ppt height 40 ppt", "command:splitv", "capture:floating_resize_ppt_split_keeps_rect"]
