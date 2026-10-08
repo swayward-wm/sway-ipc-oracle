@@ -1,0 +1,53 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-srp-1 --title=fixture-srp-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent; split v",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-srp-2 --title=fixture-srp-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "layout toggle all",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus prev",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move scratchpad",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

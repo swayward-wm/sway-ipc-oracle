@@ -456,6 +456,46 @@ corpora = ["state"]
 actions = ["command:output * mode --custom 1280x720@60Hz", "command:output * transform 90", "window:fixture-1", "command:layout tabbed", "capture:layout_toggle_rotated_prev_split_tabbed", "command:layout toggle", "capture:layout_toggle_rotated_prev_split"]
 
 [[scenario]]
+name = "floated_by_rule_keeps_wrapper_unfocused"
+corpora = ["state"]
+actions = ["window:fixture-fbr-1", "command:layout toggle all", "command:for_window [app_id=\"^fixture-fbr-float$\"] floating enable", "window:fixture-fbr-float", "command:move scratchpad", "capture:floated_by_rule_keeps_wrapper_unfocused"]
+
+[[scenario]]
+name = "close_focus_prefers_view_under_parent"
+corpora = ["state"]
+actions = ["window:fixture-cfp-1", "command:for_window [app_id=\"^fixture-cfp-2$\"] split v", "window:fixture-cfp-2", "command:no_focus [app_id=\"^fixture-cfp-3$\"]", "window:fixture-cfp-3", "command:kill", "capture:close_focus_prefers_view_under_parent"]
+
+[[scenario]]
+name = "scratchpad_floated_container_refocuses_old_parent"
+corpora = ["state"]
+actions = ["window:fixture-sfc-1", "window:fixture-sfc-2", "command:layout toggle split", "command:split toggle", "command:focus parent; floating toggle", "command:move scratchpad", "capture:scratchpad_floated_container_refocuses_old_parent"]
+
+[[scenario]]
+name = "close_floating_focuses_view_in_tabbed_wrapper"
+corpora = ["state"]
+actions = ["window:fixture-cff-1", "command:layout toggle splitv tabbed", "window:fixture-cff-2", "command:floating enable", "command:kill", "capture:close_floating_focuses_view_in_tabbed_wrapper"]
+
+[[scenario]]
+name = "close_floating_focuses_view_in_split"
+corpora = ["state"]
+actions = ["window:fixture-cfs-1", "window:fixture-cfs-2", "command:splitv", "window:fixture-cfs-3", "command:floating enable", "command:kill", "capture:close_floating_focuses_view_in_split"]
+
+[[scenario]]
+name = "scratchpad_reaped_parent_refocuses_view"
+corpora = ["state"]
+actions = ["window:fixture-srp-1", "command:focus parent; split v", "window:fixture-srp-2", "command:layout toggle all", "command:focus prev", "command:move scratchpad", "capture:scratchpad_reaped_parent_refocuses_view"]
+
+[[scenario]]
+name = "map_from_floating_joins_focused_split"
+corpora = ["state"]
+actions = ["window:fixture-mff-1", "window:fixture-mff-2", "command:layout toggle split", "command:split toggle", "command:focus parent; floating toggle", "window:fixture-mff-3", "capture:map_from_floating_joins_focused_split"]
+
+[[scenario]]
+name = "scratchpad_view_beside_focused_split"
+corpora = ["state"]
+actions = ["window:fixture-svb-1", "command:focus parent; split v", "window:fixture-svb-2", "command:move scratchpad", "capture:scratchpad_view_beside_focused_split"]
+
+[[scenario]]
 name = "new_view_global_fullscreen"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:fullscreen toggle global", "window:fixture-2", "capture:new_view_global_fullscreen"]
