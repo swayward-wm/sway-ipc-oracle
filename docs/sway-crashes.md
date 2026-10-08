@@ -24,7 +24,8 @@ reply there is nothing to compare, so no oracle row can come from them.
 ## Distinct crashes
 
 Each list below is minimal: removing any command stops the crash. `win` opens
-one `foot` window, and `A; B` is a single IPC `RUN_COMMAND` message. Each was
+one `foot` window. Each line is its own IPC `RUN_COMMAND` message; `A && B`
+means separate messages sent back to back with no settle in between. Each was
 reproduced 3/3 on a fresh headless sway with the oracle's differential config
 (`font monospace 10`, `default_border normal 2`, one 1280x720 output). Frames
 are resolved from the debug build's cores with `addr2line`.
@@ -34,7 +35,7 @@ are resolved from the debug build's cores with `addr2line`.
 ```
 win
 layout tabbed            # or: floating enable
-fullscreen enable global; split h
+fullscreen enable global && split h
 ```
 
 ```
@@ -52,8 +53,10 @@ which has no view. The next transaction's `arrange_fullscreen` then calls
 `con->current.workspace`, and a container created in the same transaction has
 no committed `current` state yet (`transaction.c:474-483`).
 
-The fullscreen and the split must land in one transaction: as separate IPC
-messages with a settle between them sway survives. Random sequences hit it
+The split must arrive before the fullscreen's transaction commits: sent back to
+back without a settle it crashes, while a single `fullscreen enable global;
+split h` message or separate messages with a settle between them survive
+(reviewed 3-4/3-4 alive on 88869399). Random sequences hit it
 through a wrapping command right after `fullscreen ... global`: `split`,
 `splitt`, `layout` on a fresh tabbed or stacked workspace, `move container to
 workspace`, `kill` after a split, or a new window opening. This one shape covers
@@ -64,7 +67,7 @@ workspace`, `kill` after a split, or a new window opening. This one shape covers
 ```
 win
 win
-fullscreen enable global; splitv; move container to workspace 1
+fullscreen enable global && splitv && move container to workspace 1
 ```
 
 ### 2. Moving a split, floated, fullscreen view: `workspace_focus_fullscreen`
