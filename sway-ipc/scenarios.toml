@@ -1449,3 +1449,18 @@ actions = ["command:focus output right", "window:fixture-2", "window:fixture-4",
 name = "nested_ppt_shrink_ancestor_reply"
 corpora = ["state"]
 actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2", "window:fixture-npsa-1", "window:fixture-npsa-2", "command:splitv", "window:fixture-npsa-3", "window:fixture-npsa-4", "probe:nested_ppt_shrink_ancestor_reply_3:resize shrink width 5 ppt", "window:fixture-npsa-5", "window:fixture-npsa-6", "probe:nested_ppt_shrink_ancestor_reply_5:resize shrink width 5 ppt", "window:fixture-npsa-7", "probe:nested_ppt_shrink_ancestor_reply_6:resize shrink width 5 ppt", "window:fixture-npsa-8", "probe:nested_ppt_shrink_ancestor_reply_7:resize shrink width 5 ppt", "window:fixture-npsa-9", "probe:nested_ppt_shrink_ancestor_reply_8:resize shrink width 5 ppt", "window:fixture-npsa-10", "probe:nested_ppt_shrink_ancestor_reply_9:resize shrink width 5 ppt", "capture:nested_ppt_shrink_ancestor_reply"]
+
+[[scenario]]
+name = "floating_toggle_focus_parent_focus_order"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:floating toggle", "command:focus parent", "capture:floating_toggle_focus_parent_focus_order"]
+
+[[scenario]]
+name = "focus_next_without_target_keeps_focus_order"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating enable", "window:fixture-2", "command:layout stacking", "command:focus next", "capture:focus_next_without_target_keeps_focus_order"]
+
+[[scenario]]
+name = "criteria_float_from_split_focus_order"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "window:fixture-3", "command:layout tabbed; layout toggle", "command:[app_id=\"^fixture-[23]$\"] floating enable", "capture:criteria_float_from_split_focus_order"]
