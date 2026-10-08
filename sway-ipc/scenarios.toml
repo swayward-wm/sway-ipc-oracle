@@ -1278,3 +1278,8 @@ actions = ["window:fixture-1", "window:fixture-2", "command:move scratchpad", "c
 name = "swap_fullscreen_floating_place_floats_arrival"
 corpora = ["state"]
 actions = ["window:fixture-1", "window:fixture-2", "command:[app_id=\"^fixture-1$\"] focus", "command:floating toggle", "command:fullscreen enable", "probe:swap_fullscreen_floating_place_floats_arrival:swap container with con_id @con:fixture-2", "capture:swap_fullscreen_floating_place_floats_arrival"]
+
+[[scenario]]
+name = "urgent_hidden_scratchpad_split"
+corpora = ["state"]
+actions = ["window:fixture-uhss-1", "command:focus parent", "command:move scratchpad", "window:fixture-uhss-2", "command:floating enable", "command:splitv", "window:fixture-uhss-3", "command:move scratchpad", "command:[app_id=\"^fixture-uhss-1$\"] urgent enable", "command:[app_id=\"^fixture-uhss-3$\"] urgent enable", "capture:urgent_hidden_scratchpad_split"]
