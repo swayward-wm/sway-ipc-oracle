@@ -155,12 +155,17 @@ preconditions) and `recipes.json` (precondition builders that end in trigger
 commands). Each purpose has its own RNG seeded from `random-v3:<seed>:<purpose>`,
 and the generator reads only stable fields, so the same seed against the
 same sway gives the same command list. `fuzz-self-test --binary <sway>`
-checks this on a live sway. Seed `s` starts one-output recipe `s % 16` within its
+checks this on a live sway. Seed `s` starts one-output recipe `s % 17` within its
 first five generated steps: it opens only the windows that recipe needs, then
 starts it before any random choice. The default is 40 steps. `--outputs auto` gives
 30% of seeds two outputs in an explicit layout, which both compositors check
 at step 0. A two-output seed starts recipe R14 (windows on both outputs, then
-cross-output moves and focus) first, and recipe `s % 16` after it.
+cross-output moves and focus) first, and recipe `s % 17` after it. Recipe R18
+(`output … disable`, sticky evacuation) runs only on two-output seeds and R19
+(several urgent views, then `[urgent=latest|oldest]`) on any seed. About 5% of
+steps are a uniform pick from `setters` in `vocabulary.json`: random-v2's
+config-setter commands, without the declared `client.*` and
+`hide_edge_borders --i3` gaps.
 `differential` records every seed's command list, started recipes and
 trigger steps in a `[[recorded]]` table. With any generator, a compositor
 that dies or stops answering during a seed, including just after a step that
