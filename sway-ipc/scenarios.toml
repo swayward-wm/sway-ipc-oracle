@@ -1425,3 +1425,22 @@ outputs = 2
 output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
 corpora = ["state"]
 actions = ["window:fixture-1", "command:layout stacking", "command:focus parent", "window:fixture-2", "command:fullscreen enable", "command:move container to workspace number 3", "capture:move_fullscreen_view_refocuses_focused_split"]
+
+[[scenario]]
+name = "focus_onto_visible_workspace_on_other_output_clears_urgency"
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+corpora = ["state"]
+actions = ["command:force_display_urgency_hint 10000 ms", "window:fixture-1", "command:focus output right", "window:fixture-2", "command:focus output left", "command:[app_id=\"^fixture-2$\"] urgent enable", "command:focus right", "capture:focus_onto_visible_workspace_on_other_output_clears_urgency"]
+
+[[scenario]]
+name = "focus_from_empty_workspace_starts_urgency_timer"
+corpora = ["state"]
+actions = ["command:force_display_urgency_hint 10000 ms", "window:fixture-1", "command:workspace number 3", "command:[app_id=\"^fixture-1$\"] urgent enable", "command:[app_id=\"^fixture-1$\"] focus", "capture:focus_from_empty_workspace_starts_urgency_timer"]
+
+[[scenario]]
+name = "split_focused_workspace_with_floater_keeps_urgency"
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+corpora = ["state"]
+actions = ["command:focus output right", "window:fixture-2", "window:fixture-4", "command:focus output left", "command:[app_id=\"^fixture-4$\"] urgent enable", "window:fixture-12", "command:focus next", "command:floating enable", "command:focus parent", "command:split v", "capture:split_focused_workspace_with_floater_keeps_urgency"]
