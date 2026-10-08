@@ -1474,3 +1474,18 @@ actions = ["window:fixture-fwm-1", "command:focus parent", "command:for_window [
 name = "for_window_move_keeps_focused_floating_split"
 corpora = ["state"]
 actions = ["window:fixture-fwf-1", "command:floating enable", "command:split v", "command:focus parent", "command:for_window [app_id=\"^fixture-fwf-2$\"] move container to workspace 2", "window:fixture-fwf-2", "capture:for_window_move_keeps_focused_floating_split"]
+
+[[scenario]]
+name = "unfloat_floating_split_keeps_its_focused_view"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:floating toggle", "command:splith", "command:floating toggle", "capture:unfloat_floating_split_keeps_its_focused_view"]
+
+[[scenario]]
+name = "move_focused_workspace_wrapper_then_switch"
+corpora = ["state"]
+actions = ["command:assign [app_id=\"^fixture-1$\"] workspace 2", "window:fixture-1", "window:fixture-2", "command:focus parent", "command:move container to workspace next", "command:workspace 2", "capture:move_focused_workspace_wrapper_then_switch"]
+
+[[scenario]]
+name = "move_focused_split_then_switch"
+corpora = ["state"]
+actions = ["command:assign [app_id=\"^fixture-1$\"] workspace 2", "window:fixture-1", "window:fixture-2", "window:fixture-3", "command:splitv", "command:focus parent", "command:move container to workspace next", "command:workspace 2", "capture:move_focused_split_then_switch"]
