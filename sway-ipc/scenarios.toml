@@ -1444,3 +1444,8 @@ outputs = 2
 output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
 corpora = ["state"]
 actions = ["command:focus output right", "window:fixture-2", "window:fixture-4", "command:focus output left", "command:[app_id=\"^fixture-4$\"] urgent enable", "window:fixture-12", "command:focus next", "command:floating enable", "command:focus parent", "command:split v", "capture:split_focused_workspace_with_floater_keeps_urgency"]
+
+[[scenario]]
+name = "nested_ppt_shrink_ancestor_reply"
+corpora = ["state"]
+actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2", "window:fixture-npsa-1", "window:fixture-npsa-2", "command:splitv", "window:fixture-npsa-3", "window:fixture-npsa-4", "probe:nested_ppt_shrink_ancestor_reply_3:resize shrink width 5 ppt", "window:fixture-npsa-5", "window:fixture-npsa-6", "probe:nested_ppt_shrink_ancestor_reply_5:resize shrink width 5 ppt", "window:fixture-npsa-7", "probe:nested_ppt_shrink_ancestor_reply_6:resize shrink width 5 ppt", "window:fixture-npsa-8", "probe:nested_ppt_shrink_ancestor_reply_7:resize shrink width 5 ppt", "window:fixture-npsa-9", "probe:nested_ppt_shrink_ancestor_reply_8:resize shrink width 5 ppt", "window:fixture-npsa-10", "probe:nested_ppt_shrink_ancestor_reply_9:resize shrink width 5 ppt", "capture:nested_ppt_shrink_ancestor_reply"]
