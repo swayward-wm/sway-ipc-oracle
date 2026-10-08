@@ -1371,3 +1371,8 @@ actions = ["window:fixture-mwbf-1", "window:fixture-mwbf-2", "command:focus up",
 name = "floating_toggle_ppt_resize"
 corpora = ["state"]
 actions = ["command:output * mode --custom 1280x720@60Hz", "window:fixture-1", "command:floating toggle", "probe:floating_toggle_ppt_resize_grow:resize grow height 10 ppt", "probe:floating_toggle_ppt_resize_shrink:resize shrink width 5 ppt", "command:resize set width 50 ppt", "command:splith", "capture:floating_toggle_ppt_resize"]
+
+[[scenario]]
+name = "floating_fullscreen_split_yields_to_tiled_fullscreen"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:fullscreen toggle", "window:fixture-2", "command:floating enable", "command:splith", "command:[app_id=fixture-2] fullscreen enable", "capture:floating_fullscreen_split_yields_to_tiled_fullscreen"]
