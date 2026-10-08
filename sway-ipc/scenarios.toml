@@ -1489,3 +1489,18 @@ actions = ["command:assign [app_id=\"^fixture-1$\"] workspace 2", "window:fixtur
 name = "move_focused_split_then_switch"
 corpora = ["state"]
 actions = ["command:assign [app_id=\"^fixture-1$\"] workspace 2", "window:fixture-1", "window:fixture-2", "window:fixture-3", "command:splitv", "command:focus parent", "command:move container to workspace next", "command:workspace 2", "capture:move_focused_split_then_switch"]
+
+[[scenario]]
+name = "scratchpad_split_floating_enable_keeps_scratchpad"
+corpora = ["state"]
+actions = ["window:fixture-sfe-1", "command:move scratchpad", "command:scratchpad show", "command:splith", "command:floating enable", "capture:scratchpad_split_floating_enable_keeps_scratchpad"]
+
+[[scenario]]
+name = "scratchpad_split_move_out_empties_scratchpad"
+corpora = ["state"]
+actions = ["window:fixture-sme-1", "command:move scratchpad", "command:scratchpad show", "command:splith", "command:[workspace=__focused__] move container to workspace 2", "probe:scratchpad_split_move_out_empties_scratchpad_show:scratchpad show", "capture:scratchpad_split_move_out_empties_scratchpad"]
+
+[[scenario]]
+name = "scratchpad_split_map_resize_set_ppt"
+corpora = ["state"]
+actions = ["window:fixture-ssrp-1", "command:move scratchpad", "command:[app_id=\"^fixture-ssrp-1$\"] focus", "command:splitv", "window:fixture-ssrp-2", "command:resize set width 30 ppt height 40 ppt", "capture:scratchpad_split_map_resize_set_ppt"]
