@@ -1346,3 +1346,8 @@ actions = ["window:fixture-1", "command:layout tabbed; layout toggle", "window:f
 name = "criteria_move_beside_floating_focus_keeps_order"
 corpora = ["state"]
 actions = ["window:fixture-1", "window:fixture-2", "command:layout tabbed; layout toggle", "window:fixture-3", "command:move right", "command:floating enable", "command:[app_id=\"fixture-1\"] move container to workspace 1", "capture:criteria_move_beside_floating_focus_keeps_order_first", "command:[app_id=\"fixture-2\"] move container to workspace 1", "capture:criteria_move_beside_floating_focus_keeps_order"]
+
+[[scenario]]
+name = "fullscreen_floating_ppt_resize_rejected"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:fullscreen toggle", "command:floating toggle", "probe:fullscreen_floating_ppt_resize_width:resize shrink width 5 ppt", "capture:fullscreen_floating_ppt_resize_rejected"]
