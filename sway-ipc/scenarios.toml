@@ -1381,3 +1381,13 @@ actions = ["window:fixture-1", "command:fullscreen toggle", "window:fixture-2", 
 name = "for_window_split_in_floating_group"
 corpora = ["state"]
 actions = ["window:fixture-fwsfg-1", "command:floating enable", "command:split toggle", "command:for_window [app_id=\"^fixture-fwsfg-2$\"] split v", "window:fixture-fwsfg-2", "capture:for_window_split_in_floating_group"]
+
+[[scenario]]
+name = "scratchpad_rule_show_uses_natural_size"
+corpora = ["state"]
+actions = ["command:for_window [app_id=\"^fixture-ssr-1$\"] move scratchpad", "window:fixture-ssr-1", "command:scratchpad show", "command:split h", "capture:scratchpad_rule_show_uses_natural_size"]
+
+[[scenario]]
+name = "scratchpad_tabbed_criteria_focus_split_rect"
+corpora = ["state"]
+actions = ["command:layout tabbed", "window:fixture-ssr-2", "command:move scratchpad", "command:[app_id=\"^fixture-ssr-2$\"] focus", "command:splitv", "capture:scratchpad_tabbed_criteria_focus_split_rect"]
