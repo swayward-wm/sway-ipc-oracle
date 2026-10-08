@@ -1509,3 +1509,11 @@ actions = ["window:fixture-sme-1", "command:move scratchpad", "command:scratchpa
 name = "scratchpad_split_map_resize_set_ppt"
 corpora = ["state"]
 actions = ["window:fixture-ssrp-1", "command:move scratchpad", "command:[app_id=\"^fixture-ssrp-1$\"] focus", "command:splitv", "window:fixture-ssrp-2", "command:resize set width 30 ppt height 40 ppt", "capture:scratchpad_split_map_resize_set_ppt"]
+
+[[scenario]]
+name = "floating_disabled_fixed_view_moves_tiled"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell; X11 size hints exercise a different protocol path."
+actions = ["hint_window:fixture-fdmt|400|300|400|300|0", "command:floating disable", "command:move container to workspace 2", "capture:floating_disabled_fixed_view_moves_tiled"]
