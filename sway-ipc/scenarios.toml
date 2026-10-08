@@ -1232,3 +1232,8 @@ actions = ["window:fixture-1", "command:floating enable", "command:resize set wi
 name = "map_after_float_from_split"
 corpora = ["state"]
 actions = ["window:fixture-mafs-5", "command:layout toggle", "window:fixture-mafs-6", "command:floating enable", "window:fixture-mafs-7", "capture:map_after_float_from_split"]
+
+[[scenario]]
+name = "floating_fullscreen_group_map_keeps_focus"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus parent", "command:floating toggle", "command:fullscreen enable", "window:fixture-2", "capture:floating_fullscreen_group_map_keeps_focus"]
