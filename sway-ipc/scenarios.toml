@@ -1147,3 +1147,8 @@ name = "move_workspace_back_shows_recent_workspace"
 outputs = 2
 corpora = ["state"]
 actions = ["command:focus output right", "window:fixture-back-2", "command:focus output left", "window:fixture-back-1", "command:move workspace to output right", "command:workspace oracle", "command:move workspace to output left", "capture:move_workspace_back_shows_recent_workspace"]
+
+[[scenario]]
+name = "criteria_focus_marked_split_on_other_workspace"
+corpora = ["state"]
+actions = ["window:fixture-fmw-1", "command:layout stacking", "command:focus parent; mark n", "command:workspace 2", "command:[con_mark=\"n\"] focus", "capture:criteria_focus_marked_split_on_other_workspace"]

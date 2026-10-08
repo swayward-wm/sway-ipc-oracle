@@ -1,0 +1,45 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-fmw-1 --title=fixture-fmw-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "layout stacking",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent; mark n",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace 2",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "[con_mark=\"n\"] focus",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]
