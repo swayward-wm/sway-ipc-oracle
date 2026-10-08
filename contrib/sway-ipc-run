@@ -1217,20 +1217,83 @@ def first_difference(observations, rules):
 
 
 class CompositorCrash(RuntimeError):
-    """A compositor stopped answering IPC during a generated step: a finding, not a harness error."""
-    def __init__(self, labels, error):
-        super().__init__(f"{', '.join(labels)} stopped answering IPC: {error}")
+    """A compositor died or stopped answering IPC during a sequence.
+
+    A finding, not a harness error, and never a mismatch: when the reference
+    (sway) crashes there is no reference reply to compare against. step is the
+    1-based command after which the death was observed (sway segfaults on a
+    later transaction, so it is usually the last command sent, not an earlier
+    one); exits maps each dead label to its exit description.
+    """
+    def __init__(self, dead, error, step=None):
+        labels = [label for label, _ in dead]
+        detail = ", ".join(f"{label} {how}" for label, how in dead)
+        super().__init__(f"{detail} (stopped answering IPC: {error})")
         self.labels = labels
+        self.exits = dict(dead)
+        self.step = step
 
 
-def unresponsive(adapters, labels):
+def exit_description(code):
+    if code < 0:
+        try:
+            return f"killed by {signal.Signals(-code).name}"
+        except ValueError:
+            return f"killed by signal {-code}"
+    return f"exited with {code}"
+
+
+def exited_code(adapter, grace=1.0):
+    """The adapter process's exit code, waiting briefly for a dying process to be reaped."""
+    if not adapter.process:
+        return None
+    try:
+        return adapter.process.wait(grace)
+    except subprocess.TimeoutExpired:
+        return None
+
+
+def unresponsive(adapters, labels, settle=0.0):
+    """[(label, how)] for every compositor that exited or no longer answers IPC.
+
+    Sway applies a command's layout in a later transaction, so a crash can
+    follow a successful reply by ~0.15 s; settle waits for it first.
+    """
+    if settle:
+        time.sleep(settle)
     dead = []
     for adapter, label in zip(adapters, labels):
+        code = adapter.process.poll() if adapter.process else None
+        if code is not None:
+            dead.append((label, exit_description(code)))
+            continue
         try:
             ipc(adapter.socket, "version")
         except (OSError, RuntimeError):
-            dead.append(label)
+            dead.append((label, "stopped answering IPC"))
     return dead
+
+
+def guarded_step(adapters, labels, text, settle, step):
+    """differential_step, raising CompositorCrash when a compositor died during it."""
+    try:
+        return differential_step(adapters, text, settle)
+    except (OSError, RuntimeError) as error:
+        dead = unresponsive(adapters, labels, settle=0.5)
+        if dead:
+            raise CompositorCrash(dead, error, step) from error
+        raise
+
+
+def require_alive(adapters, labels, step, reason):
+    """Raise CompositorCrash if a compositor died just after a step that looked fine.
+
+    A divergence observed just before sway segfaults compares a state sway
+    never finished arranging; it must be reported as a crash, not a mismatch.
+    """
+    dead = unresponsive(adapters, labels, settle=0.3)
+    if dead:
+        raise CompositorCrash(dead, reason, step)
 
 
 def differential_online(args, gen, steps, scenario=None, commands=None):
@@ -1246,6 +1309,7 @@ def differential_online(args, gen, steps, scenario=None, commands=None):
         commands = [] if commands is None else commands
         try:
             start_differential(args, Path(directory), adapters, versions, logs, scenario)
+            labels = (args.a, args.b)
             rules = load_rules()
             prelude = gen.prelude()
             state = {"tree": ipc(adapters[0].socket, "tree"),
@@ -1256,20 +1320,15 @@ def differential_online(args, gen, steps, scenario=None, commands=None):
                 else:
                     text = gen.next(sway_ipc_v3.features(state["tree"], state["workspaces"]), step)
                 commands.append(text)
-                try:
-                    observations = differential_step(adapters, text, settle=True)
-                except (OSError, RuntimeError) as error:
-                    time.sleep(0.5)
-                    dead = unresponsive(adapters, (args.a, args.b))
-                    if dead:
-                        raise CompositorCrash(dead, error) from error
-                    raise
+                observations = guarded_step(adapters, labels, text, True, step)
                 gen.observe_reply(text, observations["command"][0])
                 state = {request: observations[request][0] for request in ("tree", "workspaces")}
                 found = first_difference(observations, rules)
                 if found:
+                    require_alive(adapters, labels, step, "died after a divergent step")
                     return {"step": step, "command": text, "request": found[0],
                             "differences": found[1]}, versions, commands
+            require_alive(adapters, labels, steps, "died after the last step")
             return None, versions, commands
         finally:
             for adapter in reversed(adapters):
@@ -1279,7 +1338,10 @@ def differential_online(args, gen, steps, scenario=None, commands=None):
 
 
 def differential_once(args, commands, keep_state=False, scenario=None, settle=False):
-    """Run one sequence on fresh compositors and return its first divergence."""
+    """Run one sequence on fresh compositors and return its first divergence.
+
+    A compositor that dies during or just after a step raises CompositorCrash.
+    """
     with tempfile.TemporaryDirectory(prefix="sio-") as directory:
         base = Path(directory)
         adapters = []
@@ -1287,11 +1349,13 @@ def differential_once(args, commands, keep_state=False, scenario=None, settle=Fa
         logs = []
         try:
             start_differential(args, base, adapters, versions, logs, scenario)
+            labels = (args.a, args.b)
             rules = load_rules()
             for step, text in enumerate(commands, 1):
-                observations = differential_step(adapters, text, settle)
+                observations = guarded_step(adapters, labels, text, settle, step)
                 found = first_difference(observations, rules)
                 if found:
+                    require_alive(adapters, labels, step, "died after a divergent step")
                     request, differences = found
                     result = {
                         "step": step, "command": text, "request": request,
@@ -1305,6 +1369,7 @@ def differential_once(args, commands, keep_state=False, scenario=None, settle=Fa
                             "outputs": ipc(adapters[0].socket, "outputs"),
                         }
                     return result, versions
+            require_alive(adapters, labels, len(commands), "died after the last step")
             return None, versions
         finally:
             for adapter in reversed(adapters):
@@ -2015,6 +2080,7 @@ def scenario_main(args, parser):
                                 continue
                         adapter.reset()
                         subscription = EventSubscription(adapter.socket) if args.corpus == "events" else None
+                        action = None
                         try:
                             for action in scenario["actions"]:
                                 kind, value = action.split(":", 1)
@@ -2076,6 +2142,19 @@ def scenario_main(args, parser):
                                                              "reason": applicability["i3"][request]["reason"]})
                                 else:
                                     raise RuntimeError(f"unknown action {kind}")
+                            # Sway applies layout in a later transaction and can segfault
+                            # after its last reply; a scenario captured from a dying sway
+                            # is not a fixture.
+                            time.sleep(0.3)
+                            if adapter.process.poll() is not None:
+                                raise OSError("compositor exited after the last action")
+                        except (OSError, RuntimeError) as error:
+                            code = exited_code(adapter)
+                            if code is None:
+                                raise
+                            raise RuntimeError(
+                                f"{args.compositor} crashed ({exit_description(code)}) in scenario "
+                                f"{scenario['name']} at action {action!r}: {error}") from error
                         finally:
                             if subscription:
                                 subscription.close()
@@ -2368,8 +2447,16 @@ def write_differential_results(path, args, rows):
                       "differences = [" + ", ".join(toml_string(x) for x in row["differences"]) + "]",
                       f"scenario = {toml_string(row['scenario'])}"]
         if row["verdict"] == "crash":
+            # A crash of the reference (sway) is a harness finding: there is no
+            # sway reply to compare, so the seed cannot count as a mismatch.
+            triage = "harness issue" if args.a in row["crashed"] else "untriaged"
             lines += ["crashed = [" + ", ".join(toml_string(x) for x in row["crashed"]) + "]",
+                      f"triage = {toml_string(triage)}",
                       f"error = {toml_string(row['error'])}"]
+            if row.get("commands"):
+                lines += [f"step = {row['step']}",
+                          "exits = [" + ", ".join(toml_string(x) for x in row["exits"]) + "]",
+                          "commands = [" + ", ".join(toml_string(x) for x in row["commands"]) + "]"]
         lines.append("")
     # v3 commands depend on sway's state: record every seed's list (match rows included)
     # so it replays without the generator.
@@ -2385,6 +2472,19 @@ def write_differential_results(path, args, rows):
           + (f"crash: {len(crashes)}; " if crashes else "") +
           f"difference fields: {difference_fields}")
     return bool(counts["mismatch"] or crashes)
+
+
+def crash_row(seed, crash, commands, extra=None):
+    """A seed whose sequence killed a compositor: a harness finding, never a mismatch.
+
+    commands is truncated to the step after which the death was seen, so the
+    row replays the crash without the generator.
+    """
+    step = crash.step or len(commands)
+    return {"seed": seed, "verdict": "crash", "crashed": crash.labels, "error": str(crash),
+            "step": step, "commands": commands[:step],
+            "exits": [f"{label}: {how}" for label, how in crash.exits.items()],
+            **(extra or {})}
 
 
 def differential_main(args):
@@ -2408,12 +2508,15 @@ def differential_main(args):
             try:
                 divergence, _, commands = differential_online(args, gen, args.steps, layout, commands)
             except CompositorCrash as crash:
-                rows.append({"seed": seed, "verdict": "crash", "crashed": crash.labels,
-                             "error": str(crash), **recorded(commands)})
+                rows.append(crash_row(seed, crash, commands, recorded(commands)))
                 continue
         else:
             commands = GENERATORS[args.generator](seed, args.steps)
-            divergence, _ = differential_once(args, commands)
+            try:
+                divergence, _ = differential_once(args, commands)
+            except CompositorCrash as crash:
+                rows.append(crash_row(seed, crash, commands))
+                continue
         if divergence is None:
             rows.append({"seed": seed, "verdict": "match",
                          **(recorded(commands) if online else {})})
@@ -2421,13 +2524,19 @@ def differential_main(args):
         def reproduces(candidate):
             try:
                 found, _ = differential_once(args, candidate, scenario=layout, settle=online)
+            except CompositorCrash:
+                return False  # the candidate crashed a compositor instead
             except (OSError, RuntimeError):
                 if not online:
                     raise
-                return False  # the candidate crashed a compositor instead
+                return False
             return found is not None
         minimal = minimize_commands(commands[:divergence["step"]], reproduces)
-        final, _ = differential_once(args, minimal, keep_state=True, scenario=layout, settle=online)
+        try:
+            final, _ = differential_once(args, minimal, keep_state=True, scenario=layout, settle=online)
+        except CompositorCrash as crash:
+            rows.append(crash_row(seed, crash, minimal, recorded(commands) if online else None))
+            continue
         if final is None:
             raise RuntimeError(f"seed {seed} stopped reproducing during shrink")
         scenario = f"differential_seed_{seed}"

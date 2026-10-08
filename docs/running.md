@@ -162,8 +162,11 @@ starts it before any random choice. The default is 40 steps. `--outputs auto` gi
 at step 0. A two-output seed starts recipe R14 (windows on both outputs, then
 cross-output moves and focus) first, and recipe `s % 16` after it.
 `differential` records every seed's command list, started recipes and
-trigger steps in a `[[recorded]]` table, and a compositor that stops
-answering IPC becomes a `crash` row. `--save-scenarios` writes a two-output
+trigger steps in a `[[recorded]]` table. With any generator, a compositor
+that dies or stops answering during a seed, including just after a step that
+looked fine, becomes a `crash` row, never a mismatch. A crash of the sway side
+is triaged `harness issue`. [Pinned sway crashes](sway-crashes.md) lists the
+known shapes. `--save-scenarios` writes a two-output
 reproducer with its `outputs` and `output_layout`, so the scenario replays
 on the same layout. v3 has no committed corpus yet, so `random --capture` writes to
 `--out DIR`:
