@@ -1,0 +1,45 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "fullscreen enable global",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "splitt",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent; floating toggle",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "success": true
+      }
+    ]
+  }
+]
