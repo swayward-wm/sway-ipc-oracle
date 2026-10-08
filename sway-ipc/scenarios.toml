@@ -1366,3 +1366,8 @@ actions = ["window:fixture-mcfo-1", "command:move container to workspace 4", "wi
 name = "move_workspace_wrapper_lands_beside_focus_inactive"
 corpora = ["state"]
 actions = ["window:fixture-mwbf-1", "window:fixture-mwbf-2", "command:focus up", "command:workspace 2", "window:fixture-mwbf-3", "command:focus parent", "command:move container to workspace 1", "capture:move_workspace_wrapper_lands_beside_focus_inactive"]
+
+[[scenario]]
+name = "floating_toggle_ppt_resize"
+corpora = ["state"]
+actions = ["command:output * mode --custom 1280x720@60Hz", "window:fixture-1", "command:floating toggle", "probe:floating_toggle_ppt_resize_grow:resize grow height 10 ppt", "probe:floating_toggle_ppt_resize_shrink:resize shrink width 5 ppt", "command:resize set width 50 ppt", "command:splith", "capture:floating_toggle_ppt_resize"]
