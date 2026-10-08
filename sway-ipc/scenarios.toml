@@ -1532,3 +1532,8 @@ actions = ["hint_window:fixture-fdmt|400|300|400|300|0", "command:floating disab
 name = "float_split_children_of_focused_wrapper_keeps_tiled_focus"
 corpora = ["state"]
 actions = ["window:fixture-diff-1", "window:fixture-diff-2", "command:focus parent; split v", "command:[app_id=\"^fixture-diff-[23]$\"] floating enable", "capture:float_split_children_of_focused_wrapper_keeps_tiled_focus"]
+
+[[scenario]]
+name = "sticky_fullscreen_floating_move_to_workspace_refused"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating enable", "command:sticky enable", "command:fullscreen enable", "command:move container to workspace number 3", "capture:sticky_fullscreen_floating_move_to_workspace_refused"]
