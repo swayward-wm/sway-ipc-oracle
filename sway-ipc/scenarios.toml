@@ -1464,3 +1464,13 @@ actions = ["window:fixture-1", "command:floating enable", "window:fixture-2", "c
 name = "criteria_float_from_split_focus_order"
 corpora = ["state"]
 actions = ["window:fixture-1", "window:fixture-2", "window:fixture-3", "command:layout tabbed; layout toggle", "command:[app_id=\"^fixture-[23]$\"] floating enable", "capture:criteria_float_from_split_focus_order"]
+
+[[scenario]]
+name = "for_window_move_keeps_focused_workspace"
+corpora = ["state"]
+actions = ["window:fixture-fwm-1", "command:focus parent", "command:for_window [app_id=\"^fixture-fwm-2$\"] move container to workspace 2", "window:fixture-fwm-2", "capture:for_window_move_keeps_focused_workspace"]
+
+[[scenario]]
+name = "for_window_move_keeps_focused_floating_split"
+corpora = ["state"]
+actions = ["window:fixture-fwf-1", "command:floating enable", "command:split v", "command:focus parent", "command:for_window [app_id=\"^fixture-fwf-2$\"] move container to workspace 2", "window:fixture-fwf-2", "capture:for_window_move_keeps_focused_floating_split"]
