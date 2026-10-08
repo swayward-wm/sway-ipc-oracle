@@ -1527,3 +1527,8 @@ requires = ["xdg-toplevel-size-hints"]
 not_applicable = true
 reason = "i3 does not implement xdg-shell; X11 size hints exercise a different protocol path."
 actions = ["hint_window:fixture-fdmt|400|300|400|300|0", "command:floating disable", "command:move container to workspace 2", "capture:floating_disabled_fixed_view_moves_tiled"]
+
+[[scenario]]
+name = "float_split_children_of_focused_wrapper_keeps_tiled_focus"
+corpora = ["state"]
+actions = ["window:fixture-diff-1", "window:fixture-diff-2", "command:focus parent; split v", "command:[app_id=\"^fixture-diff-[23]$\"] floating enable", "capture:float_split_children_of_focused_wrapper_keeps_tiled_focus"]
