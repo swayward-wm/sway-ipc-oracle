@@ -586,6 +586,16 @@ corpora = ["state"]
 actions = ["command:workspace number 3", "command:workspace next_on_output", "capture:workspace_next_on_output_after_empty_destroyed", "command:workspace prev_on_output", "command:workspace next", "command:workspace prev", "capture:workspace_next_on_output_after_empty_destroyed_relative"]
 
 [[scenario]]
+name = "floating_criteria_split_view_is_tiling"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating enable", "command:splitv", "probe:floating_criteria_split_view_not_floating:[floating] border pixel 4", "probe:floating_criteria_split_view_tiling:[tiling] mark --add oracle-tiled", "capture:floating_criteria_split_view_is_tiling"]
+
+[[scenario]]
+name = "floating_criteria_fullscreen_floater_is_floating"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating enable", "command:fullscreen toggle", "probe:floating_criteria_fullscreen_floater_not_tiling:[tiling] mark --add oracle-tiled", "probe:floating_criteria_fullscreen_floater_floating:[floating] mark --add oracle-floated", "capture:floating_criteria_fullscreen_floater_is_floating"]
+
+[[scenario]]
 name = "recreated_workspace_has_no_representation"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:move container to workspace number 3", "command:workspace oracle", "command:gaps top current set 15", "command:workspace 1", "capture:recreated_workspace_has_no_representation", "command:workspace oracle", "capture:recreated_workspace_has_no_representation_gaps"]
