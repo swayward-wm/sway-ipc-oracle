@@ -1298,3 +1298,51 @@ actions = ["window:fixture-uhss-1", "command:focus parent", "command:move scratc
 name = "floating_fullscreen_group_map_global_rule"
 corpora = ["state"]
 actions = ["command:for_window [app_id=\"fixture-2\"] fullscreen enable global", "window:fixture-1", "command:focus parent", "command:floating toggle", "command:fullscreen enable", "window:fixture-2", "capture:floating_fullscreen_group_map_global_rule"]
+
+[[scenario]]
+name = "map_into_failed_move_wrapper_keeps_empty_box"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus parent", "command:move container to output left", "window:fixture-2", "capture:map_into_failed_move_wrapper_keeps_empty_box", "command:fullscreen toggle", "capture:map_into_failed_move_wrapper_keeps_empty_box_fullscreen"]
+
+[[scenario]]
+name = "directional_move_beside_fullscreen_keeps_focus"
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus output right", "window:fixture-2", "command:for_window [app_id=\"fixture-3\"] fullscreen enable", "window:fixture-3", "command:focus output left", "command:move right", "capture:directional_move_beside_fullscreen_keeps_focus", "command:focus right", "capture:directional_move_beside_fullscreen_refuses_hidden_focus"]
+
+[[scenario]]
+name = "directional_move_of_split_keeps_focus"
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus output right", "window:fixture-2", "command:focus parent; fullscreen toggle", "command:workspace 1", "command:focus output left", "command:split h", "command:move left", "capture:directional_move_of_split_keeps_focus"]
+
+[[scenario]]
+name = "directional_move_of_split_onto_empty_workspace"
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+corpora = ["state"]
+actions = ["command:focus output right", "window:fixture-1", "window:fixture-2", "command:move workspace to output right", "command:layout toggle splitv tabbed", "command:floating toggle", "command:move scratchpad", "command:move right", "capture:directional_move_of_split_onto_empty_workspace"]
+
+[[scenario]]
+name = "move_to_workspace_joins_focus_inactive_split"
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus output right", "window:fixture-2", "command:mark --toggle m", "command:sticky enable; focus output right", "command:layout toggle", "command:[con_mark=\"m\"] focus", "command:focus parent", "command:move container to workspace 1", "capture:move_to_workspace_joins_focus_inactive_split"]
+
+[[scenario]]
+name = "float_workspace_view_keeps_focus_order"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:layout tabbed; layout toggle", "window:fixture-3", "command:move right", "command:floating enable", "command:[workspace=__focused__] move container to workspace 1", "capture:float_workspace_view_keeps_focus_order"]
+
+[[scenario]]
+name = "float_wrapped_view_refocuses_view"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:layout tabbed; layout toggle", "window:fixture-2", "command:splith", "command:floating enable", "command:move container to workspace number 3", "capture:float_wrapped_view_refocuses_view"]
+
+[[scenario]]
+name = "criteria_move_beside_floating_focus_keeps_order"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:layout tabbed; layout toggle", "window:fixture-3", "command:move right", "command:floating enable", "command:[app_id=\"fixture-1\"] move container to workspace 1", "capture:criteria_move_beside_floating_focus_keeps_order_first", "command:[app_id=\"fixture-2\"] move container to workspace 1", "capture:criteria_move_beside_floating_focus_keeps_order"]

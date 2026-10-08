@@ -1,0 +1,69 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-1 --title=fixture-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus output right",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-2 --title=fixture-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent; fullscreen toggle",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace 1",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus output left",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "split h",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move left",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]
