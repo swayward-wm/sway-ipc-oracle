@@ -1212,3 +1212,13 @@ actions = ["window:fixture-diff-4", "window:fixture-diff-5", "command:fullscreen
 name = "focus_child_skips_floating_child"
 corpora = ["state"]
 actions = ["window:fixture-fcf-1", "command:floating enable", "command:focus parent", "command:focus child", "capture:focus_child_skips_floating_child"]
+
+[[scenario]]
+name = "split_floated_workspace_wrapper"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus parent; floating toggle", "command:split v", "capture:split_floated_workspace_wrapper"]
+
+[[scenario]]
+name = "split_floated_wrapper_then_tile"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus parent", "command:floating enable", "command:splitt", "command:floating toggle", "capture:split_floated_wrapper_then_tile"]
