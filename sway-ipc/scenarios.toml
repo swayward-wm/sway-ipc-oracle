@@ -1283,3 +1283,8 @@ actions = ["window:fixture-1", "window:fixture-2", "command:[app_id=\"^fixture-1
 name = "urgent_hidden_scratchpad_split"
 corpora = ["state"]
 actions = ["window:fixture-uhss-1", "command:focus parent", "command:move scratchpad", "window:fixture-uhss-2", "command:floating enable", "command:splitv", "window:fixture-uhss-3", "command:move scratchpad", "command:[app_id=\"^fixture-uhss-1$\"] urgent enable", "command:[app_id=\"^fixture-uhss-3$\"] urgent enable", "capture:urgent_hidden_scratchpad_split"]
+
+[[scenario]]
+name = "floating_fullscreen_group_map_global_rule"
+corpora = ["state"]
+actions = ["command:for_window [app_id=\"fixture-2\"] fullscreen enable global", "window:fixture-1", "command:focus parent", "command:floating toggle", "command:fullscreen enable", "window:fixture-2", "capture:floating_fullscreen_group_map_global_rule"]
