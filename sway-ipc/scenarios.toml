@@ -1237,3 +1237,8 @@ actions = ["window:fixture-mafs-5", "command:layout toggle", "window:fixture-maf
 name = "floating_fullscreen_group_map_keeps_focus"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:focus parent", "command:floating toggle", "command:fullscreen enable", "window:fixture-2", "capture:floating_fullscreen_group_map_keeps_focus"]
+
+[[scenario]]
+name = "no_focus_maps_into_floating_split"
+corpora = ["state"]
+actions = ["window:fixture-nfs-1", "command:floating enable", "command:splith", "command:no_focus [app_id=\"^fixture-nfs-2$\"]", "window:fixture-nfs-2", "capture:no_focus_maps_into_floating_split"]
