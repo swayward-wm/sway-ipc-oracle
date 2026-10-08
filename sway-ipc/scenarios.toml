@@ -1207,3 +1207,8 @@ actions = ["window:fixture-diff-1", "command:fullscreen toggle global", "command
 name = "global_fullscreen_split_floating_shows_sibling"
 corpora = ["state"]
 actions = ["window:fixture-diff-4", "window:fixture-diff-5", "command:fullscreen enable global", "command:splitt", "command:focus parent; floating toggle", "capture:global_fullscreen_split_floating_shows_sibling"]
+
+[[scenario]]
+name = "focus_child_skips_floating_child"
+corpora = ["state"]
+actions = ["window:fixture-fcf-1", "command:floating enable", "command:focus parent", "command:focus child", "capture:focus_child_skips_floating_child"]
