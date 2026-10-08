@@ -1256,3 +1256,25 @@ outputs = 2
 output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
 corpora = ["state"]
 actions = ["command:focus output right", "window:fixture-1", "command:fullscreen toggle", "command:floating toggle", "probe:floating_fullscreen_move_absolute_crosses_output:move absolute position 10 px 20 px", "capture:floating_fullscreen_move_absolute_crosses_output"]
+
+# diff-fam-v3-swap-floating-con-id-residual: container_swap trades any two
+# containers, wherever they live (sway/tree/container.c:1718-1890).
+[[scenario]]
+name = "swap_tiled_with_floating_split_child"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:move down", "command:focus parent; floating toggle", "window:fixture-3", "probe:swap_tiled_with_floating_split_child:swap container with con_id @con:fixture-1", "capture:swap_tiled_with_floating_split_child"]
+
+[[scenario]]
+name = "swap_floating_with_tiled_on_other_workspace"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:mark m", "command:workspace number 3", "window:fixture-2", "command:floating enable", "probe:swap_floating_with_tiled_on_other_workspace:swap container with mark m", "capture:swap_floating_with_tiled_on_other_workspace"]
+
+[[scenario]]
+name = "swap_shown_scratchpad_focuses_floated_view"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:move scratchpad", "command:[app_id=\"^fixture-2$\"] focus", "probe:swap_shown_scratchpad_focuses_floated_view:swap container with con_id @con:fixture-1", "capture:swap_shown_scratchpad_focuses_floated_view"]
+
+[[scenario]]
+name = "swap_fullscreen_floating_place_floats_arrival"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:[app_id=\"^fixture-1$\"] focus", "command:floating toggle", "command:fullscreen enable", "probe:swap_fullscreen_floating_place_floats_arrival:swap container with con_id @con:fixture-2", "capture:swap_fullscreen_floating_place_floats_arrival"]
