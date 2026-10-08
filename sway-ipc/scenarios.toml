@@ -1351,3 +1351,18 @@ actions = ["window:fixture-1", "window:fixture-2", "command:layout tabbed; layou
 name = "fullscreen_floating_ppt_resize_rejected"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:fullscreen toggle", "command:floating toggle", "probe:fullscreen_floating_ppt_resize_width:resize shrink width 5 ppt", "capture:fullscreen_floating_ppt_resize_rejected"]
+
+[[scenario]]
+name = "move_workspace_onto_floating_only_workspace_keeps_wrapper"
+corpora = ["state"]
+actions = ["window:fixture-mwfo-1", "command:move container to workspace 4", "window:fixture-mwfo-2", "command:[app_id=\"^fixture-mwfo-1$\"] floating enable", "command:focus parent", "command:move container to workspace prev", "capture:move_workspace_onto_floating_only_workspace_keeps_wrapper"]
+
+[[scenario]]
+name = "move_container_onto_floating_only_workspace_keeps_focus"
+corpora = ["state"]
+actions = ["window:fixture-mcfo-1", "command:move container to workspace 4", "window:fixture-mcfo-2", "command:[app_id=\"^fixture-mcfo-1$\"] floating enable", "command:layout tabbed", "command:focus parent", "command:move container to workspace prev", "capture:move_container_onto_floating_only_workspace_keeps_focus"]
+
+[[scenario]]
+name = "move_workspace_wrapper_lands_beside_focus_inactive"
+corpora = ["state"]
+actions = ["window:fixture-mwbf-1", "window:fixture-mwbf-2", "command:focus up", "command:workspace 2", "window:fixture-mwbf-3", "command:focus parent", "command:move container to workspace 1", "capture:move_workspace_wrapper_lands_beside_focus_inactive"]
