@@ -1644,3 +1644,8 @@ actions = ["hint_window:fixture-dialog|0|0|0|0|1", "command:focus parent", "capt
 name = "scratchpad_split_second_view_show_hides"
 corpora = ["state"]
 actions = ["window:fixture-ssv-1", "command:move scratchpad", "command:scratchpad show", "command:splith", "window:fixture-ssv-2", "command:scratchpad show", "capture:scratchpad_split_second_view_show_hides"]
+
+[[scenario]]
+name = "move_focused_workspace_leaves_floating_behind"
+corpora = ["state"]
+actions = ["window:fixture-diff-1", "command:floating enable", "window:fixture-diff-2", "command:focus parent; mark m", "command:move container to workspace 2", "capture:move_focused_workspace_leaves_floating_behind"]
