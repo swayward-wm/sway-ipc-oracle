@@ -1649,3 +1649,11 @@ actions = ["window:fixture-ssv-1", "command:move scratchpad", "command:scratchpa
 name = "move_focused_workspace_leaves_floating_behind"
 corpora = ["state"]
 actions = ["window:fixture-diff-1", "command:floating enable", "window:fixture-diff-2", "command:focus parent; mark m", "command:move container to workspace 2", "capture:move_focused_workspace_leaves_floating_behind"]
+
+[[scenario]]
+name = "tiling_criteria_skips_fullscreen_hinted_floater"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell; the equivalent X11 WM_NORMAL_HINTS exercise a different protocol path."
+actions = ["hint_window:fixture-tcfh|400|300|400|300|1", "command:fullscreen toggle", "command:[tiling] mark --add tiled", "capture:tiling_criteria_skips_fullscreen_hinted_floater"]
