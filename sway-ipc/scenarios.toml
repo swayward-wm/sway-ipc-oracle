@@ -1664,3 +1664,9 @@ actions = ["hint_window:fixture-tcfh|400|300|400|300|1", "command:fullscreen tog
 name = "floating_split_fullscreen_focus_parent_floating_toggle"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:border pixel 2", "command:floating enable", "command:split v", "command:fullscreen toggle", "command:focus parent; floating toggle", "command:fullscreen disable", "capture:floating_split_fullscreen_focus_parent_floating_toggle"]
+
+[[scenario]]
+name = "move_back_and_forth_after_cross_output_move"
+outputs = 2
+corpora = ["state"]
+actions = ["window:fixture-mbcm-1", "command:focus output right", "command:focus output left", "command:move right", "capture:move_back_and_forth_after_cross_output_move_before", "command:mark --add x", "command:move container to workspace back_and_forth", "capture:move_back_and_forth_after_cross_output_move"]
