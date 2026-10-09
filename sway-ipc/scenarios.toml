@@ -1739,3 +1739,8 @@ requires = ["xdg-toplevel-size-hints"]
 not_applicable = true
 reason = "i3 does not implement xdg-shell; X11 size hints exercise a different protocol path."
 actions = ["hint_window:fixture-comf-1|300|200|300|200|0", "command:focus output left", "window:fixture-comf-2", "command:move container to output left", "capture:cross_output_move_to_floating_focus_floats"]
+
+[[scenario]]
+name = "fullscreen_floating_group_px_resize_rejected"
+corpora = ["state"]
+actions = ["window:fixture-ffpx-1", "command:focus parent; floating toggle", "command:fullscreen toggle", "probe:fullscreen_floating_group_px_resize_left:resize grow left 20 px", "probe:fullscreen_floating_group_px_resize_height:resize grow height 20 px", "capture:fullscreen_floating_group_px_resize_rejected"]
