@@ -1676,3 +1676,8 @@ name = "move_back_and_forth_after_cross_output_floating_move"
 outputs = 2
 corpora = ["state"]
 actions = ["window:fixture-mbcf-1", "command:focus output right", "command:focus output left", "command:floating enable", "command:move absolute position 1500 px 100 px", "capture:move_back_and_forth_after_cross_output_floating_move_before", "command:move container to workspace back_and_forth", "capture:move_back_and_forth_after_cross_output_floating_move"]
+
+[[scenario]]
+name = "rename_then_back_and_forth"
+corpora = ["state"]
+actions = ["command:workspace oracle", "window:fixture-rtbf-1", "command:workspace --no-auto-back-and-forth 1", "command:rename workspace oracle to oracle-renamed", "capture:rename_then_back_and_forth_before", "command:workspace back_and_forth", "capture:rename_then_back_and_forth"]
