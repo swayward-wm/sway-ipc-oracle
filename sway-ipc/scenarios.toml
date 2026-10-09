@@ -1670,3 +1670,9 @@ name = "move_back_and_forth_after_cross_output_move"
 outputs = 2
 corpora = ["state"]
 actions = ["window:fixture-mbcm-1", "command:focus output right", "command:focus output left", "command:move right", "capture:move_back_and_forth_after_cross_output_move_before", "command:mark --add x", "command:move container to workspace back_and_forth", "capture:move_back_and_forth_after_cross_output_move"]
+
+[[scenario]]
+name = "move_back_and_forth_after_cross_output_floating_move"
+outputs = 2
+corpora = ["state"]
+actions = ["window:fixture-mbcf-1", "command:focus output right", "command:focus output left", "command:floating enable", "command:move absolute position 1500 px 100 px", "capture:move_back_and_forth_after_cross_output_floating_move_before", "command:move container to workspace back_and_forth", "capture:move_back_and_forth_after_cross_output_floating_move"]
