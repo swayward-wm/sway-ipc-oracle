@@ -64,6 +64,14 @@ reason = "i3 does not implement xdg-shell or xdg-decoration; X11 windows map wit
 actions = ["hint_window:fixture-hinted|400|300|400|300|0", "capture:hinted_view_without_decoration_maps_csd"]
 
 [[scenario]]
+name = "swap_csd_views_keep_stored_border"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell or xdg-decoration; X11 windows map without client-side decorations."
+actions = ["window:fixture-tiled", "command:[app_id=\"^fixture-tiled$\"] mark t", "hint_window:fixture-hinted|400|300|400|300|0", "command:swap container with mark t", "capture:swap_csd_views_keep_stored_border"]
+
+[[scenario]]
 name = "default_floating_parent"
 corpora = ["state"]
 requires = ["xdg-toplevel-size-hints"]
