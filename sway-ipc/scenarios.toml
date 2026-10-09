@@ -1537,3 +1537,13 @@ actions = ["window:fixture-diff-1", "window:fixture-diff-2", "command:focus pare
 name = "sticky_fullscreen_floating_move_to_workspace_refused"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:floating enable", "command:sticky enable", "command:fullscreen enable", "command:move container to workspace number 3", "capture:sticky_fullscreen_floating_move_to_workspace_refused"]
+
+[[scenario]]
+name = "output_disable_refocuses_evacuated_sticky_floater"
+corpora = ["state"]
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+requires = ["sway-command-language"]
+not_applicable = true
+reason = "i3 has no output command or sticky evacuation; source: i3/src/commands.c command table. Output disable is a sway extension; source: sway/sway/tree/output.c:188-203."
+actions = ["window:fixture-odsf-1", "command:workspace next", "window:fixture-odsf-2", "command:floating enable", "command:sticky enable", "command:output fake-1 disable", "capture:output_disable_refocuses_evacuated_sticky_floater"]

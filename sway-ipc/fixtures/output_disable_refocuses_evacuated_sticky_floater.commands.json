@@ -1,0 +1,50 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-odsf-1 --title=fixture-odsf-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace next",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-odsf-2 --title=fixture-odsf-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "floating enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "sticky enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "output fake-1 disable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]
