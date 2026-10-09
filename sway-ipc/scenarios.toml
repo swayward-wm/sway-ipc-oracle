@@ -1060,10 +1060,22 @@ corpora = ["state"]
 actions = ["command:focus output left", "command:focus output right", "command:workspace back_and_forth", "capture:workspace_back_and_forth_after_focus_output", "window:fixture-1", "command:focus output right", "command:focus output left", "command:move container to workspace back_and_forth", "capture:move_back_and_forth_after_focus_output"]
 
 [[scenario]]
+name = "sticky_move_back_and_forth_same_output_refused"
+outputs = 2
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating enable", "command:sticky enable", "command:workspace 3", "command:focus floating", "command:move container to workspace back_and_forth", "capture:sticky_move_back_and_forth_same_output_refused"]
+
+[[scenario]]
 name = "workspace_auto_back_and_forth_two_outputs"
 outputs = 2
 corpora = ["state"]
 actions = ["command:focus output left", "command:workspace next", "command:workspace 1", "command:workspace_auto_back_and_forth yes; workspace 1", "capture:workspace_auto_back_and_forth_two_outputs"]
+
+[[scenario]]
+name = "move_back_and_forth_after_move_workspace_to_output"
+outputs = 2
+corpora = ["state"]
+actions = ["command:move workspace to output left", "window:fixture-1", "command:move container to workspace back_and_forth", "capture:move_back_and_forth_after_move_workspace_to_output"]
 
 [[scenario]]
 name = "two_output_seat_focus"
