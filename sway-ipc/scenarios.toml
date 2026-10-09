@@ -779,6 +779,11 @@ corpora = ["state"]
 actions = ["window:fixture-fmark-1", "command:floating enable", "command:mark z", "command:move container to workspace 2", "window:fixture-fmark-2", "capture:move_tiled_to_floating_mark_fresh_workspace_representation_before", "command:move container to mark z", "capture:move_tiled_to_floating_mark_fresh_workspace_representation"]
 
 [[scenario]]
+name = "move_floating_split_to_own_child_mark"
+corpora = ["state"]
+actions = ["window:fixture-fmark-1", "command:mark z", "command:focus parent", "command:floating toggle", "capture:move_floating_split_to_own_child_mark_before", "command:move container to mark z", "capture:move_floating_split_to_own_child_mark"]
+
+[[scenario]]
 name = "focus_next_crosses_outputs"
 outputs = 2
 corpora = ["state"]
