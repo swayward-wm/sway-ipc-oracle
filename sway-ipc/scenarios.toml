@@ -1744,3 +1744,13 @@ actions = ["hint_window:fixture-comf-1|300|200|300|200|0", "command:focus output
 name = "fullscreen_floating_group_px_resize_rejected"
 corpora = ["state"]
 actions = ["window:fixture-ffpx-1", "command:focus parent; floating toggle", "command:fullscreen toggle", "probe:fullscreen_floating_group_px_resize_left:resize grow left 20 px", "probe:fullscreen_floating_group_px_resize_height:resize grow height 20 px", "capture:fullscreen_floating_group_px_resize_rejected"]
+
+[[scenario]]
+name = "global_fullscreen_floated_split_px_resize_rejected"
+corpora = ["state"]
+actions = ["window:fixture-gfpx-1", "command:focus parent; split v", "command:floating toggle", "command:fullscreen enable global", "probe:global_fullscreen_floated_split_px_resize_width:resize grow width 10 px", "probe:global_fullscreen_floated_split_px_resize_up:resize grow up 10 px", "capture:global_fullscreen_floated_split_px_resize_rejected"]
+
+[[scenario]]
+name = "raised_floater_focused_split_resize_rejected"
+corpora = ["state"]
+actions = ["command:output * mode --custom 1280x720@60Hz", "command:output * transform 90", "hint_window:fixture-rfsr-1|400|300|400|300|1", "window:fixture-rfsr-2", "command:layout tabbed; layout toggle", "window:fixture-rfsr-3", "command:layout toggle split", "command:move up", "command:move container to workspace number 3", "probe:raised_floater_focused_split_resize_px_or_ppt:resize grow width 10 px or 5 ppt", "capture:raised_floater_focused_split_resize_rejected"]

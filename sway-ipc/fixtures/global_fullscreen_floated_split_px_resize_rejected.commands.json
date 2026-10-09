@@ -1,0 +1,37 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-gfpx-1 --title=fixture-gfpx-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent; split v",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "floating toggle",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "fullscreen enable global",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]
