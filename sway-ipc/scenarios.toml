@@ -1614,3 +1614,8 @@ requires = ["xdg-toplevel-size-hints"]
 not_applicable = true
 reason = "i3 does not implement xdg-shell; X11 WM_TRANSIENT_FOR exercises a different protocol path."
 actions = ["command:layout splith", "hint_window:fixture-hmf-child|400|300|400|300|1", "window:fixture-hmf-tiled", "command:focus left", "command:floating enable", "capture:hinted_child_map_then_float_parent_order"]
+
+[[scenario]]
+name = "global_fullscreen_split_child_moves_to_new_workspace"
+corpora = ["state"]
+actions = ["window:fixture-gfsm-1", "command:border none", "command:layout tabbed", "command:fullscreen toggle global", "command:split h", "probe:global_fullscreen_split_child_moves_reply:move container to workspace number 3", "capture:global_fullscreen_split_child_moves_to_new_workspace"]
