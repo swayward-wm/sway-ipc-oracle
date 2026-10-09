@@ -1759,3 +1759,8 @@ actions = ["window:fixture-gfpx-1", "command:focus parent; split v", "command:fl
 name = "raised_floater_focused_split_resize_rejected"
 corpora = ["state"]
 actions = ["command:output * mode --custom 1280x720@60Hz", "command:output * transform 90", "hint_window:fixture-rfsr-1|400|300|400|300|1", "window:fixture-rfsr-2", "command:layout tabbed; layout toggle", "window:fixture-rfsr-3", "command:layout toggle split", "command:move up", "command:move container to workspace number 3", "probe:raised_floater_focused_split_resize_px_or_ppt:resize grow width 10 px or 5 ppt", "capture:raised_floater_focused_split_resize_rejected"]
+
+[[scenario]]
+name = "smart_no_gaps_lone_view_under_smart_gaps"
+corpora = ["state"]
+actions = ["command:smart_gaps on", "command:default_border pixel 1", "command:hide_edge_borders smart_no_gaps", "window:fixture-sng-1", "command:gaps outer current set 20", "capture:smart_no_gaps_lone_view_under_smart_gaps"]
