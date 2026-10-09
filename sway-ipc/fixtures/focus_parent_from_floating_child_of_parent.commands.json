@@ -1,0 +1,18 @@
+[
+  {
+    "command": "xdg-toplevel-fixture fixture-dialog 0 0 0 0 1",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]
