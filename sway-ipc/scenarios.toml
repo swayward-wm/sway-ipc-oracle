@@ -1657,3 +1657,8 @@ requires = ["xdg-toplevel-size-hints"]
 not_applicable = true
 reason = "i3 does not implement xdg-shell; the equivalent X11 WM_NORMAL_HINTS exercise a different protocol path."
 actions = ["hint_window:fixture-tcfh|400|300|400|300|1", "command:fullscreen toggle", "command:[tiling] mark --add tiled", "capture:tiling_criteria_skips_fullscreen_hinted_floater"]
+
+[[scenario]]
+name = "floating_split_fullscreen_focus_parent_floating_toggle"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:border pixel 2", "command:floating enable", "command:split v", "command:fullscreen toggle", "command:focus parent; floating toggle", "command:fullscreen disable", "capture:floating_split_fullscreen_focus_parent_floating_toggle"]
