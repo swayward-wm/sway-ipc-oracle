@@ -1719,3 +1719,8 @@ requires = ["sway-command-language"]
 not_applicable = true
 reason = "i3 has no output command; source: i3/src/commands.c command table. Output disable is a sway extension; source: sway/sway/tree/output.c:205-253."
 actions = ["window:fixture-odfo-1", "window:fixture-odfo-2", "command:move container to workspace next", "command:move container to workspace number 3", "command:output fake-1 disable", "capture:output_disable_evacuated_workspaces_focus_order"]
+
+[[scenario]]
+name = "focus_parent_noop_on_fullscreen_floating_group_split"
+corpora = ["state"]
+actions = ["window:fixture-diff-10", "command:focus parent", "command:floating enable", "command:fullscreen toggle", "command:focus parent; split v", "capture:focus_parent_noop_on_fullscreen_floating_group_split"]
