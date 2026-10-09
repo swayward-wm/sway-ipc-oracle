@@ -1819,3 +1819,25 @@ actions = ["window:fixture-swtf-1", "command:mark r", "command:floating enable",
 name = "tabbed_fullscreen_map_layout_toggle_splitv_tabbed"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:layout tabbed", "command:fullscreen toggle", "window:fixture-2", "command:layout toggle splitv tabbed", "capture:tabbed_fullscreen_map_layout_toggle_splitv_tabbed"]
+
+[[scenario]]
+name = "fullscreen_floating_group_px_shrink_shifts_children"
+corpora = ["state"]
+actions = ["window:fixture-ffpr-1", "command:focus parent; floating toggle", "command:fullscreen toggle", "probe:fullscreen_floating_group_px_shrink_left:resize shrink left 20 px", "capture:fullscreen_floating_group_px_shrink_shifts_children"]
+
+[[scenario]]
+name = "fullscreen_floating_group_px_grow_two_outputs"
+outputs = 2
+corpora = ["state"]
+actions = ["window:fixture-ffpr-2", "command:focus parent; floating toggle", "command:fullscreen toggle", "probe:fullscreen_floating_group_px_grow_two_left:resize grow left 20 px", "capture:fullscreen_floating_group_px_grow_two_outputs"]
+
+[[scenario]]
+name = "fullscreen_floating_view_px_grow_two_outputs"
+outputs = 2
+corpora = ["state"]
+actions = ["window:fixture-ffpr-3", "command:floating toggle", "command:fullscreen toggle", "probe:fullscreen_floating_view_px_grow_two_left:resize grow left 20 px", "capture:fullscreen_floating_view_px_grow_two_outputs"]
+
+[[scenario]]
+name = "fullscreen_floating_view_px_resize"
+corpora = ["state"]
+actions = ["window:fixture-ffpr-4", "command:floating toggle", "command:fullscreen toggle", "probe:fullscreen_floating_view_px_grow_left:resize grow left 20 px", "probe:fullscreen_floating_view_px_shrink_width:resize shrink width 20 px", "probe:fullscreen_floating_view_px_shrink_up:resize shrink up 20 px", "capture:fullscreen_floating_view_px_resize"]
