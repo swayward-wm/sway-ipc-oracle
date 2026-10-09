@@ -1769,3 +1769,13 @@ actions = ["command:smart_gaps on", "command:default_border pixel 1", "command:h
 name = "split_none_flattens_floating_group_root"
 corpora = ["state"]
 actions = ["window:fixture-snfg-1", "command:floating enable", "command:split toggle", "capture:split_none_flattens_floating_group_root_split", "probe:split_none_flattens_floating_group_root_flatten:split none", "capture:split_none_flattens_floating_group_root"]
+
+[[scenario]]
+name = "floating_split_fullscreen_child_move_scratchpad"
+corpora = ["state"]
+actions = ["window:fixture-fsfc-1", "command:floating enable", "command:split t", "command:fullscreen toggle; move scratchpad", "capture:floating_split_fullscreen_child_move_scratchpad"]
+
+[[scenario]]
+name = "floating_split_fullscreen_child_move_scratchpad_tiled_sibling"
+corpora = ["state"]
+actions = ["window:fixture-fsfs-1", "window:fixture-fsfs-2", "command:floating enable", "command:split t", "command:fullscreen toggle; move scratchpad", "capture:floating_split_fullscreen_child_move_scratchpad_tiled_sibling_hidden", "command:workspace 2", "command:scratchpad show", "capture:floating_split_fullscreen_child_move_scratchpad_tiled_sibling_shown", "command:workspace 1", "capture:floating_split_fullscreen_child_move_scratchpad_tiled_sibling"]
