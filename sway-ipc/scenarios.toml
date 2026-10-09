@@ -1182,6 +1182,12 @@ corpora = ["state"]
 actions = ["window:fixture-sat-1", "command:focus output right", "window:fixture-sat-2", "command:focus output left", "command:mark m", "command:layout tabbed", "window:fixture-sat-3", "command:focus right", "probe:swap_across_outputs_into_tabbed_visible:swap container with mark m", "capture:swap_across_outputs_into_tabbed_visible"]
 
 [[scenario]]
+name = "move_to_mark_across_outputs_into_tabbed_visible"
+outputs = 2
+corpora = ["state"]
+actions = ["window:fixture-sat-1", "command:focus output right", "command:focus output left", "command:mark m", "command:layout tabbed", "command:focus next", "window:fixture-sat-2", "probe:move_to_mark_across_outputs_into_tabbed_visible:move container to mark m", "capture:move_to_mark_across_outputs_into_tabbed_visible"]
+
+[[scenario]]
 name = "focus_edge_in_fullscreen_split"
 corpora = ["state"]
 actions = ["window:fixture-diff-1", "window:fixture-diff-2", "command:fullscreen enable", "command:split h", "window:fixture-diff-3", "command:focus right", "capture:focus_edge_in_fullscreen_split_inside", "command:focus right", "capture:focus_edge_in_fullscreen_split"]
