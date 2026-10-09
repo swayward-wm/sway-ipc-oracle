@@ -1764,3 +1764,8 @@ actions = ["command:output * mode --custom 1280x720@60Hz", "command:output * tra
 name = "smart_no_gaps_lone_view_under_smart_gaps"
 corpora = ["state"]
 actions = ["command:smart_gaps on", "command:default_border pixel 1", "command:hide_edge_borders smart_no_gaps", "window:fixture-sng-1", "command:gaps outer current set 20", "capture:smart_no_gaps_lone_view_under_smart_gaps"]
+
+[[scenario]]
+name = "split_none_flattens_floating_group_root"
+corpora = ["state"]
+actions = ["window:fixture-snfg-1", "command:floating enable", "command:split toggle", "capture:split_none_flattens_floating_group_root_split", "probe:split_none_flattens_floating_group_root_flatten:split none", "capture:split_none_flattens_floating_group_root"]
