@@ -792,6 +792,14 @@ corpora = ["state"]
 actions = ["window:fixture-1", "command:floating enable", "command:border csd", "command:split v", "capture:floating_csd_split_keeps_content"]
 
 [[scenario]]
+name = "hinted_floating_dialog_split_keeps_content"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell or xdg-decoration; X11 WM_TRANSIENT_FOR maps without client-side decorations."
+actions = ["hint_window:fixture-dialog|0|0|0|0|1", "command:split h", "capture:hinted_floating_dialog_split_keeps_content"]
+
+[[scenario]]
 name = "workspace_switch_refused_under_global_fullscreen"
 corpora = ["state"]
 actions = ["window:fixture-wsgf-1", "command:workspace 2", "window:fixture-wsgf-2", "command:fullscreen toggle global", "command:workspace next", "command:workspace prev_on_output", "command:workspace back_and_forth", "command:workspace oracle", "command:workspace number 1", "capture:workspace_switch_refused_under_global_fullscreen"]
