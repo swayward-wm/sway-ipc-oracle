@@ -1,0 +1,42 @@
+[
+  {
+    "command": "layout splith",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "xdg-toplevel-fixture fixture-hmf-child 400 300 400 300 1",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-hmf-tiled --title=fixture-hmf-tiled sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus left",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "floating enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

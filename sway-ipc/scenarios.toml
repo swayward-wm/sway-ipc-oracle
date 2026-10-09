@@ -1600,3 +1600,11 @@ requires = ["xdg-toplevel-size-hints"]
 not_applicable = true
 reason = "i3 does not implement xdg-shell or xdg-decoration; X11 WM_TRANSIENT_FOR maps without client-side decorations."
 actions = ["hint_window:fixture-hinted-fixed|400|300|400|300|1", "command:move scratchpad", "command:floating enable", "command:split t", "capture:hinted_scratchpad_float_enable_split_keeps_content"]
+
+[[scenario]]
+name = "hinted_child_map_then_float_parent_order"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell; X11 WM_TRANSIENT_FOR exercises a different protocol path."
+actions = ["command:layout splith", "hint_window:fixture-hmf-child|400|300|400|300|1", "window:fixture-hmf-tiled", "command:focus left", "command:floating enable", "capture:hinted_child_map_then_float_parent_order"]
