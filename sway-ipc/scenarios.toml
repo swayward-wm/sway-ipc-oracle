@@ -830,6 +830,11 @@ corpora = ["state"]
 actions = ["command:layout splith", "window:fixture-fwl-0", "command:floating enable", "command:for_window [app_id=\"^fixture-fwl-1$\"] layout tabbed", "window:fixture-fwl-1", "capture:for_window_layout_wraps_workspace_first", "command:for_window [app_id=\"^fixture-fwl-2$\"] layout stacking", "window:fixture-fwl-2", "capture:for_window_layout_wraps_workspace"]
 
 [[scenario]]
+name = "for_window_layout_in_floating_split"
+corpora = ["state"]
+actions = ["window:fixture-fwfs-1", "command:floating enable", "command:split toggle", "command:for_window [app_id=\"^fixture-fwfs-2$\"] layout tabbed", "window:fixture-fwfs-2", "capture:for_window_layout_in_floating_split", "probe:for_window_layout_in_floating_split_default:[app_id=\"^fixture-fwfs-2$\"] layout default", "probe:for_window_layout_in_floating_split_toggle_all:[app_id=\"^fixture-fwfs-1$\"] layout toggle all", "capture:for_window_layout_in_floating_split_after"]
+
+[[scenario]]
 name = "criteria_layout_wraps_workspace"
 corpora = ["state"]
 actions = ["command:layout splith", "window:fixture-cl-1", "window:fixture-cl-2", "probe:criteria_layout_wraps_workspace_tabbed:[app_id=\"^fixture-cl-1$\"] layout tabbed", "probe:criteria_layout_wraps_workspace_default:[app_id=\"^fixture-cl-1$\"] layout default", "probe:criteria_layout_wraps_workspace_toggle_all:[app_id=\"^fixture-cl-1$\"] layout toggle all", "capture:criteria_layout_wraps_workspace"]
