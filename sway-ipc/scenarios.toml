@@ -1681,3 +1681,11 @@ actions = ["window:fixture-mbcf-1", "command:focus output right", "command:focus
 name = "rename_then_back_and_forth"
 corpora = ["state"]
 actions = ["command:workspace oracle", "window:fixture-rtbf-1", "command:workspace --no-auto-back-and-forth 1", "command:rename workspace oracle to oracle-renamed", "capture:rename_then_back_and_forth_before", "command:workspace back_and_forth", "capture:rename_then_back_and_forth"]
+
+[[scenario]]
+name = "hinted_dialog_focus_parent_split_move_scratchpad"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell; X11 WM_TRANSIENT_FOR exercises a different protocol path."
+actions = ["hint_window:fixture-dialog|0|0|0|0|1", "command:focus parent; split v", "command:move scratchpad", "capture:hinted_dialog_focus_parent_split_move_scratchpad"]
