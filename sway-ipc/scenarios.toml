@@ -1329,6 +1329,11 @@ corpora = ["state"]
 actions = ["window:fixture-1", "command:floating enable", "command:resize set width 30 ppt height 40 ppt", "command:splitv", "capture:floating_resize_ppt_split_keeps_rect"]
 
 [[scenario]]
+name = "floating_focus_parent_split_resize_set_ppt"
+corpora = ["state"]
+actions = ["window:fixture-ffps-1", "window:fixture-ffps-2", "window:fixture-ffps-3", "command:floating enable", "command:focus parent; split v", "command:resize set width 30 ppt height 40 ppt", "capture:floating_focus_parent_split_resize_set_ppt"]
+
+[[scenario]]
 name = "map_after_float_from_split"
 corpora = ["state"]
 actions = ["window:fixture-mafs-5", "command:layout toggle", "window:fixture-mafs-6", "command:floating enable", "window:fixture-mafs-7", "capture:map_after_float_from_split"]
