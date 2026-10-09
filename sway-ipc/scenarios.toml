@@ -351,6 +351,11 @@ corpora = ["state"]
 actions = ["window:fixture-sgf-1", "command:move scratchpad", "window:fixture-sgf-2", "command:[app_id=\"fixture-sgf-1\"] scratchpad show", "command:fullscreen enable global", "command:[title=\"fixture-sgf-2\"] focus", "capture:scratchpad_global_fullscreen_focus_tiled_refloats"]
 
 [[scenario]]
+name = "scratchpad_fullscreen_floating_enable_keeps_scratchpad"
+corpora = ["state"]
+actions = ["window:fixture-sff-1", "command:move scratchpad", "command:[app_id=\"fixture-sff-1\"] scratchpad show", "command:fullscreen enable", "command:floating enable", "capture:scratchpad_fullscreen_floating_enable_keeps_scratchpad"]
+
+[[scenario]]
 name = "fullscreen_split_wrapper"
 corpora = ["state"]
 actions = ["window:fixture-fullscreen-split", "command:fullscreen enable", "command:splitv", "capture:fullscreen_split_wrapper"]
