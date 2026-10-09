@@ -1,0 +1,26 @@
+[
+  {
+    "command": "xdg-toplevel-fixture fixture-hinted-min 200 150 0 0 0",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "floating enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "split h",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

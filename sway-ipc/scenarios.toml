@@ -1579,3 +1579,19 @@ actions = ["window:fixture-1", "command:layout tabbed", "command:for_window [app
 name = "floated_fullscreen_move_refocuses_old_parent"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:fullscreen toggle", "command:layout tabbed", "window:fixture-2", "command:floating toggle", "command:move container to workspace number 3", "capture:floated_fullscreen_move_refocuses_old_parent"]
+
+[[scenario]]
+name = "hinted_min_size_float_enable_split_keeps_content"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell or xdg-decoration; X11 WM_TRANSIENT_FOR maps without client-side decorations."
+actions = ["hint_window:fixture-hinted-min|200|150|0|0|0", "command:floating enable", "command:split h", "capture:hinted_min_size_float_enable_split_keeps_content"]
+
+[[scenario]]
+name = "hinted_scratchpad_float_enable_split_keeps_content"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell or xdg-decoration; X11 WM_TRANSIENT_FOR maps without client-side decorations."
+actions = ["hint_window:fixture-hinted-fixed|400|300|400|300|1", "command:move scratchpad", "command:floating enable", "command:split t", "capture:hinted_scratchpad_float_enable_split_keeps_content"]
