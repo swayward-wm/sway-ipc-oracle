@@ -1790,3 +1790,9 @@ name = "workspace_fullscreen_move_right_appends_on_next_output"
 outputs = 2
 corpora = ["state"]
 actions = ["window:fixture-wfmr-1", "command:focus output right", "window:fixture-wfmr-2", "command:sticky enable; focus output right", "command:fullscreen toggle", "command:move right", "capture:workspace_fullscreen_move_right_appends_on_next_output"]
+
+[[scenario]]
+name = "move_workspace_after_back_and_forth"
+outputs = 2
+corpora = ["state"]
+actions = ["command:focus output left", "command:workspace 4", "command:workspace 2", "command:workspace back_and_forth", "capture:move_workspace_after_back_and_forth_before", "command:move workspace to output right", "capture:move_workspace_after_back_and_forth"]
