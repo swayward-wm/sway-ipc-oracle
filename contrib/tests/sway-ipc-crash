@@ -1,0 +1,109 @@
+#!/usr/bin/env python3
+"""A compositor that dies during a differential sequence is a crash row, never a mismatch.
+
+Pinned sway 1.12 segfaults a transaction after replying (see
+docs/sway-crashes.md), so the death is often seen only after the step that
+caused it. Fake adapters stand in for the compositors.
+"""
+
+import argparse
+import importlib.machinery
+from pathlib import Path
+import sys
+import tempfile
+import tomllib
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.dont_write_bytecode = True
+runner = importlib.machinery.SourceFileLoader(
+    "sway_ipc_run", str(ROOT / "contrib/sway-ipc-run")
+).load_module()
+
+
+class Process:
+    def __init__(self):
+        self.code = None
+
+    def poll(self):
+        return self.code
+
+
+class Fake:
+    """Answers every step identically; dies with SIGSEGV after die_after steps."""
+    def __init__(self, die_after=None, raise_on_death=True):
+        self.process = Process()
+        self.die_after = die_after
+        self.raise_on_death = raise_on_death
+        self.steps = 0
+        self.socket = Path("/nonexistent/fake.sock")
+
+    def stop(self):
+        pass
+
+
+def install(fakes):
+    def start(args, base, adapters, versions, logs, scenario=None):
+        adapters.extend(fakes)
+        versions.extend(["a", "b"])
+    def step(adapters, text, settle):
+        for fake in adapters:
+            fake.steps += 1
+            if fake.die_after is not None and fake.steps >= fake.die_after:
+                fake.process.code = -11
+                if fake.raise_on_death and fake.steps > fake.die_after:
+                    raise ConnectionResetError(104, "Connection reset by peer")
+        # The step that kills sway still returns a divergent reply first.
+        diverge = any(f.die_after is not None and f.steps >= f.die_after for f in adapters)
+        return {"command": [[{"success": True}], [{"success": not diverge}]]}
+    runner.start_differential = start
+    runner.differential_step = step
+    runner.load_rules = lambda: {}
+    runner.ipc = lambda sock, kind, payload="": {}  # a live fake always answers
+    runner.compare = lambda a, b, request, rules: [] if a == b else ["$.success"]
+
+
+args = argparse.Namespace(a="sway", b="swayward", timeout=1)
+commands = ["win", "fullscreen enable global", "split h", "nop", "nop"]
+
+# Death raised on the step after the one that caused it.
+install([Fake(die_after=3), Fake()])
+try:
+    runner.differential_once(args, commands)
+except runner.CompositorCrash as crash:
+    assert crash.labels == ["sway"], crash.labels
+    assert crash.exits == {"sway": "killed by SIGSEGV"}, crash.exits
+    assert crash.step == 3, crash.step  # divergent step 3 is followed by the death
+else:
+    raise AssertionError("a sway segfault was reported as a divergence")
+
+# A sequence that ends while sway is dying is a crash, not a match.
+install([Fake(die_after=5, raise_on_death=False), Fake()])
+assert runner.differential_once(args, ["a", "b", "c", "d"]) == (None, ["a", "b"])
+install([Fake(die_after=4, raise_on_death=False), Fake()])
+try:
+    runner.differential_once(args, ["a", "b", "c", "d"])
+except runner.CompositorCrash as crash:
+    assert crash.step == 4, crash.step
+else:
+    raise AssertionError("a compositor dead after the last step was accepted")
+
+row = runner.crash_row(31296, runner.CompositorCrash([("sway", "killed by SIGSEGV")], "reset", 3),
+                       commands)
+assert row["commands"] == commands[:3] and row["step"] == 3, row
+
+with tempfile.TemporaryDirectory() as directory:
+    out = Path(directory) / "diff.toml"
+    run = argparse.Namespace(a="sway", b="swayward", seed=31296, generator="v2", steps=5)
+    failed = runner.write_differential_results(out, run, [row])
+    assert failed
+    doc = tomllib.loads(out.read_text())
+    assert doc["run"]["crash"] == 1 and doc["run"]["mismatch"] == 0, doc["run"]
+    result = doc["result"][0]
+    assert result["verdict"] == "crash" and result["triage"] == "harness issue", result
+    assert result["commands"] == commands[:3] and result["exits"] == ["sway: killed by SIGSEGV"]
+    # A swayward crash is not the reference's fault: it stays untriaged.
+    row_b = runner.crash_row(1, runner.CompositorCrash([("swayward", "exited with 1")], "x", 1), ["x"])
+    runner.write_differential_results(out, run, [row_b])
+    assert tomllib.loads(out.read_text())["result"][0]["triage"] == "untriaged"
+
+print("sway-ipc crash classification self-test passed")

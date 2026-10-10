@@ -1,0 +1,42 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move container to workspace 2",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "fullscreen toggle",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

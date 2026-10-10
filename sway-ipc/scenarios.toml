@@ -64,6 +64,14 @@ reason = "i3 does not implement xdg-shell or xdg-decoration; X11 windows map wit
 actions = ["hint_window:fixture-hinted|400|300|400|300|0", "capture:hinted_view_without_decoration_maps_csd"]
 
 [[scenario]]
+name = "swap_csd_views_keep_stored_border"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell or xdg-decoration; X11 windows map without client-side decorations."
+actions = ["window:fixture-tiled", "command:[app_id=\"^fixture-tiled$\"] mark t", "hint_window:fixture-hinted|400|300|400|300|0", "command:swap container with mark t", "capture:swap_csd_views_keep_stored_border"]
+
+[[scenario]]
 name = "default_floating_parent"
 corpora = ["state"]
 requires = ["xdg-toplevel-size-hints"]
@@ -338,6 +346,16 @@ corpora = ["state"]
 actions = ["window:fixture-scratchpad-unfloat", "command:move scratchpad", "command:scratchpad show", "command:floating disable", "command:scratchpad show", "capture:scratchpad_unfloat"]
 
 [[scenario]]
+name = "scratchpad_global_fullscreen_focus_tiled_refloats"
+corpora = ["state"]
+actions = ["window:fixture-sgf-1", "command:move scratchpad", "window:fixture-sgf-2", "command:[app_id=\"fixture-sgf-1\"] scratchpad show", "command:fullscreen enable global", "command:[title=\"fixture-sgf-2\"] focus", "capture:scratchpad_global_fullscreen_focus_tiled_refloats"]
+
+[[scenario]]
+name = "scratchpad_fullscreen_floating_enable_keeps_scratchpad"
+corpora = ["state"]
+actions = ["window:fixture-sff-1", "command:move scratchpad", "command:[app_id=\"fixture-sff-1\"] scratchpad show", "command:fullscreen enable", "command:floating enable", "capture:scratchpad_fullscreen_floating_enable_keeps_scratchpad"]
+
+[[scenario]]
 name = "fullscreen_split_wrapper"
 corpora = ["state"]
 actions = ["window:fixture-fullscreen-split", "command:fullscreen enable", "command:splitv", "capture:fullscreen_split_wrapper"]
@@ -456,6 +474,46 @@ corpora = ["state"]
 actions = ["command:output * mode --custom 1280x720@60Hz", "command:output * transform 90", "window:fixture-1", "command:layout tabbed", "capture:layout_toggle_rotated_prev_split_tabbed", "command:layout toggle", "capture:layout_toggle_rotated_prev_split"]
 
 [[scenario]]
+name = "floated_by_rule_keeps_wrapper_unfocused"
+corpora = ["state"]
+actions = ["window:fixture-fbr-1", "command:layout toggle all", "command:for_window [app_id=\"^fixture-fbr-float$\"] floating enable", "window:fixture-fbr-float", "command:move scratchpad", "capture:floated_by_rule_keeps_wrapper_unfocused"]
+
+[[scenario]]
+name = "close_focus_prefers_view_under_parent"
+corpora = ["state"]
+actions = ["window:fixture-cfp-1", "command:for_window [app_id=\"^fixture-cfp-2$\"] split v", "window:fixture-cfp-2", "command:no_focus [app_id=\"^fixture-cfp-3$\"]", "window:fixture-cfp-3", "command:kill", "capture:close_focus_prefers_view_under_parent"]
+
+[[scenario]]
+name = "scratchpad_floated_container_refocuses_old_parent"
+corpora = ["state"]
+actions = ["window:fixture-sfc-1", "window:fixture-sfc-2", "command:layout toggle split", "command:split toggle", "command:focus parent; floating toggle", "command:move scratchpad", "capture:scratchpad_floated_container_refocuses_old_parent"]
+
+[[scenario]]
+name = "close_floating_focuses_view_in_tabbed_wrapper"
+corpora = ["state"]
+actions = ["window:fixture-cff-1", "command:layout toggle splitv tabbed", "window:fixture-cff-2", "command:floating enable", "command:kill", "capture:close_floating_focuses_view_in_tabbed_wrapper"]
+
+[[scenario]]
+name = "close_floating_focuses_view_in_split"
+corpora = ["state"]
+actions = ["window:fixture-cfs-1", "window:fixture-cfs-2", "command:splitv", "window:fixture-cfs-3", "command:floating enable", "command:kill", "capture:close_floating_focuses_view_in_split"]
+
+[[scenario]]
+name = "scratchpad_reaped_parent_refocuses_view"
+corpora = ["state"]
+actions = ["window:fixture-srp-1", "command:focus parent; split v", "window:fixture-srp-2", "command:layout toggle all", "command:focus prev", "command:move scratchpad", "capture:scratchpad_reaped_parent_refocuses_view"]
+
+[[scenario]]
+name = "map_from_floating_joins_focused_split"
+corpora = ["state"]
+actions = ["window:fixture-mff-1", "window:fixture-mff-2", "command:layout toggle split", "command:split toggle", "command:focus parent; floating toggle", "window:fixture-mff-3", "capture:map_from_floating_joins_focused_split"]
+
+[[scenario]]
+name = "scratchpad_view_beside_focused_split"
+corpora = ["state"]
+actions = ["window:fixture-svb-1", "command:focus parent; split v", "window:fixture-svb-2", "command:move scratchpad", "capture:scratchpad_view_beside_focused_split"]
+
+[[scenario]]
 name = "new_view_global_fullscreen"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:fullscreen toggle global", "window:fixture-2", "capture:new_view_global_fullscreen"]
@@ -489,6 +547,11 @@ actions = ["window:fixture-1", "command:focus parent", "command:layout tabbed", 
 name = "criteria_move_to_workspace_keeps_match_order"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:workspace 2", "window:fixture-2", "window:fixture-3", "window:fixture-4", "command:[workspace=\"2\"] move container to workspace 1", "capture:criteria_move_to_workspace_keeps_match_order"]
+
+[[scenario]]
+name = "criteria_float_fullscreen_keeps_match_order"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:fullscreen enable", "window:fixture-2", "command:[app_id=\"^fixture-[12]$\"] floating enable", "capture:criteria_float_fullscreen_keeps_match_order"]
 
 [[scenario]]
 name = "focus_prev_next_lone_floating"
@@ -541,6 +604,26 @@ corpora = ["state"]
 actions = ["command:workspace number 3", "command:workspace next_on_output", "capture:workspace_next_on_output_after_empty_destroyed", "command:workspace prev_on_output", "command:workspace next", "command:workspace prev", "capture:workspace_next_on_output_after_empty_destroyed_relative"]
 
 [[scenario]]
+name = "floating_criteria_split_view_is_tiling"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating enable", "command:splitv", "probe:floating_criteria_split_view_not_floating:[floating] border pixel 4", "probe:floating_criteria_split_view_tiling:[tiling] mark --add oracle-tiled", "capture:floating_criteria_split_view_is_tiling"]
+
+[[scenario]]
+name = "floating_criteria_fullscreen_floater_is_floating"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating enable", "command:fullscreen toggle", "probe:floating_criteria_fullscreen_floater_not_tiling:[tiling] mark --add oracle-tiled", "probe:floating_criteria_fullscreen_floater_floating:[floating] mark --add oracle-floated", "capture:floating_criteria_fullscreen_floater_is_floating"]
+
+[[scenario]]
+name = "recreated_workspace_has_no_representation"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:move container to workspace number 3", "command:workspace oracle", "command:gaps top current set 15", "command:workspace 1", "capture:recreated_workspace_has_no_representation", "command:workspace oracle", "capture:recreated_workspace_has_no_representation_gaps"]
+
+[[scenario]]
+name = "floating_split_on_fresh_workspace_representation"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:move scratchpad", "command:workspace oracle", "command:scratchpad show", "capture:floating_split_on_fresh_workspace_representation_shown", "command:split toggle", "capture:floating_split_on_fresh_workspace_representation"]
+
+[[scenario]]
 name = "fullscreen_focus_layer_tiled"
 corpora = ["state"]
 actions = ["window:fixture-fsfl-1", "command:fullscreen enable", "probe:fullscreen_focus_layer_tiled_tiling:focus tiling", "command:for_window [app_id=\"fixture-fsfl-float\"] floating enable", "window:fixture-fsfl-float", "probe:fullscreen_focus_layer_tiled_floating:focus floating", "window:fixture-fsfl-tail", "capture:fullscreen_focus_layer_tiled"]
@@ -584,6 +667,16 @@ actions = ["window:fixture-1", "window:fixture-2", "command:splitv", "window:fix
 name = "criteria_focus_clears_urgency_from_focused_workspace"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:focus parent; [app_id=\"^fixture-1$\"] urgent enable", "capture:criteria_focus_clears_urgency_from_focused_workspace_set", "command:[urgent=latest] focus", "capture:criteria_focus_clears_urgency_from_focused_workspace"]
+
+[[scenario]]
+name = "workspace_switch_same_clears_urgency"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus parent; [app_id=\"^fixture-1$\"] urgent enable", "capture:workspace_switch_same_clears_urgency_set", "command:workspace --no-auto-back-and-forth 1", "capture:workspace_switch_same_clears_urgency"]
+
+[[scenario]]
+name = "focus_tiling_clears_urgency_from_focused_workspace"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus parent; [app_id=\"^fixture-1$\"] urgent enable", "command:focus tiling", "capture:focus_tiling_clears_urgency_from_focused_workspace"]
 
 [[scenario]]
 name = "view_mapped_under_fullscreen_rects"
@@ -691,6 +784,16 @@ corpora = ["state"]
 actions = ["window:fixture-fmark-1", "command:splitv", "window:fixture-fmark-2", "window:fixture-fmark-3", "command:floating enable", "command:mark m", "window:fixture-fmark-4", "command:floating enable", "command:[app_id=\"^fixture-fmark-2$\"] focus", "command:move container to mark m", "capture:move_tiled_to_floating_mark_stacks_above_mark"]
 
 [[scenario]]
+name = "move_tiled_to_floating_mark_fresh_workspace_representation"
+corpora = ["state"]
+actions = ["window:fixture-fmark-1", "command:floating enable", "command:mark z", "command:move container to workspace 2", "window:fixture-fmark-2", "capture:move_tiled_to_floating_mark_fresh_workspace_representation_before", "command:move container to mark z", "capture:move_tiled_to_floating_mark_fresh_workspace_representation"]
+
+[[scenario]]
+name = "move_floating_split_to_own_child_mark"
+corpora = ["state"]
+actions = ["window:fixture-fmark-1", "command:mark z", "command:focus parent", "command:floating toggle", "capture:move_floating_split_to_own_child_mark_before", "command:move container to mark z", "capture:move_floating_split_to_own_child_mark"]
+
+[[scenario]]
 name = "focus_next_crosses_outputs"
 outputs = 2
 corpora = ["state"]
@@ -710,6 +813,14 @@ actions = ["window:fixture-fsplit-1", "window:fixture-fsplit-2", "command:floati
 name = "floating_csd_split_keeps_content"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:floating enable", "command:border csd", "command:split v", "capture:floating_csd_split_keeps_content"]
+
+[[scenario]]
+name = "hinted_floating_dialog_split_keeps_content"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell or xdg-decoration; X11 WM_TRANSIENT_FOR maps without client-side decorations."
+actions = ["hint_window:fixture-dialog|0|0|0|0|1", "command:split h", "capture:hinted_floating_dialog_split_keeps_content"]
 
 [[scenario]]
 name = "workspace_switch_refused_under_global_fullscreen"
@@ -740,6 +851,11 @@ actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2"
 name = "for_window_layout_wraps_workspace"
 corpora = ["state"]
 actions = ["command:layout splith", "window:fixture-fwl-0", "command:floating enable", "command:for_window [app_id=\"^fixture-fwl-1$\"] layout tabbed", "window:fixture-fwl-1", "capture:for_window_layout_wraps_workspace_first", "command:for_window [app_id=\"^fixture-fwl-2$\"] layout stacking", "window:fixture-fwl-2", "capture:for_window_layout_wraps_workspace"]
+
+[[scenario]]
+name = "for_window_layout_in_floating_split"
+corpora = ["state"]
+actions = ["window:fixture-fwfs-1", "command:floating enable", "command:split toggle", "command:for_window [app_id=\"^fixture-fwfs-2$\"] layout tabbed", "window:fixture-fwfs-2", "capture:for_window_layout_in_floating_split", "probe:for_window_layout_in_floating_split_default:[app_id=\"^fixture-fwfs-2$\"] layout default", "probe:for_window_layout_in_floating_split_toggle_all:[app_id=\"^fixture-fwfs-1$\"] layout toggle all", "capture:for_window_layout_in_floating_split_after"]
 
 [[scenario]]
 name = "criteria_layout_wraps_workspace"
@@ -944,6 +1060,16 @@ corpora = ["state"]
 actions = ["window:fixture-sffs-1", "command:fullscreen enable", "command:floating enable", "command:sticky enable", "command:workspace 2", "capture:sticky_fullscreen_floating_workspace_switch"]
 
 [[scenario]]
+name = "sticky_fullscreen_floating_switch_keeps_source_unarranged"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:fullscreen enable", "command:floating enable", "command:sticky enable", "command:workspace 2", "capture:sticky_fullscreen_floating_switch_keeps_source_unarranged"]
+
+[[scenario]]
+name = "sticky_fullscreen_floating_carry_keeps_mapped_view_unarranged"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:fullscreen enable", "command:floating enable", "command:sticky enable", "command:workspace 2", "window:fixture-3", "command:workspace 3", "capture:sticky_fullscreen_floating_carry_keeps_mapped_view_unarranged"]
+
+[[scenario]]
 name = "fullscreen_layout_toggle_split_under_view"
 corpora = ["state"]
 actions = ["window:fixture-1", "command:fullscreen toggle", "command:layout toggle split", "window:fixture-2", "command:splith", "capture:fullscreen_layout_toggle_split_under_view"]
@@ -970,10 +1096,28 @@ corpora = ["state"]
 actions = ["command:focus output left", "command:focus output right", "command:workspace back_and_forth", "capture:workspace_back_and_forth_after_focus_output", "window:fixture-1", "command:focus output right", "command:focus output left", "command:move container to workspace back_and_forth", "capture:move_back_and_forth_after_focus_output"]
 
 [[scenario]]
+name = "sticky_move_back_and_forth_same_output_refused"
+outputs = 2
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating enable", "command:sticky enable", "command:workspace 3", "command:focus floating", "command:move container to workspace back_and_forth", "capture:sticky_move_back_and_forth_same_output_refused"]
+
+[[scenario]]
+name = "focus_wrapping_workspace_crosses_from_an_empty_workspace"
+outputs = 2
+corpora = ["state"]
+actions = ["command:focus_wrapping workspace", "command:focus output left", "command:focus right", "command:focus down", "capture:focus_wrapping_workspace_crosses_from_an_empty_workspace"]
+
+[[scenario]]
 name = "workspace_auto_back_and_forth_two_outputs"
 outputs = 2
 corpora = ["state"]
 actions = ["command:focus output left", "command:workspace next", "command:workspace 1", "command:workspace_auto_back_and_forth yes; workspace 1", "capture:workspace_auto_back_and_forth_two_outputs"]
+
+[[scenario]]
+name = "move_back_and_forth_after_move_workspace_to_output"
+outputs = 2
+corpora = ["state"]
+actions = ["command:move workspace to output left", "window:fixture-1", "command:move container to workspace back_and_forth", "capture:move_back_and_forth_after_move_workspace_to_output"]
 
 [[scenario]]
 name = "two_output_seat_focus"
@@ -1053,6 +1197,12 @@ corpora = ["state"]
 actions = ["window:fixture-sat-1", "command:focus output right", "window:fixture-sat-2", "command:focus output left", "command:mark m", "command:layout tabbed", "window:fixture-sat-3", "command:focus right", "probe:swap_across_outputs_into_tabbed_visible:swap container with mark m", "capture:swap_across_outputs_into_tabbed_visible"]
 
 [[scenario]]
+name = "move_to_mark_across_outputs_into_tabbed_visible"
+outputs = 2
+corpora = ["state"]
+actions = ["window:fixture-sat-1", "command:focus output right", "command:focus output left", "command:mark m", "command:layout tabbed", "command:focus next", "window:fixture-sat-2", "probe:move_to_mark_across_outputs_into_tabbed_visible:move container to mark m", "capture:move_to_mark_across_outputs_into_tabbed_visible"]
+
+[[scenario]]
 name = "focus_edge_in_fullscreen_split"
 corpora = ["state"]
 actions = ["window:fixture-diff-1", "window:fixture-diff-2", "command:fullscreen enable", "command:split h", "window:fixture-diff-3", "command:focus right", "capture:focus_edge_in_fullscreen_split_inside", "command:focus right", "capture:focus_edge_in_fullscreen_split"]
@@ -1090,9 +1240,687 @@ actions = ["window:fixture-kog-3", "command:floating enable", "window:fixture-ko
 [[scenario]]
 name = "kill_global_fullscreen_split_wrapper_keeps_workspace_focus"
 corpora = ["state"]
-actions = ["window:fixture-kog-5", "window:fixture-kog-6", "command:fullscreen toggle global", "command:split toggle", "command:kill", "capture:kill_global_fullscreen_split_wrapper_keeps_workspace_focus"]
+actions = ["window:fixture-kog-5", "window:fixture-kog-6", "command:fullscreen toggle global; split toggle", "command:kill", "capture:kill_global_fullscreen_split_wrapper_keeps_workspace_focus"]
 
 [[scenario]]
 name = "kill_scratchpad_global_fullscreen_focuses_sibling"
 corpora = ["state"]
 actions = ["window:fixture-kog-7", "command:move scratchpad", "window:fixture-kog-8", "command:[app_id=\"fixture-kog-7\"] focus", "command:fullscreen toggle global", "command:kill", "capture:kill_scratchpad_global_fullscreen_focuses_sibling"]
+
+[[scenario]]
+name = "floated_wrapper_child_move_to_current_workspace"
+corpora = ["state"]
+actions = ["window:fixture-fwcm-6", "command:focus parent; floating toggle", "window:fixture-fwcm-9", "command:[app_id=\"fixture-fwcm-6\"] focus", "command:move --no-auto-back-and-forth container to workspace 1", "capture:floated_wrapper_child_move_to_current_workspace"]
+
+[[scenario]]
+name = "floated_wrapper_child_move_to_empty_tiling_workspace"
+corpora = ["state"]
+actions = ["window:fixture-fwcm-1", "command:focus parent; floating toggle", "command:[app_id=\"fixture-fwcm-1\"] focus", "command:move --no-auto-back-and-forth container to workspace 1", "capture:floated_wrapper_child_move_to_empty_tiling_workspace"]
+
+[[scenario]]
+name = "floated_wrapper_child_move_to_current_workspace_focus"
+corpora = ["state"]
+actions = ["window:fixture-fwcm-5", "window:fixture-fwcm-6", "command:focus parent; floating toggle", "window:fixture-fwcm-9", "command:[app_id=\"fixture-fwcm-6\"] focus", "command:move --no-auto-back-and-forth container to workspace 1", "capture:floated_wrapper_child_move_to_current_workspace_focus"]
+
+[[scenario]]
+name = "floated_wrapper_child_move_to_current_workspace_focus_split"
+corpora = ["state"]
+actions = ["window:fixture-fwcm-5", "window:fixture-fwcm-6", "command:focus parent; floating toggle", "window:fixture-fwcm-9", "command:[app_id=\"fixture-fwcm-6\"] focus", "command:split h", "command:move --no-auto-back-and-forth container to workspace 1", "capture:floated_wrapper_child_move_to_current_workspace_focus_split"]
+
+[[scenario]]
+name = "sticky_floating_workspace_switch_kill_workspace"
+corpora = ["state"]
+actions = ["window:fixture-skw-1", "command:floating enable", "command:sticky enable", "command:workspace 3", "command:focus parent; kill", "capture:sticky_floating_workspace_switch_kill_workspace"]
+
+[[scenario]]
+name = "floating_hidden_scratchpad_is_invalid"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:move scratchpad", "probe:floating_hidden_scratchpad_enable:[app_id=\"^fixture-2$\"] floating enable", "probe:floating_hidden_scratchpad_toggle:[app_id=\"fixture-[2]\"] floating toggle", "capture:floating_hidden_scratchpad_is_invalid"]
+
+[[scenario]]
+name = "floating_enable_in_hidden_scratchpad_group"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:layout tabbed", "window:fixture-3", "command:focus parent", "command:move scratchpad", "probe:floating_enable_in_hidden_scratchpad_group_child:[app_id=\"^fixture-[23]$\"] floating enable", "capture:floating_enable_in_hidden_scratchpad_group"]
+
+[[scenario]]
+name = "floating_fullscreen_split_wraps"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:fullscreen toggle", "command:floating enable", "probe:floating_fullscreen_split_wraps_splith:splith", "capture:floating_fullscreen_split_wraps"]
+
+[[scenario]]
+name = "move_workspace_back_shows_recent_workspace"
+outputs = 2
+corpora = ["state"]
+actions = ["command:focus output right", "window:fixture-back-2", "command:focus output left", "window:fixture-back-1", "command:move workspace to output right", "command:workspace oracle", "command:move workspace to output left", "capture:move_workspace_back_shows_recent_workspace"]
+
+[[scenario]]
+name = "criteria_focus_marked_split_on_other_workspace"
+corpora = ["state"]
+actions = ["window:fixture-fmw-1", "command:layout stacking", "command:focus parent; mark n", "command:workspace 2", "command:[con_mark=\"n\"] focus", "capture:criteria_focus_marked_split_on_other_workspace"]
+
+[[scenario]]
+name = "global_fullscreen_floating_shows_tiled_sibling"
+corpora = ["state"]
+actions = ["window:fixture-diff-1", "window:fixture-diff-2", "command:fullscreen enable global", "command:floating enable", "capture:global_fullscreen_floating_shows_tiled_sibling", "probe:global_fullscreen_floating_workspace_switch:workspace number 3"]
+
+[[scenario]]
+name = "global_fullscreen_for_window_layout_new_view_focus"
+corpora = ["state"]
+actions = ["window:fixture-diff-1", "command:fullscreen toggle global", "command:for_window [app_id=\"fixture-diff-3\"] layout tabbed", "window:fixture-diff-3", "capture:global_fullscreen_for_window_layout_new_view_focus"]
+
+[[scenario]]
+name = "global_fullscreen_split_floating_shows_sibling"
+corpora = ["state"]
+actions = ["window:fixture-diff-4", "window:fixture-diff-5", "command:fullscreen enable global", "command:splitt", "command:focus parent; floating toggle", "capture:global_fullscreen_split_floating_shows_sibling"]
+
+[[scenario]]
+name = "focus_child_skips_floating_child"
+corpora = ["state"]
+actions = ["window:fixture-fcf-1", "command:floating enable", "command:focus parent", "command:focus child", "capture:focus_child_skips_floating_child"]
+
+[[scenario]]
+name = "split_floated_workspace_wrapper"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus parent; floating toggle", "command:split v", "capture:split_floated_workspace_wrapper"]
+
+[[scenario]]
+name = "split_floated_wrapper_then_tile"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus parent", "command:floating enable", "command:splitt", "command:floating toggle", "capture:split_floated_wrapper_then_tile"]
+
+[[scenario]]
+name = "floating_resize_ppt_split_keeps_rect"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating enable", "command:resize set width 30 ppt height 40 ppt", "command:splitv", "capture:floating_resize_ppt_split_keeps_rect"]
+
+[[scenario]]
+name = "floating_focus_parent_split_resize_set_ppt"
+corpora = ["state"]
+actions = ["window:fixture-ffps-1", "window:fixture-ffps-2", "window:fixture-ffps-3", "command:floating enable", "command:focus parent; split v", "command:resize set width 30 ppt height 40 ppt", "capture:floating_focus_parent_split_resize_set_ppt"]
+
+[[scenario]]
+name = "map_after_float_from_split"
+corpora = ["state"]
+actions = ["window:fixture-mafs-5", "command:layout toggle", "window:fixture-mafs-6", "command:floating enable", "window:fixture-mafs-7", "capture:map_after_float_from_split"]
+
+[[scenario]]
+name = "floating_fullscreen_group_map_keeps_focus"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus parent", "command:floating toggle", "command:fullscreen enable", "window:fixture-2", "capture:floating_fullscreen_group_map_keeps_focus"]
+
+[[scenario]]
+name = "no_focus_maps_into_floating_split"
+corpora = ["state"]
+actions = ["window:fixture-nfs-1", "command:floating enable", "command:splith", "command:no_focus [app_id=\"^fixture-nfs-2$\"]", "window:fixture-nfs-2", "capture:no_focus_maps_into_floating_split"]
+
+[[scenario]]
+name = "floating_move_absolute_crosses_output"
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+corpora = ["state"]
+actions = ["window:fixture-1", "command:move workspace to output left", "command:floating toggle", "capture:floating_move_absolute_crosses_output_before", "command:move absolute position 10 px 20 px", "capture:floating_move_absolute_crosses_output", "command:move right 1500 px", "capture:floating_move_absolute_crosses_output_move_right"]
+
+[[scenario]]
+name = "floating_fullscreen_move_absolute_crosses_output"
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+corpora = ["state"]
+actions = ["command:focus output right", "window:fixture-1", "command:fullscreen toggle", "command:floating toggle", "probe:floating_fullscreen_move_absolute_crosses_output:move absolute position 10 px 20 px", "capture:floating_fullscreen_move_absolute_crosses_output"]
+
+# diff-fam-v3-swap-floating-con-id-residual: container_swap trades any two
+# containers, wherever they live (sway/tree/container.c:1718-1890).
+[[scenario]]
+name = "swap_tiled_with_floating_split_child"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:move down", "command:focus parent; floating toggle", "window:fixture-3", "probe:swap_tiled_with_floating_split_child:swap container with con_id @con:fixture-1", "capture:swap_tiled_with_floating_split_child"]
+
+[[scenario]]
+name = "swap_floating_with_tiled_on_other_workspace"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:mark m", "command:workspace number 3", "window:fixture-2", "command:floating enable", "probe:swap_floating_with_tiled_on_other_workspace:swap container with mark m", "capture:swap_floating_with_tiled_on_other_workspace"]
+
+[[scenario]]
+name = "swap_shown_scratchpad_focuses_floated_view"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:move scratchpad", "command:[app_id=\"^fixture-2$\"] focus", "probe:swap_shown_scratchpad_focuses_floated_view:swap container with con_id @con:fixture-1", "capture:swap_shown_scratchpad_focuses_floated_view"]
+
+[[scenario]]
+name = "swap_fullscreen_floating_place_floats_arrival"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:[app_id=\"^fixture-1$\"] focus", "command:floating toggle", "command:fullscreen enable", "probe:swap_fullscreen_floating_place_floats_arrival:swap container with con_id @con:fixture-2", "capture:swap_fullscreen_floating_place_floats_arrival"]
+
+[[scenario]]
+name = "urgent_hidden_scratchpad_split"
+corpora = ["state"]
+actions = ["window:fixture-uhss-1", "command:focus parent", "command:move scratchpad", "window:fixture-uhss-2", "command:floating enable", "command:splitv", "window:fixture-uhss-3", "command:move scratchpad", "command:[app_id=\"^fixture-uhss-1$\"] urgent enable", "command:[app_id=\"^fixture-uhss-3$\"] urgent enable", "capture:urgent_hidden_scratchpad_split"]
+
+[[scenario]]
+name = "floating_fullscreen_group_map_global_rule"
+corpora = ["state"]
+actions = ["command:for_window [app_id=\"fixture-2\"] fullscreen enable global", "window:fixture-1", "command:focus parent", "command:floating toggle", "command:fullscreen enable", "window:fixture-2", "capture:floating_fullscreen_group_map_global_rule"]
+
+[[scenario]]
+name = "map_into_failed_move_wrapper_keeps_empty_box"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus parent", "command:move container to output left", "window:fixture-2", "capture:map_into_failed_move_wrapper_keeps_empty_box", "command:fullscreen toggle", "capture:map_into_failed_move_wrapper_keeps_empty_box_fullscreen"]
+
+[[scenario]]
+name = "directional_move_beside_fullscreen_keeps_focus"
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus output right", "window:fixture-2", "command:for_window [app_id=\"fixture-3\"] fullscreen enable", "window:fixture-3", "command:focus output left", "command:move right", "capture:directional_move_beside_fullscreen_keeps_focus", "command:focus right", "capture:directional_move_beside_fullscreen_refuses_hidden_focus"]
+
+[[scenario]]
+name = "directional_move_of_split_keeps_focus"
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus output right", "window:fixture-2", "command:focus parent; fullscreen toggle", "command:workspace 1", "command:focus output left", "command:split h", "command:move left", "capture:directional_move_of_split_keeps_focus"]
+
+[[scenario]]
+name = "directional_move_of_split_onto_empty_workspace"
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+corpora = ["state"]
+actions = ["command:focus output right", "window:fixture-1", "window:fixture-2", "command:move workspace to output right", "command:layout toggle splitv tabbed", "command:floating toggle", "command:move scratchpad", "command:move right", "capture:directional_move_of_split_onto_empty_workspace"]
+
+[[scenario]]
+name = "move_to_workspace_joins_focus_inactive_split"
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus output right", "window:fixture-2", "command:mark --toggle m", "command:sticky enable; focus output right", "command:layout toggle", "command:[con_mark=\"m\"] focus", "command:focus parent", "command:move container to workspace 1", "capture:move_to_workspace_joins_focus_inactive_split"]
+
+[[scenario]]
+name = "float_workspace_view_keeps_focus_order"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:layout tabbed; layout toggle", "window:fixture-3", "command:move right", "command:floating enable", "command:[workspace=__focused__] move container to workspace 1", "capture:float_workspace_view_keeps_focus_order"]
+
+[[scenario]]
+name = "float_wrapped_view_refocuses_view"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:layout tabbed; layout toggle", "window:fixture-2", "command:splith", "command:floating enable", "command:move container to workspace number 3", "capture:float_wrapped_view_refocuses_view"]
+
+[[scenario]]
+name = "criteria_move_beside_floating_focus_keeps_order"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:layout tabbed; layout toggle", "window:fixture-3", "command:move right", "command:floating enable", "command:[app_id=\"fixture-1\"] move container to workspace 1", "capture:criteria_move_beside_floating_focus_keeps_order_first", "command:[app_id=\"fixture-2\"] move container to workspace 1", "capture:criteria_move_beside_floating_focus_keeps_order"]
+
+[[scenario]]
+name = "fullscreen_floating_ppt_resize_rejected"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:fullscreen toggle", "command:floating toggle", "probe:fullscreen_floating_ppt_resize_width:resize shrink width 5 ppt", "capture:fullscreen_floating_ppt_resize_rejected"]
+
+[[scenario]]
+name = "move_workspace_onto_floating_only_workspace_keeps_wrapper"
+corpora = ["state"]
+actions = ["window:fixture-mwfo-1", "command:move container to workspace 4", "window:fixture-mwfo-2", "command:[app_id=\"^fixture-mwfo-1$\"] floating enable", "command:focus parent", "command:move container to workspace prev", "capture:move_workspace_onto_floating_only_workspace_keeps_wrapper"]
+
+[[scenario]]
+name = "move_container_onto_floating_only_workspace_keeps_focus"
+corpora = ["state"]
+actions = ["window:fixture-mcfo-1", "command:move container to workspace 4", "window:fixture-mcfo-2", "command:[app_id=\"^fixture-mcfo-1$\"] floating enable", "command:layout tabbed", "command:focus parent", "command:move container to workspace prev", "capture:move_container_onto_floating_only_workspace_keeps_focus"]
+
+[[scenario]]
+name = "move_workspace_wrapper_lands_beside_focus_inactive"
+corpora = ["state"]
+actions = ["window:fixture-mwbf-1", "window:fixture-mwbf-2", "command:focus up", "command:workspace 2", "window:fixture-mwbf-3", "command:focus parent", "command:move container to workspace 1", "capture:move_workspace_wrapper_lands_beside_focus_inactive"]
+
+[[scenario]]
+name = "floating_toggle_ppt_resize"
+corpora = ["state"]
+actions = ["command:output * mode --custom 1280x720@60Hz", "window:fixture-1", "command:floating toggle", "probe:floating_toggle_ppt_resize_grow:resize grow height 10 ppt", "probe:floating_toggle_ppt_resize_shrink:resize shrink width 5 ppt", "command:resize set width 50 ppt", "command:splith", "capture:floating_toggle_ppt_resize"]
+
+[[scenario]]
+name = "floating_fullscreen_split_yields_to_tiled_fullscreen"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:fullscreen toggle", "window:fixture-2", "command:floating enable", "command:splith", "command:[app_id=fixture-2] fullscreen enable", "capture:floating_fullscreen_split_yields_to_tiled_fullscreen"]
+
+[[scenario]]
+name = "for_window_split_in_floating_group"
+corpora = ["state"]
+actions = ["window:fixture-fwsfg-1", "command:floating enable", "command:split toggle", "command:for_window [app_id=\"^fixture-fwsfg-2$\"] split v", "window:fixture-fwsfg-2", "capture:for_window_split_in_floating_group"]
+
+[[scenario]]
+name = "scratchpad_rule_show_uses_natural_size"
+corpora = ["state"]
+actions = ["command:for_window [app_id=\"^fixture-ssr-1$\"] move scratchpad", "window:fixture-ssr-1", "command:scratchpad show", "command:split h", "capture:scratchpad_rule_show_uses_natural_size"]
+
+[[scenario]]
+name = "scratchpad_tabbed_criteria_focus_split_rect"
+corpora = ["state"]
+actions = ["command:layout tabbed", "window:fixture-ssr-2", "command:move scratchpad", "command:[app_id=\"^fixture-ssr-2$\"] focus", "command:splitv", "capture:scratchpad_tabbed_criteria_focus_split_rect"]
+
+[[scenario]]
+name = "move_to_other_output_workspace_refocuses_focused_split"
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+corpora = ["state"]
+actions = ["window:fixture-1", "command:focus parent", "command:split h", "window:fixture-2", "command:move container to workspace 2", "capture:move_to_other_output_workspace_refocuses_focused_split"]
+
+[[scenario]]
+name = "move_fullscreen_view_refocuses_focused_split"
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+corpora = ["state"]
+actions = ["window:fixture-1", "command:layout stacking", "command:focus parent", "window:fixture-2", "command:fullscreen enable", "command:move container to workspace number 3", "capture:move_fullscreen_view_refocuses_focused_split"]
+
+[[scenario]]
+name = "focus_onto_visible_workspace_on_other_output_clears_urgency"
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+corpora = ["state"]
+actions = ["command:force_display_urgency_hint 10000 ms", "window:fixture-1", "command:focus output right", "window:fixture-2", "command:focus output left", "command:[app_id=\"^fixture-2$\"] urgent enable", "command:focus right", "capture:focus_onto_visible_workspace_on_other_output_clears_urgency"]
+
+[[scenario]]
+name = "focus_from_empty_workspace_starts_urgency_timer"
+corpora = ["state"]
+actions = ["command:force_display_urgency_hint 10000 ms", "window:fixture-1", "command:workspace number 3", "command:[app_id=\"^fixture-1$\"] urgent enable", "command:[app_id=\"^fixture-1$\"] focus", "capture:focus_from_empty_workspace_starts_urgency_timer"]
+
+[[scenario]]
+name = "split_focused_workspace_with_floater_keeps_urgency"
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+corpora = ["state"]
+actions = ["command:focus output right", "window:fixture-2", "window:fixture-4", "command:focus output left", "command:[app_id=\"^fixture-4$\"] urgent enable", "window:fixture-12", "command:focus next", "command:floating enable", "command:focus parent", "command:split v", "capture:split_focused_workspace_with_floater_keeps_urgency"]
+
+[[scenario]]
+name = "nested_ppt_shrink_ancestor_reply"
+corpora = ["state"]
+actions = ["command:output * mode --custom 1280x720@60Hz", "command:workspace 2", "window:fixture-npsa-1", "window:fixture-npsa-2", "command:splitv", "window:fixture-npsa-3", "window:fixture-npsa-4", "probe:nested_ppt_shrink_ancestor_reply_3:resize shrink width 5 ppt", "window:fixture-npsa-5", "window:fixture-npsa-6", "probe:nested_ppt_shrink_ancestor_reply_5:resize shrink width 5 ppt", "window:fixture-npsa-7", "probe:nested_ppt_shrink_ancestor_reply_6:resize shrink width 5 ppt", "window:fixture-npsa-8", "probe:nested_ppt_shrink_ancestor_reply_7:resize shrink width 5 ppt", "window:fixture-npsa-9", "probe:nested_ppt_shrink_ancestor_reply_8:resize shrink width 5 ppt", "window:fixture-npsa-10", "probe:nested_ppt_shrink_ancestor_reply_9:resize shrink width 5 ppt", "capture:nested_ppt_shrink_ancestor_reply"]
+
+[[scenario]]
+name = "floating_toggle_focus_parent_focus_order"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:floating toggle", "command:focus parent", "capture:floating_toggle_focus_parent_focus_order"]
+
+[[scenario]]
+name = "focus_next_without_target_keeps_focus_order"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating enable", "window:fixture-2", "command:layout stacking", "command:focus next", "capture:focus_next_without_target_keeps_focus_order"]
+
+[[scenario]]
+name = "criteria_float_from_split_focus_order"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "window:fixture-3", "command:layout tabbed; layout toggle", "command:[app_id=\"^fixture-[23]$\"] floating enable", "capture:criteria_float_from_split_focus_order"]
+
+[[scenario]]
+name = "for_window_move_keeps_focused_workspace"
+corpora = ["state"]
+actions = ["window:fixture-fwm-1", "command:focus parent", "command:for_window [app_id=\"^fixture-fwm-2$\"] move container to workspace 2", "window:fixture-fwm-2", "capture:for_window_move_keeps_focused_workspace"]
+
+[[scenario]]
+name = "for_window_move_keeps_focused_floating_split"
+corpora = ["state"]
+actions = ["window:fixture-fwf-1", "command:floating enable", "command:split v", "command:focus parent", "command:for_window [app_id=\"^fixture-fwf-2$\"] move container to workspace 2", "window:fixture-fwf-2", "capture:for_window_move_keeps_focused_floating_split"]
+
+[[scenario]]
+name = "unfloat_floating_split_keeps_its_focused_view"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:floating toggle", "command:splith", "command:floating toggle", "capture:unfloat_floating_split_keeps_its_focused_view"]
+
+[[scenario]]
+name = "move_focused_workspace_wrapper_then_switch"
+corpora = ["state"]
+actions = ["command:assign [app_id=\"^fixture-1$\"] workspace 2", "window:fixture-1", "window:fixture-2", "command:focus parent", "command:move container to workspace next", "command:workspace 2", "capture:move_focused_workspace_wrapper_then_switch"]
+
+[[scenario]]
+name = "move_focused_split_then_switch"
+corpora = ["state"]
+actions = ["command:assign [app_id=\"^fixture-1$\"] workspace 2", "window:fixture-1", "window:fixture-2", "window:fixture-3", "command:splitv", "command:focus parent", "command:move container to workspace next", "command:workspace 2", "capture:move_focused_split_then_switch"]
+
+[[scenario]]
+name = "scratchpad_split_floating_enable_keeps_scratchpad"
+corpora = ["state"]
+actions = ["window:fixture-sfe-1", "command:move scratchpad", "command:scratchpad show", "command:splith", "command:floating enable", "capture:scratchpad_split_floating_enable_keeps_scratchpad"]
+
+[[scenario]]
+name = "scratchpad_split_move_out_empties_scratchpad"
+corpora = ["state"]
+actions = ["window:fixture-sme-1", "command:move scratchpad", "command:scratchpad show", "command:splith", "command:[workspace=__focused__] move container to workspace 2", "probe:scratchpad_split_move_out_empties_scratchpad_show:scratchpad show", "capture:scratchpad_split_move_out_empties_scratchpad"]
+
+[[scenario]]
+name = "scratchpad_split_map_resize_set_ppt"
+corpora = ["state"]
+actions = ["window:fixture-ssrp-1", "command:move scratchpad", "command:[app_id=\"^fixture-ssrp-1$\"] focus", "command:splitv", "window:fixture-ssrp-2", "command:resize set width 30 ppt height 40 ppt", "capture:scratchpad_split_map_resize_set_ppt"]
+
+[[scenario]]
+name = "floating_disabled_fixed_view_moves_tiled"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell; X11 size hints exercise a different protocol path."
+actions = ["hint_window:fixture-fdmt|400|300|400|300|0", "command:floating disable", "command:move container to workspace 2", "capture:floating_disabled_fixed_view_moves_tiled"]
+
+[[scenario]]
+name = "float_split_children_of_focused_wrapper_keeps_tiled_focus"
+corpora = ["state"]
+actions = ["window:fixture-diff-1", "window:fixture-diff-2", "command:focus parent; split v", "command:[app_id=\"^fixture-diff-[23]$\"] floating enable", "capture:float_split_children_of_focused_wrapper_keeps_tiled_focus"]
+
+[[scenario]]
+name = "sticky_fullscreen_floating_move_to_workspace_refused"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:floating enable", "command:sticky enable", "command:fullscreen enable", "command:move container to workspace number 3", "capture:sticky_fullscreen_floating_move_to_workspace_refused"]
+
+[[scenario]]
+name = "output_disable_refocuses_evacuated_sticky_floater"
+corpora = ["state"]
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+requires = ["sway-command-language"]
+not_applicable = true
+reason = "i3 has no output command or sticky evacuation; source: i3/src/commands.c command table. Output disable is a sway extension; source: sway/sway/tree/output.c:188-203."
+actions = ["window:fixture-odsf-1", "command:workspace next", "window:fixture-odsf-2", "command:floating enable", "command:sticky enable", "command:output fake-1 disable", "capture:output_disable_refocuses_evacuated_sticky_floater"]
+
+[[scenario]]
+name = "for_window_split_tabbed_move_refocuses_emptied_split"
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+corpora = ["state"]
+actions = ["window:fixture-1", "command:layout tabbed", "command:for_window [app_id=\"^fixture-2$\"] split v", "window:fixture-2", "command:move container to workspace next", "capture:for_window_split_tabbed_move_refocuses_emptied_split"]
+
+[[scenario]]
+name = "floated_fullscreen_move_refocuses_old_parent"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:fullscreen toggle", "command:layout tabbed", "window:fixture-2", "command:floating toggle", "command:move container to workspace number 3", "capture:floated_fullscreen_move_refocuses_old_parent"]
+
+[[scenario]]
+name = "hinted_min_size_float_enable_split_keeps_content"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell or xdg-decoration; X11 WM_TRANSIENT_FOR maps without client-side decorations."
+actions = ["hint_window:fixture-hinted-min|200|150|0|0|0", "command:floating enable", "command:split h", "capture:hinted_min_size_float_enable_split_keeps_content"]
+
+[[scenario]]
+name = "hinted_scratchpad_float_enable_split_keeps_content"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell or xdg-decoration; X11 WM_TRANSIENT_FOR maps without client-side decorations."
+actions = ["hint_window:fixture-hinted-fixed|400|300|400|300|1", "command:move scratchpad", "command:floating enable", "command:split t", "capture:hinted_scratchpad_float_enable_split_keeps_content"]
+
+[[scenario]]
+name = "hinted_child_map_then_float_parent_order"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell; X11 WM_TRANSIENT_FOR exercises a different protocol path."
+actions = ["command:layout splith", "hint_window:fixture-hmf-child|400|300|400|300|1", "window:fixture-hmf-tiled", "command:focus left", "command:floating enable", "capture:hinted_child_map_then_float_parent_order"]
+
+[[scenario]]
+name = "focus_parent_from_floating_child_of_parent"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell; X11 WM_TRANSIENT_FOR exercises a different protocol path."
+actions = ["hint_window:fixture-dialog|0|0|0|0|1", "command:focus parent", "capture:focus_parent_from_floating_child_of_parent"]
+
+[[scenario]]
+name = "global_fullscreen_split_child_moves_to_new_workspace"
+corpora = ["state"]
+actions = ["window:fixture-gfsm-1", "command:border none", "command:layout tabbed", "command:fullscreen toggle global", "command:split h", "probe:global_fullscreen_split_child_moves_reply:move container to workspace number 3", "capture:global_fullscreen_split_child_moves_to_new_workspace"]
+
+[[scenario]]
+name = "scratchpad_split_second_view_show_hides"
+corpora = ["state"]
+actions = ["window:fixture-ssv-1", "command:move scratchpad", "command:scratchpad show", "command:splith", "window:fixture-ssv-2", "command:scratchpad show", "capture:scratchpad_split_second_view_show_hides"]
+
+[[scenario]]
+name = "move_focused_workspace_leaves_floating_behind"
+corpora = ["state"]
+actions = ["window:fixture-diff-1", "command:floating enable", "window:fixture-diff-2", "command:focus parent; mark m", "command:move container to workspace 2", "capture:move_focused_workspace_leaves_floating_behind"]
+
+[[scenario]]
+name = "tiling_criteria_skips_fullscreen_hinted_floater"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell; the equivalent X11 WM_NORMAL_HINTS exercise a different protocol path."
+actions = ["hint_window:fixture-tcfh|400|300|400|300|1", "command:fullscreen toggle", "command:[tiling] mark --add tiled", "capture:tiling_criteria_skips_fullscreen_hinted_floater"]
+
+[[scenario]]
+name = "floating_split_fullscreen_focus_parent_floating_toggle"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:border pixel 2", "command:floating enable", "command:split v", "command:fullscreen toggle", "command:focus parent; floating toggle", "command:fullscreen disable", "capture:floating_split_fullscreen_focus_parent_floating_toggle"]
+
+[[scenario]]
+name = "move_back_and_forth_after_cross_output_move"
+outputs = 2
+corpora = ["state"]
+actions = ["window:fixture-mbcm-1", "command:focus output right", "command:focus output left", "command:move right", "capture:move_back_and_forth_after_cross_output_move_before", "command:mark --add x", "command:move container to workspace back_and_forth", "capture:move_back_and_forth_after_cross_output_move"]
+
+[[scenario]]
+name = "move_back_and_forth_after_cross_output_floating_move"
+outputs = 2
+corpora = ["state"]
+actions = ["window:fixture-mbcf-1", "command:focus output right", "command:focus output left", "command:floating enable", "command:move absolute position 1500 px 100 px", "capture:move_back_and_forth_after_cross_output_floating_move_before", "command:move container to workspace back_and_forth", "capture:move_back_and_forth_after_cross_output_floating_move"]
+
+[[scenario]]
+name = "rename_then_back_and_forth"
+corpora = ["state"]
+actions = ["command:workspace oracle", "window:fixture-rtbf-1", "command:workspace --no-auto-back-and-forth 1", "command:rename workspace oracle to oracle-renamed", "capture:rename_then_back_and_forth_before", "command:workspace back_and_forth", "capture:rename_then_back_and_forth"]
+
+[[scenario]]
+name = "hinted_dialog_focus_parent_split_move_scratchpad"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell; X11 WM_TRANSIENT_FOR exercises a different protocol path."
+actions = ["hint_window:fixture-dialog|0|0|0|0|1", "command:focus parent; split v", "command:move scratchpad", "capture:hinted_dialog_focus_parent_split_move_scratchpad"]
+
+[[scenario]]
+name = "output_disable_moved_workspace_focus_order"
+corpora = ["state"]
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+requires = ["sway-command-language"]
+not_applicable = true
+reason = "i3 has no output command; source: i3/src/commands.c command table. Output disable is a sway extension; source: sway/sway/tree/output.c:205-253."
+actions = ["window:fixture-odfo-1", "command:move right", "command:move workspace to output right", "command:focus output right", "command:output fake-0 disable", "capture:output_disable_moved_workspace_focus_order"]
+
+[[scenario]]
+name = "output_disable_evacuated_workspaces_focus_order"
+corpora = ["state"]
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+requires = ["sway-command-language"]
+not_applicable = true
+reason = "i3 has no output command; source: i3/src/commands.c command table. Output disable is a sway extension; source: sway/sway/tree/output.c:205-253."
+actions = ["window:fixture-odfo-1", "window:fixture-odfo-2", "command:move container to workspace next", "command:move container to workspace number 3", "command:output fake-1 disable", "capture:output_disable_evacuated_workspaces_focus_order"]
+
+[[scenario]]
+name = "focus_parent_noop_on_fullscreen_floating_group_split"
+corpora = ["state"]
+actions = ["window:fixture-diff-10", "command:focus parent", "command:floating enable", "command:fullscreen toggle", "command:focus parent; split v", "capture:focus_parent_noop_on_fullscreen_floating_group_split"]
+
+[[scenario]]
+name = "cross_output_move_to_floating_focus_floats"
+corpora = ["state"]
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell; X11 size hints exercise a different protocol path."
+actions = ["hint_window:fixture-comf-1|300|200|300|200|0", "command:focus output left", "window:fixture-comf-2", "command:move container to output left", "capture:cross_output_move_to_floating_focus_floats"]
+
+[[scenario]]
+name = "fullscreen_floating_group_px_resize_rejected"
+corpora = ["state"]
+actions = ["window:fixture-ffpx-1", "command:focus parent; floating toggle", "command:fullscreen toggle", "probe:fullscreen_floating_group_px_resize_left:resize grow left 20 px", "probe:fullscreen_floating_group_px_resize_height:resize grow height 20 px", "capture:fullscreen_floating_group_px_resize_rejected"]
+
+[[scenario]]
+name = "global_fullscreen_floated_split_px_resize_rejected"
+corpora = ["state"]
+actions = ["window:fixture-gfpx-1", "command:focus parent; split v", "command:floating toggle", "command:fullscreen enable global", "probe:global_fullscreen_floated_split_px_resize_width:resize grow width 10 px", "probe:global_fullscreen_floated_split_px_resize_up:resize grow up 10 px", "capture:global_fullscreen_floated_split_px_resize_rejected"]
+
+[[scenario]]
+name = "raised_floater_focused_split_resize_rejected"
+corpora = ["state"]
+actions = ["command:output * mode --custom 1280x720@60Hz", "command:output * transform 90", "hint_window:fixture-rfsr-1|400|300|400|300|1", "window:fixture-rfsr-2", "command:layout tabbed; layout toggle", "window:fixture-rfsr-3", "command:layout toggle split", "command:move up", "command:move container to workspace number 3", "probe:raised_floater_focused_split_resize_px_or_ppt:resize grow width 10 px or 5 ppt", "capture:raised_floater_focused_split_resize_rejected"]
+
+[[scenario]]
+name = "smart_no_gaps_lone_view_under_smart_gaps"
+corpora = ["state"]
+actions = ["command:smart_gaps on", "command:default_border pixel 1", "command:hide_edge_borders smart_no_gaps", "window:fixture-sng-1", "command:gaps outer current set 20", "capture:smart_no_gaps_lone_view_under_smart_gaps"]
+
+[[scenario]]
+name = "split_none_flattens_floating_group_root"
+corpora = ["state"]
+actions = ["window:fixture-snfg-1", "command:floating enable", "command:split toggle", "capture:split_none_flattens_floating_group_root_split", "probe:split_none_flattens_floating_group_root_flatten:split none", "capture:split_none_flattens_floating_group_root"]
+
+[[scenario]]
+name = "floating_split_fullscreen_child_move_scratchpad"
+corpora = ["state"]
+actions = ["window:fixture-fsfc-1", "command:floating enable", "command:split t", "command:fullscreen toggle; move scratchpad", "capture:floating_split_fullscreen_child_move_scratchpad"]
+
+[[scenario]]
+name = "floating_split_fullscreen_child_move_scratchpad_tiled_sibling"
+corpora = ["state"]
+actions = ["window:fixture-fsfs-1", "window:fixture-fsfs-2", "command:floating enable", "command:split t", "command:fullscreen toggle; move scratchpad", "capture:floating_split_fullscreen_child_move_scratchpad_tiled_sibling_hidden", "command:workspace 2", "command:scratchpad show", "capture:floating_split_fullscreen_child_move_scratchpad_tiled_sibling_shown", "command:workspace 1", "capture:floating_split_fullscreen_child_move_scratchpad_tiled_sibling"]
+
+[[scenario]]
+name = "title_format_on_floated_workspace_wrapper"
+corpora = ["state"]
+actions = ["window:fixture-tff-1", "command:focus parent", "command:floating enable", "probe:title_format_floated_wrapper:title_format [%app_id] %title", "capture:title_format_on_floated_workspace_wrapper"]
+
+[[scenario]]
+name = "workspace_fullscreen_move_right_appends_on_next_output"
+outputs = 2
+corpora = ["state"]
+actions = ["window:fixture-wfmr-1", "command:focus output right", "window:fixture-wfmr-2", "command:sticky enable; focus output right", "command:fullscreen toggle", "command:move right", "capture:workspace_fullscreen_move_right_appends_on_next_output"]
+
+[[scenario]]
+name = "move_workspace_after_back_and_forth"
+outputs = 2
+corpora = ["state"]
+actions = ["command:focus output left", "command:workspace 4", "command:workspace 2", "command:workspace back_and_forth", "capture:move_workspace_after_back_and_forth_before", "command:move workspace to output right", "capture:move_workspace_after_back_and_forth"]
+
+[[scenario]]
+name = "swap_focused_floater_into_split_focus_order"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:for_window [app_id=\"^fixture-3$\"] floating enable", "command:mark --add m", "command:splitt", "window:fixture-3", "command:swap container with mark m", "capture:swap_focused_floater_into_split_focus_order"]
+
+[[scenario]]
+name = "kill_workspace_after_focus_parent_from_dialog"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell; X11 WM_TRANSIENT_FOR exercises a different protocol path."
+actions = ["window:fixture-kwd-1", "hint_window:fixture-kwd-dialog|0|0|0|0|1", "command:focus parent", "command:kill", "capture:kill_workspace_after_focus_parent_from_dialog"]
+
+[[scenario]]
+name = "swap_focused_tab_with_floating_mark"
+corpora = ["state"]
+actions = ["window:fixture-swtf-1", "command:mark r", "command:floating enable", "window:fixture-swtf-2", "window:fixture-swtf-3", "command:layout tabbed", "command:[app_id=\"^fixture-swtf-2$\"] focus", "command:swap container with mark r", "capture:swap_focused_tab_with_floating_mark"]
+
+[[scenario]]
+name = "tabbed_fullscreen_map_layout_toggle_splitv_tabbed"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:layout tabbed", "command:fullscreen toggle", "window:fixture-2", "command:layout toggle splitv tabbed", "capture:tabbed_fullscreen_map_layout_toggle_splitv_tabbed"]
+
+[[scenario]]
+name = "fullscreen_floating_group_px_shrink_shifts_children"
+corpora = ["state"]
+actions = ["window:fixture-ffpr-1", "command:focus parent; floating toggle", "command:fullscreen toggle", "probe:fullscreen_floating_group_px_shrink_left:resize shrink left 20 px", "capture:fullscreen_floating_group_px_shrink_shifts_children"]
+
+[[scenario]]
+name = "fullscreen_floating_group_px_grow_two_outputs"
+outputs = 2
+corpora = ["state"]
+actions = ["window:fixture-ffpr-2", "command:focus parent; floating toggle", "command:fullscreen toggle", "probe:fullscreen_floating_group_px_grow_two_left:resize grow left 20 px", "capture:fullscreen_floating_group_px_grow_two_outputs"]
+
+[[scenario]]
+name = "fullscreen_floating_view_px_grow_two_outputs"
+outputs = 2
+corpora = ["state"]
+actions = ["window:fixture-ffpr-3", "command:floating toggle", "command:fullscreen toggle", "probe:fullscreen_floating_view_px_grow_two_left:resize grow left 20 px", "capture:fullscreen_floating_view_px_grow_two_outputs"]
+
+[[scenario]]
+name = "fullscreen_floating_view_px_resize"
+corpora = ["state"]
+actions = ["window:fixture-ffpr-4", "command:floating toggle", "command:fullscreen toggle", "probe:fullscreen_floating_view_px_grow_left:resize grow left 20 px", "probe:fullscreen_floating_view_px_shrink_width:resize shrink width 20 px", "probe:fullscreen_floating_view_px_shrink_up:resize shrink up 20 px", "capture:fullscreen_floating_view_px_resize"]
+
+[[scenario]]
+name = "move_container_focus_order"
+corpora = ["state"]
+actions = ["window:fixture-diff-3", "step:move container to workspace 2", "window:fixture-diff-4", "window:fixture-diff-5", "step:fullscreen toggle", "probe:move_container_focus_order:[workspace=\"2\"] move container to workspace 1", "capture:move_container_focus_order"]
+
+[[scenario]]
+name = "move_container_to_mark_focus_order"
+corpora = ["state"]
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+actions = ["window:fixture-diff-5", "step:mark m", "step:focus parent; split v", "window:fixture-diff-7", "window:fixture-diff-9", "probe:move_container_to_mark_focus_order:move container to mark m", "capture:move_container_to_mark_focus_order"]
+
+[[scenario]]
+name = "criteria_float_tabbed_split_focus_order"
+corpora = ["state"]
+actions = ["window:fixture-cfts-1", "window:fixture-cfts-2", "window:fixture-cfts-3", "command:[app_id=\"^fixture-cfts-1$\"] focus", "command:layout tabbed", "command:split h", "command:[app_id=\"^fixture-cfts-[12]$\"] floating enable", "capture:criteria_float_tabbed_split_focus_order"]
+
+[[scenario]]
+name = "float_after_split_toggle_focus_order"
+corpora = ["state"]
+actions = ["window:fixture-fstf-1", "window:fixture-fstf-2", "command:focus parent; split v", "window:fixture-fstf-3", "command:focus next", "command:split toggle", "command:floating enable", "capture:float_after_split_toggle_focus_order"]
+
+[[scenario]]
+name = "criteria_float_tabbed_split_then_float_new_view_focus_order"
+corpora = ["state"]
+actions = ["window:fixture-cftn-2", "window:fixture-cftn-4", "command:split v", "command:[app_id=\"^fixture-cftn-2$\"] focus", "command:layout tabbed", "command:split h", "command:[app_id=\"^fixture-cftn-[23]$\"] floating enable", "window:fixture-cftn-7", "command:floating enable", "capture:criteria_float_tabbed_split_then_float_new_view_focus_order"]
+
+[[scenario]]
+name = "float_fullscreen_view_from_split_focus_order"
+corpora = ["state"]
+actions = ["window:fixture-ffsf-1", "window:fixture-ffsf-2", "command:splitv", "command:fullscreen enable", "window:fixture-ffsf-3", "command:floating enable", "capture:float_fullscreen_view_from_split_focus_order"]
+
+[[scenario]]
+name = "float_after_no_focus_map_into_split_focus_order"
+corpora = ["state"]
+actions = ["window:fixture-fnfm-4", "window:fixture-fnfm-5", "command:split toggle", "command:no_focus [app_id=\"fixture-fnfm-6\"]", "window:fixture-fnfm-6", "command:floating enable", "capture:float_after_no_focus_map_into_split_focus_order"]
+
+[[scenario]]
+name = "swap_focused_dialog_with_tabbed_parent_focus_order"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+actions = ["hint_window:fixture-sdtp-1|0|0|0|0|1", "window:fixture-sdtp-2", "command:layout tabbed", "command:focus floating", "capture:swap_focused_dialog_with_tabbed_parent_focus_order_before", "command:swap container with con_id @con:fixture-hint-parent", "capture:swap_focused_dialog_with_tabbed_parent_focus_order"]
+
+[[scenario]]
+name = "swap_across_workspaces_focus_order"
+corpora = ["state"]
+actions = ["window:fixture-sawf-1", "window:fixture-sawf-2", "command:[app_id=\"^fixture-sawf-1$\"] floating enable", "command:[workspace=__focused__] move container to workspace 2", "capture:swap_across_workspaces_focus_order_moved", "window:fixture-sawf-3", "capture:swap_across_workspaces_focus_order_before", "command:swap container with con_id @con:fixture-sawf-2", "capture:swap_across_workspaces_focus_order"]
+
+[[scenario]]
+name = "fs_move_back_focus"
+corpora = ["state"]
+actions = ["window:fixture-fmbf-a", "command:fullscreen enable", "command:workspace 3", "window:fixture-fmbf-b", "command:move container to workspace 1", "capture:fs_move_back_focus_moved", "command:workspace 1", "capture:fs_move_back_focus"]
+
+[[scenario]]
+name = "output_disable_empty_active_focuses_evacuated_workspace"
+corpora = ["state"]
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+requires = ["sway-command-language"]
+not_applicable = true
+reason = "i3 has no output command; source: i3/src/commands.c command table. Output disable destroys the empty active workspace and refocuses the seat's focus-stack head; source: sway/sway/tree/output.c:205-253, sway/sway/input/seat.c:242-256."
+actions = ["command:focus output right", "window:fixture-odef-1", "command:workspace 3", "command:output fake-1 disable", "capture:output_disable_empty_active_focuses_evacuated_workspace"]
+
+[[scenario]]
+name = "output_disable_sticky_active_shows_evacuated_workspace"
+corpora = ["state"]
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+requires = ["sway-command-language"]
+not_applicable = true
+reason = "i3 has no output command; source: i3/src/commands.c command table. An evacuated workspace focused more recently becomes the survivor's active workspace and receives the sticky floater; source: sway/sway/desktop/output.c:76-86, sway/sway/tree/output.c:188-253."
+actions = ["command:focus output right", "window:fixture-odef-1", "command:workspace oracle", "window:fixture-odef-2", "command:floating enable", "command:sticky enable", "command:output fake-1 disable", "capture:output_disable_sticky_active_shows_evacuated_workspace"]
+
+[[scenario]]
+name = "output_disable_evacuated_focus_leaves_sticky_behind"
+corpora = ["state"]
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+requires = ["sway-command-language"]
+not_applicable = true
+reason = "i3 has no output command; source: i3/src/commands.c command table. Evacuation moves the seat focus without seat_set_workspace_focus, so a sticky floater stays on the survivor's old workspace; source: sway/sway/tree/output.c:205-253, sway/sway/input/seat.c:1209-1220."
+actions = ["window:fixture-odef-1", "command:floating enable", "command:sticky enable", "command:focus output right", "window:fixture-odef-2", "command:output fake-1 disable", "capture:output_disable_evacuated_focus_leaves_sticky_behind"]

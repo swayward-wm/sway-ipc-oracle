@@ -1,0 +1,50 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-fnfm-4 --title=fixture-fnfm-4 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-fnfm-5 --title=fixture-fnfm-5 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "split toggle",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "no_focus [app_id=\"fixture-fnfm-6\"]",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-fnfm-6 --title=fixture-fnfm-6 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "floating enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

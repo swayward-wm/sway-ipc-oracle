@@ -1,0 +1,34 @@
+[
+  {
+    "command": "focus_wrapping workspace",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus output left",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus right",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus down",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

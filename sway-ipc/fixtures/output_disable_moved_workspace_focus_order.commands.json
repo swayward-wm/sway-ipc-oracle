@@ -1,0 +1,42 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-odfo-1 --title=fixture-odfo-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move right",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move workspace to output right",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus output right",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "output fake-0 disable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

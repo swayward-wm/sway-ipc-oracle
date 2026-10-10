@@ -1,0 +1,42 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-1 --title=fixture-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move workspace to output left",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "floating toggle",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move absolute position 10 px 20 px",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move right 1500 px",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

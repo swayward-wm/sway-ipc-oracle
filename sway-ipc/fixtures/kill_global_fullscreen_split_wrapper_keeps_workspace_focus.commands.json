@@ -16,16 +16,11 @@
     ]
   },
   {
-    "command": "fullscreen toggle global",
+    "command": "fullscreen toggle global; split toggle",
     "reply": [
       {
         "success": true
-      }
-    ]
-  },
-  {
-    "command": "split toggle",
-    "reply": [
+      },
       {
         "success": true
       }

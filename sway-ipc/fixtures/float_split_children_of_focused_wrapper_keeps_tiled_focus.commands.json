@@ -1,0 +1,37 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent; split v",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "[app_id=\"^fixture-diff-[23]$\"] floating enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

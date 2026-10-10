@@ -1,0 +1,53 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-ffps-1 --title=fixture-ffps-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-ffps-2 --title=fixture-ffps-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-ffps-3 --title=fixture-ffps-3 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "floating enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent; split v",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "resize set width 30 ppt height 40 ppt",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

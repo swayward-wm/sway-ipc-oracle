@@ -1,0 +1,50 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-cfp-1 --title=fixture-cfp-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "for_window [app_id=\"^fixture-cfp-2$\"] split v",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-cfp-2 --title=fixture-cfp-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "no_focus [app_id=\"^fixture-cfp-3$\"]",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-cfp-3 --title=fixture-cfp-3 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "kill",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

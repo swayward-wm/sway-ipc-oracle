@@ -1,0 +1,34 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-tiled --title=fixture-tiled sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "[app_id=\"^fixture-tiled$\"] mark t",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "xdg-toplevel-fixture fixture-hinted 400 300 400 300 0",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "swap container with mark t",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

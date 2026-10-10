@@ -1,0 +1,26 @@
+[
+  {
+    "command": "xdg-toplevel-fixture fixture-fdmt 400 300 400 300 0",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "floating disable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move container to workspace 2",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

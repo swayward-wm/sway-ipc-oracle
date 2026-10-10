@@ -1,0 +1,26 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-ffpr-4 --title=fixture-ffpr-4 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "floating toggle",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "fullscreen toggle",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

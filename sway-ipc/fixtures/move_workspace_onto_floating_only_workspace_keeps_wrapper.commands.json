@@ -1,0 +1,50 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-mwfo-1 --title=fixture-mwfo-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move container to workspace 4",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-mwfo-2 --title=fixture-mwfo-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "[app_id=\"^fixture-mwfo-1$\"] floating enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move container to workspace prev",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "command": "workspace oracle",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-rtbf-1 --title=fixture-rtbf-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace --no-auto-back-and-forth 1",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "rename workspace oracle to oracle-renamed",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace back_and_forth",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

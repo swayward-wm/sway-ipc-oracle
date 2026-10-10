@@ -1,0 +1,50 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-mbcf-1 --title=fixture-mbcf-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus output right",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus output left",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "floating enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move absolute position 1500 px 100 px",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move container to workspace back_and_forth",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

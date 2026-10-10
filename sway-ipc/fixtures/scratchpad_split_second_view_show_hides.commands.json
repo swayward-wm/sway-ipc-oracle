@@ -1,0 +1,50 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-ssv-1 --title=fixture-ssv-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move scratchpad",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "scratchpad show",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "splith",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-ssv-2 --title=fixture-ssv-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "scratchpad show",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

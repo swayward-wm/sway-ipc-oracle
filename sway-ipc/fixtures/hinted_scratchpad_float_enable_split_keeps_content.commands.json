@@ -1,0 +1,34 @@
+[
+  {
+    "command": "xdg-toplevel-fixture fixture-hinted-fixed 400 300 400 300 1",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move scratchpad",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "floating enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "split t",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

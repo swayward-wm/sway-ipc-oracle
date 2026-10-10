@@ -8,6 +8,8 @@ sway-ipc/random-v3/{vocabulary,recipes}.json; this module only interprets it.
 
 Reproducibility rules:
   * One RNG per purpose, seeded from "random-v3:<seed>:<purpose>".
+  * A small v2-style setter draw ("setters" in vocabulary.json) keeps the
+    config-setter and ipc-json paths that the weighted pool dilutes.
   * Features read only stable IPC fields: counts, layouts, types,
     fullscreen_mode, floating, sticky, scratchpad_state, marks, urgent,
     visible, focus, workspace names. Never rect, percent or ids.
@@ -24,7 +26,8 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 RANDOM_V3 = ROOT / "sway-ipc/random-v3"
-PURPOSES = ("setup", "window", "recipe", "pick", "args")
+# "setter" came after the first five; a new purpose never shifts an existing stream.
+PURPOSES = ("setup", "window", "recipe", "pick", "args", "setter")
 TWO_OUTPUT_LAYOUT = [[1280, 720, 0, 0, True], [1280, 720, 1280, 0, False]]
 WINDOW_TOKEN = "@window"
 CON_TOKEN = re.compile(r"@con:(parent-of:)?([A-Za-z0-9_.-]+)")
@@ -276,8 +279,8 @@ class V3Generator:
                         "1": 1, "2": 2}[str(outputs)]
         self.queue = deque()
         # Stratify over the one-output recipes. A two-output seed exists to test D1,
-        # and a run stops at its first divergence, so it starts R14 (the recipes
-        # with "outputs": 2) first and the stratified recipe right after it.
+        # and a run stops at its first divergence, so it starts R14 (the first
+        # recipe with "outputs": 2) first and the stratified recipe right after it.
         single = [recipe for recipe in recipes if recipe.get("outputs", 1) == 1]
         stratified = single[seed % len(single)]
         multi = [recipe for recipe in recipes if recipe.get("outputs", 1) == 2]
@@ -431,7 +434,7 @@ class V3Generator:
         eligible = [recipe for recipe in self.recipes if self._eligible(recipe, values)]
         if not eligible:
             return None
-        weights = [1.0 / (1 + sum(self.axis_hits[axis] for axis in recipe["axes"]))
+        weights = [recipe.get("weight", 1) / (1 + sum(self.axis_hits[axis] for axis in recipe["axes"]))
                    for recipe in eligible]
         return self.rng["recipe"].choices(eligible, weights)[0]
 
@@ -495,6 +498,9 @@ class V3Generator:
                 return self._exec(self._ident())
             recipe, self.follow = self.follow, None
             return self._start(recipe, f)
+        setters = self.vocab["setters"]
+        if self.rng["setter"].random() < setters["probability"]:
+            return self.rng["setter"].choice(setters["commands"])
         if self.rng["window"].random() < self.window_probability(f.views):
             return self._window()
         if self.queue:
@@ -519,8 +525,16 @@ class V3Generator:
 def self_test():
     """Pure checks: data parses, placeholders and conditions resolve, generation is deterministic."""
     vocabulary, recipes = load_v3()
-    assert len(recipes) == 17 and len({r["name"] for r in recipes}) == 17
-    assert [r["name"] for r in recipes if r.get("outputs", 1) == 2] == ["R14-multi-output"]
+    assert len(recipes) == 19 and len({r["name"] for r in recipes}) == 19
+    assert [r["name"] for r in recipes if r.get("outputs", 1) == 2] == [
+        "R14-multi-output", "R18-output-disable"]
+    assert all("outputs>=2" in r["requires"] for r in recipes if r.get("outputs", 1) == 2)
+    # The setter draw replays random-v2 commands verbatim, minus declared gaps.
+    v2 = json.loads((ROOT / "sway-ipc/random-v2/vocabulary.json").read_text())
+    v2_commands = {command for family in v2["families"] for command in family["commands"]}
+    setters = vocabulary["setters"]["commands"]
+    assert setters and set(setters) <= v2_commands and len(set(setters)) == len(setters)
+    assert not any(command.startswith(("client.", "hide_edge_borders --i3")) for command in setters)
     known = {"app", "other_app", "sibling", "inactive_tab", "hidden_app", "mark", "newmark", "dir",
              "o", "ws_other", "ws_new", "ws_focused", "next", "con_other", "con_focused", "con_parent"}
     templates = [entry["cmd"] for entry in vocabulary["commands"]] + vocabulary["map_rules"]
@@ -551,10 +565,12 @@ def self_test():
     for seed in (0, 7, 16):
         assert run(seed) == run(seed)
     assert run(0) != run(1)
+    emitted = [command for seed in range(40) for command in run(seed)]
+    assert 0 < sum(command in setters for command in emitted) < 0.15 * len(emitted)
     # Stratified schedule (v3-design.md "Recipe schedule"): a one-output seed
-    # starts single[seed % 16] first, within its first five generated steps,
+    # starts single[seed % 17] first, within its first five generated steps,
     # with the canned tree tracking the windows actually opened. A two-output
-    # seed starts R14 there instead, then single[seed % 16] once R14 has drained.
+    # seed starts R14 there instead, then single[seed % 17] once R14 has drained.
     single = [r["name"] for r in recipes if r.get("outputs", 1) == 1]
     for outputs in ("1", "2"):
         for seed in range(3 * len(single)):
