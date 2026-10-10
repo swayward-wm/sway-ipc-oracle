@@ -1796,3 +1796,8 @@ name = "move_workspace_after_back_and_forth"
 outputs = 2
 corpora = ["state"]
 actions = ["command:focus output left", "command:workspace 4", "command:workspace 2", "command:workspace back_and_forth", "capture:move_workspace_after_back_and_forth_before", "command:move workspace to output right", "capture:move_workspace_after_back_and_forth"]
+
+[[scenario]]
+name = "swap_focused_floater_into_split_focus_order"
+corpora = ["state"]
+actions = ["window:fixture-1", "window:fixture-2", "command:for_window [app_id=\"^fixture-3$\"] floating enable", "command:mark --add m", "command:splitt", "window:fixture-3", "command:swap container with mark m", "capture:swap_focused_floater_into_split_focus_order"]
