@@ -1809,3 +1809,8 @@ requires = ["xdg-toplevel-size-hints"]
 not_applicable = true
 reason = "i3 does not implement xdg-shell; X11 WM_TRANSIENT_FOR exercises a different protocol path."
 actions = ["window:fixture-kwd-1", "hint_window:fixture-kwd-dialog|0|0|0|0|1", "command:focus parent", "command:kill", "capture:kill_workspace_after_focus_parent_from_dialog"]
+
+[[scenario]]
+name = "swap_focused_tab_with_floating_mark"
+corpora = ["state"]
+actions = ["window:fixture-swtf-1", "command:mark r", "command:floating enable", "window:fixture-swtf-2", "window:fixture-swtf-3", "command:layout tabbed", "command:[app_id=\"^fixture-swtf-2$\"] focus", "command:swap container with mark r", "capture:swap_focused_tab_with_floating_mark"]

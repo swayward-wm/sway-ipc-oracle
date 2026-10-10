@@ -1,0 +1,66 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-swtf-1 --title=fixture-swtf-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "mark r",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "floating enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-swtf-2 --title=fixture-swtf-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-swtf-3 --title=fixture-swtf-3 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "layout tabbed",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "[app_id=\"^fixture-swtf-2$\"] focus",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "swap container with mark r",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]
