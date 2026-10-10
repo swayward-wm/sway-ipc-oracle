@@ -1784,3 +1784,9 @@ actions = ["window:fixture-fsfs-1", "window:fixture-fsfs-2", "command:floating e
 name = "title_format_on_floated_workspace_wrapper"
 corpora = ["state"]
 actions = ["window:fixture-tff-1", "command:focus parent", "command:floating enable", "probe:title_format_floated_wrapper:title_format [%app_id] %title", "capture:title_format_on_floated_workspace_wrapper"]
+
+[[scenario]]
+name = "workspace_fullscreen_move_right_appends_on_next_output"
+outputs = 2
+corpora = ["state"]
+actions = ["window:fixture-wfmr-1", "command:focus output right", "window:fixture-wfmr-2", "command:sticky enable; focus output right", "command:fullscreen toggle", "command:move right", "capture:workspace_fullscreen_move_right_appends_on_next_output"]
