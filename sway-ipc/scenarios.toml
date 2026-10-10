@@ -1814,3 +1814,8 @@ actions = ["window:fixture-kwd-1", "hint_window:fixture-kwd-dialog|0|0|0|0|1", "
 name = "swap_focused_tab_with_floating_mark"
 corpora = ["state"]
 actions = ["window:fixture-swtf-1", "command:mark r", "command:floating enable", "window:fixture-swtf-2", "window:fixture-swtf-3", "command:layout tabbed", "command:[app_id=\"^fixture-swtf-2$\"] focus", "command:swap container with mark r", "capture:swap_focused_tab_with_floating_mark"]
+
+[[scenario]]
+name = "tabbed_fullscreen_map_layout_toggle_splitv_tabbed"
+corpora = ["state"]
+actions = ["window:fixture-1", "command:layout tabbed", "command:fullscreen toggle", "window:fixture-2", "command:layout toggle splitv tabbed", "capture:tabbed_fullscreen_map_layout_toggle_splitv_tabbed"]
