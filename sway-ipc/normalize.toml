@@ -106,3 +106,21 @@ reason = "Child position maps independently allocated IDs while preserving focus
 name = "backend-mode-array-length"
 ignore_length_suffixes = [".modes"]
 reason = "Sway's nested output advertised no modes while headless backends advertise synthetic modes."
+
+# Keys a compositor adds to sway's replies as a documented extension. The key is
+# removed before comparison only for the compositors listed; every key sway
+# sends is still compared, so a missing or changed sway key remains a mismatch.
+
+[[extension_key]]
+name = "swayfx-version-original-version"
+compositors = ["swayfx"]
+paths = ["$version.sway_original_version"]
+reason = "SwayFX adds the sway release it is based on to GET_VERSION; sway has no such key."
+evidence = "swayfx 0.6 (fd71a6bd) sway/ipc-json.c:236 adds sway_original_version from SWAY_ORIGINAL_VERSION, set by meson.build:15,182 to '1.12.0'. The pinned build answers \"sway_original_version\": \"1.12.0\"."
+
+[[extension_key]]
+name = "swayfx-output-layer-shell-surfaces"
+compositors = ["swayfx"]
+output_keys = ["layer_shell_surfaces"]
+reason = "SwayFX adds the layer-shell surfaces of each enabled output, with their effect settings, to GET_OUTPUTS and to output nodes in GET_TREE; sway has no such key."
+evidence = "swayfx 0.6 (fd71a6bd) sway/ipc-json.c:369-445 (ipc_json_describe_enabled_output, also used for output nodes at ipc-json.c:923) adds layer_shell_surfaces; documented in sway/sway-ipc.7.scd:265 and README.md:45. The oracle opens no layer-shell client, so the measured array is empty."

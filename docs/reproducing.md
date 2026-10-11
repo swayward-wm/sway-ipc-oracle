@@ -58,6 +58,38 @@ git diff --ignore-matching-lines='^date = ' -- \
 
 An empty diff means the measured content matches the committed results.
 
+SwayFX renders only through scenefx's GLES2 renderer, which crashes on
+software rendering at the oracle's output size (see
+[`sway-ipc/adapters/swayfx.md`](../sway-ipc/adapters/swayfx.md)). Pass the
+host's render node into each SwayFX container:
+
+```sh
+podman run --rm --memory 4g --memory-swap 4g --device /dev/dri/renderD128 \
+  --security-opt label=disable -v "$PWD:/oracle" sway-ipc-oracle \
+  ./contrib/validate reproduce swayfx --snapshot sway-ipc
+```
+
+`./contrib/validate reproduce all` (or `reproduce` with no mode) runs SwayFX
+after i3, sway and swayward in the same container, so it needs the same
+`--device /dev/dri/renderD128`. Without it, the SwayFX unit fails to start
+and `reproduce all` exits non-zero.
+
+SwayFX has no i3-suite adapter, so it has sway-IPC snapshots only. Run its
+other corpora with `contrib/sway-ipc-run` and `--binary "$SWAYFX_BINARY"`, in
+the same container.
+
+scroll likewise has sway-IPC snapshots only. It renders with pixman in the
+container and needs no render node; run its corpora with `--compositor scroll`
+and `--binary "$SCROLL_BINARY"`
+([`sway-ipc/adapters/scroll.md`](../sway-ipc/adapters/scroll.md)).
+swirl is the same, with `--compositor swirl` and `--binary "$SWIRL_BINARY"`
+([`sway-ipc/adapters/swirl.md`](../sway-ipc/adapters/swirl.md)).
+
+miracle-wm also has sway-IPC snapshots only. Mir falls back to software
+buffers in the container, so it needs no render node; run its corpora with
+`--compositor miracle-wm` and `--binary "$MIRACLE_WM_BINARY"`
+([`sway-ipc/adapters/miracle-wm.md`](../sway-ipc/adapters/miracle-wm.md)).
+
 ## Release-candidate regeneration
 
 `contrib/regenerate-rc` runs the whole regeneration for a frozen swayward
@@ -92,7 +124,7 @@ script appends one line per unit to `target/rc/<sha8>/evidence.log` with the
 unit, oracle commit, image digest, run count, wall time, agreement, and
 non-metadata diff line count. To resume after a failure, fix the cause and run
 the same command again. The script skips units that already agreed with the
-same oracle commit and image. At the end it regenerates the README i3-suite
+same oracle commit and image. At the end it regenerates the `docs/results.md` i3-suite
 blocks and runs `contrib/validate`. The script never commits or pushes. Review
 the diff, triage the new swayward rows, and commit the results.
 

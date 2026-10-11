@@ -1692,6 +1692,20 @@ corpora = ["state"]
 actions = ["window:fixture-mbcm-1", "command:focus output right", "command:focus output left", "command:move right", "capture:move_back_and_forth_after_cross_output_move_before", "command:mark --add x", "command:move container to workspace back_and_forth", "capture:move_back_and_forth_after_cross_output_move"]
 
 [[scenario]]
+name = "move_back_and_forth_after_cross_output_move_and_map"
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+corpora = ["state"]
+actions = ["command:workspace 7", "window:fixture-mbmm-a", "command:focus output right", "command:workspace 8", "window:fixture-mbmm-b", "command:focus output left", "command:move right", "window:fixture-mbmm-c", "command:move container to workspace back_and_forth", "capture:move_back_and_forth_after_cross_output_move_and_map"]
+
+[[scenario]]
+name = "workspace_back_and_forth_after_cross_output_move_and_map"
+outputs = 2
+output_layout = [[1280, 720, 0, 0, true], [1280, 720, 1280, 0, false]]
+corpora = ["state"]
+actions = ["command:workspace 7", "window:fixture-wbmm-a", "command:focus output right", "command:workspace 8", "window:fixture-wbmm-b", "command:focus output left", "command:move right", "window:fixture-wbmm-c", "command:workspace back_and_forth", "capture:workspace_back_and_forth_after_cross_output_move_and_map"]
+
+[[scenario]]
 name = "move_back_and_forth_after_cross_output_floating_move"
 outputs = 2
 corpora = ["state"]
@@ -1924,3 +1938,32 @@ requires = ["sway-command-language"]
 not_applicable = true
 reason = "i3 has no output command; source: i3/src/commands.c command table. Evacuation moves the seat focus without seat_set_workspace_focus, so a sticky floater stays on the survivor's old workspace; source: sway/sway/tree/output.c:205-253, sway/sway/input/seat.c:1209-1220."
 actions = ["window:fixture-odef-1", "command:floating enable", "command:sticky enable", "command:focus output right", "window:fixture-odef-2", "command:output fake-1 disable", "capture:output_disable_evacuated_focus_leaves_sticky_behind"]
+
+[[scenario]]
+name = "kill_in_split_beside_recent_floater_focus"
+corpora = ["state"]
+actions = ["window:fixture-ksbf-1", "window:fixture-ksbf-2", "command:splitv", "window:fixture-ksbf-3", "window:fixture-ksbf-4", "command:[app_id=\"fixture-ksbf-3\"] floating enable", "command:kill", "capture:kill_in_split_beside_recent_floater_focus"]
+
+[[scenario]]
+name = "kill_in_split_beside_dialog_focus"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+actions = ["hint_window:fixture-ksbd-1|0|0|0|0|1", "window:fixture-ksbd-2", "command:splitv", "command:no_focus [app_id=\"fixture-ksbd-3\"]", "window:fixture-ksbd-3", "command:kill", "capture:kill_in_split_beside_dialog_focus"]
+
+[[scenario]]
+name = "unfloat_fullscreen_floater_lands_after_tiled_sibling"
+corpora = ["state"]
+requires = ["xdg-toplevel-size-hints"]
+not_applicable = true
+reason = "i3 does not implement xdg-shell; size hints that float a view on map exercise a different protocol path."
+actions = ["hint_window:fixture-uffs-1|300|200|300|200|0", "command:fullscreen enable", "window:fixture-uffs-2", "command:floating toggle", "capture:unfloat_fullscreen_floater_lands_after_tiled_sibling"]
+
+[[scenario]]
+name = "criteria_focus_floater_leaves_fullscreen"
+corpora = ["state"]
+actions = ["window:fixture-cflf-f", "command:floating enable", "window:fixture-cflf-t", "command:border none", "command:fullscreen enable", "capture:criteria_focus_floater_leaves_fullscreen_before", "probe:criteria_focus_floater_leaves_fullscreen_focus:[app_id=\"^fixture-cflf-f$\"] focus", "capture:criteria_focus_floater_leaves_fullscreen"]
+
+[[scenario]]
+name = "floating_close_focus_fallback"
+corpora = ["state"]
+actions = ["command:splith", "window:fixture-group-1", "window:fixture-group-2", "command:focus parent", "command:floating enable", "window:fixture-single-1", "command:floating enable", "window:fixture-single-2", "command:floating enable", "command:kill", "capture:floating_close_focus_fallback"]

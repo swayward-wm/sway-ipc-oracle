@@ -31,6 +31,27 @@ uses the ambient `SWAYSOCK`, `I3SOCK`, `WAYLAND_DISPLAY`, or `DISPLAY`.
   --out sway-ipc/results/swayward-5f4ad1d8.toml
 ```
 
+`--compositor swayfx` runs SwayFX through a subclass of the sway adapter with
+no translations; [`sway-ipc/adapters/swayfx.md`](../sway-ipc/adapters/swayfx.md)
+lists its two documented reply extensions and its renderer requirement.
+
+`--compositor scroll` runs scroll through a subclass of the sway adapter that
+sets `SCROLLSOCK` and turns animations off in the config;
+[`sway-ipc/adapters/scroll.md`](../sway-ipc/adapters/scroll.md) lists that
+translation.
+
+`--compositor miracle-wm` runs miracle-wm, a Mir compositor, headless on Mir's
+virtual display and stub input platforms. Its adapter translates the config to
+YAML, outputs to `--virtual-output` sizes, and resets by closing fixture
+windows from the client side, since miracle-wm has no `kill`;
+[`sway-ipc/adapters/miracle-wm.md`](../sway-ipc/adapters/miracle-wm.md) lists
+these translations and the requests it records as not applicable.
+
+`--compositor swirl` runs swirl, a rebrand of scroll 1.12.17, through a
+subclass of the scroll adapter. Its GET_VERSION names no commit, so the adapter
+checks the started build another way;
+[`sway-ipc/adapters/swirl.md`](../sway-ipc/adapters/swirl.md) says how.
+
 Recipes live in `sway-ipc/scenarios.toml`; comparison rules and their reasons
 live in `sway-ipc/normalize.toml`. Size-hint scenarios lazily compile
 `contrib/xdg-toplevel-fixture.c` and require a C compiler, `pkg-config`,
@@ -118,7 +139,9 @@ real sway.
 `random` replays seeded command sequences captured from sway and compares the
 command reply, `get_tree` and `get_workspaces` after every step. Each seed runs
 on a fresh compositor. A mismatch that changes on an immediate fresh retry is
-reported as unstable.
+reported as unstable. A seed whose compositor dies is reported as a crash, with
+the commands up to the step after which the death was seen, and the replay
+continues with the next seed.
 
 There are two corpora. Results of one are never compared with results of the
 other.

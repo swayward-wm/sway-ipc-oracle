@@ -25,7 +25,7 @@ files afterwards. Steps, in this order:
    i3/flaky.toml are excluded, and both runs must pass every canary. An
    agreeing unit installs the first run as the committed result and drops its
    pending.toml entry. A disagreeing unit stops the run and installs nothing.
-4. Finish: regenerate the README i3-suite blocks and run contrib/validate.
+4. Finish: regenerate the docs/results.md i3-suite blocks and run contrib/validate.
 
 Each unit appends one evidence line (unit, runs, wall time, agreement, diff
 lines against the committed result) to target/rc/SHA8/evidence.log. A rerun
@@ -72,7 +72,7 @@ SWAYWARD_URL = "https://github.com/swayward-wm/swayward.git"
 CAP = ["--memory", "4g", "--memory-swap", "4g"]
 BINARY = {"i3": "$I3_BINARY", "sway": "$SWAY_BINARY", "swayward": "$SWAYWARD_BINARY"}
 # The paths this script writes; a resumed run tolerates changes only here.
-OWNED = ("pins.toml", "pending.toml", "README.md", "i3/adapters/swayward/README.md",
+OWNED = ("pins.toml", "pending.toml", "README.md", "docs/results.md", "i3/adapters/swayward/README.md",
          "contrib/tests/fixtures/", "i3/results/", "i3/classifications/",
          "i3/abort-causes/", "sway-ipc/results/", "sway-ipc/classifications/",
          "sway-ipc/i3-derived/")
@@ -419,7 +419,7 @@ def repin(run: Run, snapshots: dict[str, str]) -> None:
     pending.write_text(pending.read_text().replace(f"/{old}", f"/{new}"))
     # Prose names the snapshot and its short commit, as the B1 re-label did.
     old_short = pins["swayward"][:8]
-    prose = [ROOT / "README.md", ROOT / "i3/adapters/swayward/README.md",
+    prose = [ROOT / "README.md", ROOT / "docs/results.md", ROOT / "i3/adapters/swayward/README.md",
              *sorted((ROOT / "contrib/tests/fixtures").glob("readme-*.md"))]
     for path in prose:
         path.write_text(path.read_text().replace(old, new).replace(old_short, run.short))
@@ -584,7 +584,7 @@ def print_plan(run: Run, units: list[dict]) -> None:
         else:
             print(f"      agree: {check}; install run1; drop its pending.toml entry")
     if not run.trial:
-        print("Finish: contrib/i3_buckets.py --write README.md; contrib/validate")
+        print("Finish: contrib/i3_buckets.py --write docs/results.md; contrib/validate")
 
 
 def main() -> int:
@@ -651,7 +651,7 @@ def regenerate(run: Run, snapshots: dict[str, str], units: list[dict]) -> int:
     if run.trial:
         print(f"\ntrial agreed; evidence in {run.work}/evidence.log; discard this worktree")
         return 0
-    subprocess.run([str(ROOT / "contrib/i3_buckets.py"), "--write", "README.md"], check=True)
+    subprocess.run([str(ROOT / "contrib/i3_buckets.py"), "--write", "docs/results.md"], check=True)
     code = subprocess.run([str(ROOT / "contrib/validate")]).returncode
     with (ROOT / run.work / "evidence.log").open("a") as handle:
         handle.write(f"# finished validate={code} pending={len(pending_paths())}\n")

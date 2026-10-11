@@ -78,3 +78,51 @@ reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percen
 [[pending]]
 path = "sway-ipc/results/swayward-ec03e0af.toml"
 reason = "normalize.toml gained the hidden-scratchpad-descendant rect and percent rules (comparator change only); regenerate at the beta1 RC regeneration in the pinned container. scenarios.toml gained foreign_toplevel_set_minimized, captured from pinned sway 1.12; regenerate with the rest at the beta1 RC. The default_floating_* and default_tiling_fixed_height_zero_width fixtures were recaptured from pinned sway 1.12 after xdg-toplevel-fixture began committing each acked configure; regenerate with the rest at the beta1 RC."
+
+[[pending]]
+path = "sway-ipc/results/swayfx-0.6-events.toml"
+reason = "scenarios.toml keeps growing during the find-and-fix lane (new state scenarios captured from pinned sway 1.12); every snapshot is regenerated together at the beta1 RC in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/swayfx-0.6.toml"
+reason = "scenarios.toml keeps growing during the find-and-fix lane (new state scenarios captured from pinned sway 1.12); every snapshot is regenerated together at the beta1 RC in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/scroll-1.12.21-events.toml"
+reason = "scenarios.toml keeps growing during the find-and-fix lane (new state scenarios captured from pinned sway 1.12); every snapshot is regenerated together at the beta1 RC in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/scroll-1.12.21.toml"
+reason = "scenarios.toml keeps growing during the find-and-fix lane (new state scenarios captured from pinned sway 1.12); every snapshot is regenerated together at the beta1 RC in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/miracle-wm-0.11.2-random.toml"
+reason = "scenarios.toml keeps growing during the find-and-fix lane (new state scenarios captured from pinned sway 1.12); every snapshot is regenerated together at the beta1 RC in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/scroll-1.12.21-random.toml"
+reason = "scenarios.toml keeps growing during the find-and-fix lane (new state scenarios captured from pinned sway 1.12); every snapshot is regenerated together at the beta1 RC in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/swayfx-0.6-random.toml"
+reason = "scenarios.toml keeps growing during the find-and-fix lane (new state scenarios captured from pinned sway 1.12); every snapshot is regenerated together at the beta1 RC in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/swirl-dc6382f2-random.toml"
+reason = "scenarios.toml keeps growing during the find-and-fix lane (new state scenarios captured from pinned sway 1.12); every snapshot is regenerated together at the beta1 RC in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/miracle-wm-0.11.2-events.toml"
+reason = "scenarios.toml keeps growing during the find-and-fix lane (new state scenarios captured from pinned sway 1.12); every snapshot is regenerated together at the beta1 RC in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/miracle-wm-0.11.2.toml"
+reason = "scenarios.toml keeps growing during the find-and-fix lane (new state scenarios captured from pinned sway 1.12); every snapshot is regenerated together at the beta1 RC in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/swirl-dc6382f2-events.toml"
+reason = "scenarios.toml keeps growing during the find-and-fix lane (new state scenarios captured from pinned sway 1.12); every snapshot is regenerated together at the beta1 RC in the pinned container."
+
+[[pending]]
+path = "sway-ipc/results/swirl-dc6382f2.toml"
+reason = "scenarios.toml keeps growing during the find-and-fix lane (new state scenarios captured from pinned sway 1.12); every snapshot is regenerated together at the beta1 RC in the pinned container."

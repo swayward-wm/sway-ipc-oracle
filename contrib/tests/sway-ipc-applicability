@@ -3,6 +3,7 @@
 
 import copy
 import importlib.machinery
+import sys
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[2]
@@ -19,6 +20,54 @@ assert scenarios["command_coverage"]["not_applicable"] is True
 assert runner.SwayAdapter.capabilities == {
     "sway-command-language", "xdg-toplevel-size-hints", "wlr-foreign-toplevel-management",
 }
+assert runner.SwayFXAdapter.capabilities == runner.SwayAdapter.capabilities
+assert runner.SwayFXAdapter.version_details(
+    {"human_readable": "0.6-fd71a6bd (Oct 10 2026, branch 'HEAD')"}
+) == ("0.6-fd71a6bd (Oct 10 2026, branch 'HEAD')", "fd71a6bd")
+assert runner.SwayFXAdapter.version_details({"human_readable": "0.6"})[1] == "unknown"
+assert runner.ScrollAdapter.capabilities == runner.SwayAdapter.capabilities
+assert runner.ScrollAdapter.version_details(
+    {"human_readable": "1.13-dev-f80c5820 (Oct 10 2026, branch 'HEAD')"}
+)[1] == "f80c5820"
+assert runner.ScrollAdapter.adapted == ("scroll-animations-off",)
+assert runner.ScrollAdapter(runner.argparse.Namespace(), Path("/tmp/x")).rendered_config().endswith(
+    "animations enabled no\n")
+assert runner.SwirlAdapter.capabilities == runner.SwayAdapter.capabilities
+assert runner.SwirlAdapter.adapted == ("scroll-animations-off",)
+assert runner.SwirlAdapter.version_details({"human_readable": "1.13-dev"}) == ("1.13-dev", "unknown")
+swirl = runner.SwirlAdapter(runner.argparse.Namespace(binary=Path(sys.executable)), Path("/tmp/x"))
+assert swirl.check_started_build({"human_readable": "1.13-dev", "variant": "swirl"})
+for reply in ({"human_readable": "1.13-dev", "variant": "scroll"},
+              {"human_readable": "1.13-dev-f80c5820", "variant": "swirl"}):
+    try:
+        swirl.check_started_build(reply)
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError(f"swirl accepted {reply}")
+assert runner.SwayAdapter.adapted == ()
+miracle = runner.MiracleAdapter
+assert miracle.adapted == ("miracle-config-yaml", "miracle-outputs-virtual",
+                           "miracle-reset-client-close")
+assert set(miracle.unsupported_requests) == {"inputs", "seats"}
+assert runner.applicable_requests("miracle-wm", rules) == (
+    "tree", "workspaces", "outputs", "marks", "binding_modes", "binding_state", "version")
+assert runner.applicable_requests("sway", rules) == runner.QUERY_REQUESTS
+assert miracle.version_details({"human_readable": "0.9.1"}) == ("0.9.1", "unknown")
+assert "enable_animations: false" in miracle.config_text and "radius: 0" in miracle.config_text
+two = miracle(runner.argparse.Namespace(), Path("/tmp/x"),
+              {"output_layout": [[1270, 1408, 0, 0, False], [800, 600, 1270, 0, True]]})
+assert two.output_layout() == [(1270, 1408, 0, 0), (800, 600, 1270, 0)]
+assert "name: Virtual-2\n    enabled: true\n    position:\n      x: 1270" in two.display_config()
+assert two.translate_command("move workspace to output fake-1") == "move workspace to output Virtual-2"
+one = runner.differential_adapter("miracle-wm", runner.argparse.Namespace(), Path("/tmp/x"))
+assert one.output_layout() == [(1280, 720, 0, 0)]
+assert miracle(runner.argparse.Namespace(), Path("/tmp/x"), {"outputs": 2}).output_layout() == [
+    (1270, 1408, 0, 0), (1270, 1408, 1270, 0)]
+assert runner.adapted_line("miracle-wm") == [
+    'adapted = ["miracle-config-yaml", "miracle-outputs-virtual", "miracle-reset-client-close"]']
+assert runner.adapted_line("scroll") == ['adapted = ["scroll-animations-off"]']
+assert runner.adapted_line("sway") == []
 assert runner.SwaywardAdapter.capabilities == {
     "sway-command-language", "xdg-toplevel-size-hints", "wlr-foreign-toplevel-management",
 }
@@ -243,5 +292,29 @@ normalized_floating = copy.deepcopy(floating_child)
 runner.normalize(normalized_floating, floating_rules, "$tree")
 assert normalized_floating["nodes"][0]["percent"] == 0.4
 assert normalized_floating["nodes"][0]["nodes"][0]["percent"] == runner.NORMAL
+
+# Extension keys are removed only for the compositors a rule names; sway's own
+# keys stay compared, and the same extra key is a mismatch for anyone else.
+swayfx_version = {**sway_version, "sway_original_version": "1.12.0"}
+assert runner.compare(sway_version, swayfx_version, "version", runner.load_rules("swayfx")) == []
+for others in ((), ("sway",), ("swayward",)):
+    assert runner.compare(sway_version, swayfx_version, "version", runner.load_rules(*others)) == [
+        "$version: keys differ"
+    ]
+assert runner.compare(sway_version, {**missing_identity, "sway_original_version": "1.12.0"},
+                      "version", runner.load_rules("swayfx")) == ["$version: keys differ"]
+swayfx_outputs = [{**output, "layer_shell_surfaces": []} for output in expected_outputs]
+assert runner.compare(expected_outputs, swayfx_outputs, "outputs", runner.load_rules("swayfx")) == []
+assert runner.compare(expected_outputs, swayfx_outputs, "outputs", runner.load_rules("sway")) == [
+    "$outputs[0]: keys differ", "$outputs[1]: keys differ"
+]
+workspace = {"type": "workspace", "name": "1", "layer_shell_surfaces": []}
+runner.normalize(workspace, runner.load_rules("swayfx"))
+assert "layer_shell_surfaces" in workspace, "only output nodes lose the key"
+fuzz_reply = {"outcome": "reply", "replies": [{"type": runner.TYPES["version"], "payload": {
+    "keys": ["human_readable", "sway_original_version", "variant"]}}]}
+assert runner.fuzz_view(fuzz_reply, runner.load_rules("swayfx"))["replies"][0]["payload"]["keys"] == [
+    "human_readable", "variant"]
+assert runner.fuzz_view(fuzz_reply, runner.load_rules("sway")) == fuzz_reply
 
 print("i3 applicability and differential checks passed")

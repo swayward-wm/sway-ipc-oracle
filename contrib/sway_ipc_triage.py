@@ -7,7 +7,15 @@ A [basis] table records the newer unpinned measurement a triage was made
 from; its `match` lists measured mismatches that matched there. Every other
 measured mismatch without a classification is untriaged, and the count is
 reported per corpus. Every expected corpus of the pinned swayward snapshot
-needs both a result and a classification file.
+needs both a result and a classification file. Another sway-IPC compositor
+reports the corpora it has results for; until its classification file exists,
+every measured mismatch of that corpus counts as untriaged.
+
+swayward rows are a swayward bug, a documented deviation (citing its
+KNOWN_DEVIATIONS anchor) or a harness issue. Rows of another compositor are a
+design difference (the compositor documents or deliberately builds the
+behaviour; the source names where), a deviation (an undocumented difference
+from sway, with the source that produces it) or a harness issue.
 
 check(root, names) raises SystemExit on the first problem and otherwise
 returns the per-snapshot untriaged count lines. contrib/validate calls it;
@@ -17,6 +25,7 @@ import tomllib
 from pathlib import Path
 
 ALLOWED_TRIAGE = {"swayward bug", "documented deviation", "harness issue"}
+OTHER_TRIAGE = {"design difference", "deviation", "harness issue"}
 CORPUS_KEYS = {"state": "rows", "events": "rows", "i3-derived": "rows", "random": "seeds",
                "command-fuzz": "case", "wire-fuzz": "case"}
 
@@ -49,15 +58,19 @@ def check(root, names):
             stem = name if corpus == "state" else f"{name}-{corpus}"
             result_path = results_dir / f"{stem}.toml"
             path = classification_dir / f"{stem}.toml"
+            required = compositor == "swayward"
             if not result_path.exists():
-                raise SystemExit(f"{result_path}: missing {corpus} result for {name}")
-            if not path.exists():
+                if required or path.exists():
+                    raise SystemExit(f"{result_path}: missing {corpus} result for {name}")
+                continue
+            if not path.exists() and required:
                 raise SystemExit(f"{result_path}: no classification file {path}")
             measured = mismatches(tomllib.load(result_path.open("rb")), corpus)
             if len(measured) != len(set(measured)):
                 raise SystemExit(f"{result_path}: duplicate mismatch rows")
-            doc = tomllib.load(path.open("rb"))
+            doc = tomllib.load(path.open("rb")) if path.exists() else {}
             known_classifications.add(path.name)
+            allowed = ALLOWED_TRIAGE if compositor == "swayward" else OTHER_TRIAGE
             basis = doc.get("basis")
             basis_match = set()
             if basis is not None:
@@ -80,7 +93,7 @@ def check(root, names):
                         raise SystemExit(f"{path}: {key} does not name a measured mismatch")
                     if key in basis_match:
                         raise SystemExit(f"{path}: {key} matched in [basis] and is classified")
-                if row.get("triage") not in ALLOWED_TRIAGE:
+                if row.get("triage") not in allowed:
                     raise SystemExit(f"{path}: {keys[0]} has invalid triage {row.get('triage')!r}")
                 for key in ("finding", "reason", "source"):
                     if not row.get(key):

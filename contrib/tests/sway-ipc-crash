@@ -57,7 +57,7 @@ def install(fakes):
         return {"command": [[{"success": True}], [{"success": not diverge}]]}
     runner.start_differential = start
     runner.differential_step = step
-    runner.load_rules = lambda: {}
+    runner.load_rules = lambda *compositors: {}
     runner.ipc = lambda sock, kind, payload="": {}  # a live fake always answers
     runner.compare = lambda a, b, request, rules: [] if a == b else ["$.success"]
 
@@ -105,5 +105,45 @@ with tempfile.TemporaryDirectory() as directory:
     row_b = runner.crash_row(1, runner.CompositorCrash([("swayward", "exited with 1")], "x", 1), ["x"])
     runner.write_differential_results(out, run, [row_b])
     assert tomllib.loads(out.read_text())["result"][0]["triage"] == "untriaged"
+
+# A compositor that dies during a random replay is a crash row, not an aborted run.
+def replay_run(args, sequence, scratch, suffix="", objects=None):
+    if sequence["seed"] == 2:
+        raise runner.CompositorCrash([("scroll", "killed by SIGSEGV")], "closed", 2)
+    return {"human_readable": "1.13-dev-f80c5820"}, []
+runner.random_sequence_run = replay_run
+runner.random_result_rows = lambda seed, *rest: [{"seed": seed, "verdict": "match"}]
+with tempfile.TemporaryDirectory() as directory:
+    out = Path(directory) / "random.toml"
+    run = argparse.Namespace(compositor="scroll", generator="v1", steps=3, out=out,
+                             unstable_seeds=set())
+    sequences = [{"seed": seed, "commands": ["a", "b", "c"], "observations": []}
+                 for seed in (1, 2, 3)]
+    assert runner.random_replay(run, sequences, {}, [], {}, Path(directory)) is True
+    doc = tomllib.loads(out.read_text())
+    assert (doc["run"]["match"], doc["run"]["crash"], doc["run"]["seeds"]) == (2, 1, 3), doc["run"]
+    row = next(row for row in doc["result"] if row["verdict"] == "crash")
+    assert row["seed"] == 2 and row["step"] == 2 and row["commands"] == ["a", "b"], row
+    assert row["exits"] == ["scroll: killed by SIGSEGV"], row
+
+# A scenario that kills the compositor records crash rows for the captures it
+# had left; rows it already recorded stay.
+scenario = {"name": "s", "actions": ["window:a", "capture:s_before", "command:x",
+                                     "probe:s_probe:y", "capture:s"]}
+done = [{"scenario": "s_before", "request": request, "verdict": "match"}
+        for request in (*runner.applicable_requests("miracle-wm", {}), "commands")]
+done += [{"scenario": "s_before", "request": request, "verdict": "not applicable"}
+         for request in runner.MiracleAdapter.unsupported_requests]
+crashed = runner.scenario_crash_rows(scenario, done, "boom", "state", "miracle-wm", {})
+assert {(row["scenario"], row["verdict"]) for row in crashed} == {
+    ("s_probe", "crash"), ("s", "crash"), ("s", "not applicable")}, crashed
+assert sum(row["verdict"] == "crash" for row in crashed) == 1 + 8
+assert all(row["reason"] == "boom" for row in crashed if row["verdict"] == "crash")
+with tempfile.TemporaryDirectory() as directory:
+    out = Path(directory) / "state.toml"
+    rows = [{"scenario": "s", "request": "tree", "verdict": "match"}] + crashed
+    counts, _ = runner.write_results(out, "miracle-wm", "0.9.1", "2df22b0e", rows, {}, "fresh")
+    run = tomllib.loads(out.read_text())["run"]
+    assert run["crash"] == 9 and run["not_applicable"] == 2 and run["match"] == 1, run
 
 print("sway-ipc crash classification self-test passed")

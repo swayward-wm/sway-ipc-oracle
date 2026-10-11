@@ -30,6 +30,8 @@ def dependencies(result: Path, compositor: str) -> list[str]:
             paths.append(f"i3/adapters/{compositor}")
         return paths
     paths = ["sway-ipc/normalize.toml"]
+    if (ROOT / "sway-ipc/adapters" / f"{compositor}.md").is_file():
+        paths.append(f"sway-ipc/adapters/{compositor}.md")
     stem = result.stem
     if stem.endswith("-i3-derived"):
         return paths + ["contrib/sway-ipc-run", "sway-ipc/i3-derived", "sway-ipc/applicability.toml"]

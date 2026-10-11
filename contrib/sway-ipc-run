@@ -430,7 +430,8 @@ def subprocess_health(adapter):
     except socket.timeout:
         return "hang"
     except (OSError, RuntimeError, ValueError):
-        return "crash" if adapter.process.poll() is not None else "hang"
+        # A compositor that is exiting refuses connections before it is reaped.
+        return "crash" if exited_code(adapter) is not None else "hang"
     return "healthy"
 
 
@@ -501,9 +502,15 @@ def reap_marked_processes(marker, grace=0.5):
             pass
 
 
-def load_rules():
+def load_rules(*compositors):
+    """normalize.toml; a rule with a `compositors` list applies only to those compositors."""
     with open(ROOT / "sway-ipc/normalize.toml", "rb") as file:
-        return tomllib.load(file)
+        rules = tomllib.load(file)
+    for kind, value in rules.items():
+        if isinstance(value, list):
+            rules[kind] = [rule for rule in value
+                           if "compositors" not in rule or set(rule["compositors"]) & set(compositors)]
+    return rules
 
 
 def rule_names(rules):
@@ -552,7 +559,8 @@ def load_applicability():
 
 def applicable_requests(compositor, applicability):
     if compositor != "i3":
-        return QUERY_REQUESTS
+        unsupported = ADAPTERS[compositor].unsupported_requests if compositor in ADAPTERS else {}
+        return tuple(request for request in QUERY_REQUESTS if request not in unsupported)
     return tuple(request for request in QUERY_REQUESTS
                  if applicability["i3"][request].get("applicable", True))
 
@@ -620,6 +628,11 @@ def normalize(value, rules, path="$", is_output=False, under_floating=False,
         output_ignored = {key for rule in rules["ignore_output_key"] for key in rule["keys"]}
         suffixes = tuple(suffix for rule in rules["ignore_path"] for suffix in rule["suffixes"])
         shape_paths = {item for rule in rules["shape_path"] for item in rule["paths"]}
+        for rule in rules.get("extension_key", []):
+            for key in rule.get("output_keys", []) if output else []:
+                value.pop(key, None)
+            for key in [key for key in value if f"{path}.{key}" in rule.get("paths", [])]:
+                value.pop(key)
         conditional_ignores = [rule for rule in rules["tree_field_rule"]
                                if rule["action"] == "ignore"
                                and rule_matches(rule, value, under_floating, under_hidden)]
@@ -753,6 +766,14 @@ def compare(expected, actual, request, rules):
 
 class Adapter:
     capabilities = frozenset()
+    # Config translations that apply to every row this adapter measures; written
+    # once to each result's [run] table as `adapted` (see the adapter README).
+    adapted = ()
+    # Requests the compositor does not implement, with the reason and source; each
+    # capture records them as not applicable instead of sending them.
+    unsupported_requests = {}
+    # Set by differential_adapter for random and differential runs.
+    differential = False
     def __init__(self, args, run_dir, scenario=None):
         self.args, self.run_dir, self.scenario = args, run_dir, scenario or {}
         wayland_socket = run_dir / "wayland-1"
@@ -766,7 +787,7 @@ class Adapter:
         self.env = os.environ.copy()
         self.marker = f"{os.getpid()}-{time.monotonic_ns()}"
         self.env[RUN_MARKER] = self.marker
-        for name in ("SWAYSOCK", "I3SOCK", "WAYLAND_DISPLAY", "DISPLAY"):
+        for name in ("SWAYSOCK", "SCROLLSOCK", "MIRACLESOCK", "I3SOCK", "WAYLAND_DISPLAY", "DISPLAY"):
             self.env.pop(name, None)
         self.env["FOOT_SERVER_SOCKET"] = str(run_dir / "no-foot-server")
 
@@ -861,6 +882,10 @@ class Adapter:
 
     def open_window(self, ident):
         raise NotImplementedError
+
+    def set_differential_mode(self):
+        """Give every output the 1280x720 mode that random and differential runs use."""
+        return self.command_reply("output * mode --custom 1280x720@60Hz")
 
 
 class FixtureUnavailable(RuntimeError):
@@ -1130,10 +1155,231 @@ class I3Adapter(Adapter):
         return command_observation(text, reply)
 
 
-ADAPTERS = {"sway": SwayAdapter, "swayward": SwaywardAdapter, "i3": I3Adapter}
+class SwayFXAdapter(SwayAdapter):
+    """SwayFX runs sway's config, commands and fake-output mapping unchanged.
+
+    Only the build identity differs: GET_VERSION reports `<release>-<commit>`.
+    See sway-ipc/adapters/swayfx.md.
+    """
+
+    @staticmethod
+    def version_details(reply):
+        version = reply.get("human_readable", "unknown")
+        match = re.match(r"\S+?-([0-9a-f]{7,40})\b", version)
+        return version, match.group(1) if match else "unknown"
+
+
+class ScrollAdapter(SwayAdapter):
+    """scroll reads sway's config and command language; two things differ.
+
+    It takes its IPC socket path from SCROLLSOCK (SWAYSOCK is ignored), and
+    its animations are on by default, so the rendered config turns them off.
+    See sway-ipc/adapters/scroll.md.
+    """
+
+    adapted = ("scroll-animations-off",)
+
+    def rendered_config(self):
+        return super().rendered_config() + "animations enabled no\n"
+
+    def start(self, log):
+        self.env["SCROLLSOCK"] = str(self.socket)
+        return super().start(log)
+
+    version_details = staticmethod(SwayFXAdapter.version_details)
+
+
+MIRACLE_CONFIG = (
+    "# Translated from the oracle's sway config; see sway-ipc/adapters/miracle-wm.md.\n"
+    "border:\n  size: 2\n  radius: 0\n"
+    "inner_gaps:\n  x: 0\n  y: 0\n"
+    "outer_gaps:\n  x: 0\n  y: 0\n"
+    "enable_animations: false\n"
+    "workspace_back_and_forth: false\n"
+)
+
+
+class MiracleAdapter(WaylandAdapter):
+    """miracle-wm 0.11.2, a Mir compositor that speaks i3/sway IPC.
+
+    Mir's virtual display and stub input platforms run it headless; the socket
+    path comes from MIRACLESOCK. The sway config is translated to miracle's
+    YAML, outputs to --virtual-output sizes and a display YAML, and reset closes
+    fixture windows client-side because miracle has no kill command.
+    See sway-ipc/adapters/miracle-wm.md.
+    """
+
+    capabilities = WaylandAdapter.capabilities | {"sway-command-language"}
+    adapted = ("miracle-config-yaml", "miracle-outputs-virtual", "miracle-reset-client-close")
+    config_name = "config.yaml"
+    config_text = MIRACLE_CONFIG
+    unsupported_requests = {
+        request: (f"miracle-wm 0.11.2 does not implement {name}: the request type has no case "
+                  "in src/ipc_message_handler.cpp:65-260 and the connection is closed without a "
+                  "reply; wiki/docs/ipc/index.md lists it as not yet implemented")
+        for request, name in (("inputs", "GET_INPUTS"), ("seats", "GET_SEATS"))
+    }
+
+    def output_layout(self):
+        """(width, height, x, y) per output, in fake-N order."""
+        layout = self.scenario.get("output_layout") or []
+        if layout:
+            return [(width, height, x, y) for width, height, x, y, _primary in layout]
+        width, height = (1280, 720) if self.differential else (1270, 1408)
+        return [(width, height, index * width, 0)
+                for index in range(self.scenario.get("outputs", 1))]
+
+    def display_config(self):
+        return "outputs:\n" + "".join(
+            f"  - name: Virtual-{index}\n    enabled: true\n"
+            f"    position:\n      x: {x}\n      y: {y}\n"
+            f"    size:\n      width: {width}\n      height: {height}\n"
+            "    orientation: normal\n    scale: 1\n    group_id: 0\n"
+            for index, (width, height, x, y) in enumerate(self.output_layout(), 1))
+
+    def translate_command(self, text):
+        # fake-0 holds workspace 1; miracle gives workspace 1 to Virtual-1.
+        return re.sub(r"\bfake-(\d+)\b", lambda match: f"Virtual-{int(match[1]) + 1}", text)
+
+    def start(self, log):
+        config = self.run_dir / self.config_name
+        config.write_text(self.rendered_config())
+        display = self.run_dir / "display.yaml"
+        display.write_text(self.display_config())
+        self.env.update({"MIRACLESOCK": str(self.socket), "XDG_RUNTIME_DIR": str(self.run_dir),
+                         "XDG_CONFIG_HOME": str(self.run_dir / "config-home")})
+        outputs = [f"--virtual-output={width}x{height}"
+                   for width, height, _x, _y in self.output_layout()]
+        self.start_process([
+            str(self.args.binary), "--config", str(config), "--display-config-path", str(display),
+            "--platform-display-libs=mir:virtual", "--platform-input-lib=mir:stub-input",
+            "--enable-x11", "false", *outputs,
+        ], log)
+        version = self.check_started_build(ipc(self.socket, "version"))
+        self.display = wait_for(self.find_display, "private Wayland socket")
+        if len(self.output_layout()) > 1:
+            # Mir focuses the last output it configures; sway starts on fake-0's.
+            self.run_command(f"focus output Virtual-{initial_fake_focus(self.scenario) + 1}")
+        return version
+
+    def check_started_build(self, version_reply):
+        """GET_VERSION carries no commit (and 0.11.2 reports 0.9.1), so re-check the checkout."""
+        require_clean_binary(self.args.binary, "miracle-wm")
+        return version_reply
+
+    @staticmethod
+    def version_details(reply):
+        return reply.get("human_readable", "unknown"), "unknown"
+
+    def set_differential_mode(self):
+        """miracle has no output command; the virtual outputs start at 1280x720."""
+        modes = {(item["current_mode"]["width"], item["current_mode"]["height"])
+                 for item in ipc(self.socket, "outputs") if item.get("active")}
+        return [{"success": modes == {(1280, 720)}}]
+
+    def open_window(self, ident, title=None):
+        """Open a foot window and wait for its window::new event.
+
+        miracle's GET_TREE omits scratchpad windows (it has no __i3_scratch), so a
+        window that a for_window rule sends to the scratchpad never raises the
+        fixture count that the other adapters wait for.
+        """
+        title = title or ident
+        text = self.open_window_command(ident, title)
+        subscription = EventSubscription(self.socket, ("window",))
+        try:
+            reply = self.command_reply(text)
+            if not isinstance(reply, list) or not all(item.get("success") for item in reply):
+                raise RuntimeError(f"command failed: {text}: {reply}")
+            deadline = time.monotonic() + 8
+            while True:
+                if time.monotonic() > deadline:
+                    raise RuntimeError(f"timed out waiting for {ident}")
+                header = recv_exact(subscription.stream, 14)
+                length, _ = struct.unpack("=II", header[6:])
+                event = json.loads(recv_exact(subscription.stream, length))
+                if event.get("change") == "new" and (event.get("container") or {}).get("app_id") == ident:
+                    break
+        finally:
+            subscription.close()
+        return command_observation(text, reply)
+
+    def foreign_toplevel_request(self, ident, request):
+        """Record a request the client cannot deliver as a failed reply, not a harness error.
+
+        Mir's wlr-foreign-toplevel handles carry the client's process name ("foot")
+        as app_id, not the xdg-toplevel app_id, so the client finds no fixture toplevel.
+        """
+        try:
+            return super().foreign_toplevel_request(ident, request)
+        except subprocess.CalledProcessError as error:
+            text = f"foreign-toplevel-request {ident} {request}"
+            return command_observation(text, [{"success": False,
+                                               "error": f"client exited with {error.returncode}"}])
+
+    def reset(self):
+        """Close every fixture window from the client side: miracle has no kill command."""
+        def fixture_pids(value):
+            identity = value.get("app_id") or ""
+            found = [value["pid"]] if str(identity).startswith("fixture-") and value.get("pid") else []
+            for key in ("nodes", "floating_nodes"):
+                for child in value.get(key, []):
+                    found += fixture_pids(child)
+            return found
+        # GET_TREE omits scratchpad windows, so also find this run's fixture clients
+        # by their command line (exec passes the run marker down to them).
+        launched = []
+        for pid in marked_processes(self.marker):
+            try:
+                arguments = Path(f"/proc/{pid}/cmdline").read_bytes().split(b"\0")
+            except (FileNotFoundError, ProcessLookupError):
+                continue
+            if any(argument.startswith(b"--app-id=fixture-") for argument in arguments):
+                launched.append(pid)
+        for pid in {*fixture_pids(ipc(self.socket, "tree")), *launched}:
+            try:
+                os.kill(pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+        wait_for(lambda: fixture_window_count(ipc(self.socket, "tree")) == 0, "fixture windows to close")
+        self.run_command("workspace __fixture_reset")
+        self.run_command("workspace 1")
+
+
+class SwirlAdapter(ScrollAdapter):
+    """swirl is a rebrand of scroll 1.12.17 and runs through the scroll adapter.
+
+    It still takes its socket from SCROLLSOCK, but its GET_VERSION carries no
+    commit, so a started build is checked by its version reply and by the
+    binary's content hash instead. See sway-ipc/adapters/swirl.md.
+    """
+
+    binary_digests = {}
+
+    @staticmethod
+    def version_details(reply):
+        return reply.get("human_readable", "unknown"), "unknown"
+
+    def check_started_build(self, version_reply):
+        """swirl reports no commit: require its variant and release, and the same binary all run."""
+        if (version_reply.get("variant"), version_reply.get("human_readable")) != ("swirl", "1.13-dev"):
+            raise RuntimeError(f"started swirl reports {version_reply!r}, expected swirl 1.13-dev")
+        binary = Path(self.args.binary).resolve()
+        digest = hashlib.sha256(binary.read_bytes()).hexdigest()
+        if self.binary_digests.setdefault(binary, digest) != digest:
+            raise RuntimeError(f"{binary} changed during the run; was it rebuilt?")
+        return version_reply
+
+
+ADAPTERS = {"sway": SwayAdapter, "swayward": SwaywardAdapter, "swayfx": SwayFXAdapter,
+            "scroll": ScrollAdapter, "swirl": SwirlAdapter, "miracle-wm": MiracleAdapter, "i3": I3Adapter}
 DIFFERENTIAL_CONFIGS = {
     "sway": "font monospace 10\ndefault_border normal 2\noutput * mode 1280x720\noutput * bg #000000 solid_color\n",
+    "swayfx": "font monospace 10\ndefault_border normal 2\noutput * mode 1280x720\noutput * bg #000000 solid_color\n",
+    "scroll": "font monospace 10\ndefault_border normal 2\noutput * mode 1280x720\noutput * bg #000000 solid_color\n",
+    "swirl": "font monospace 10\ndefault_border normal 2\noutput * mode 1280x720\noutput * bg #000000 solid_color\n",
     "swayward": "output \"headless-1\" { mode custom=true \"1280x720@60\"; scale 1; }\nlayout { default-border \"normal\" width=2; default-floating-border \"normal\" width=2; border { on; width 2; }; }\n",
+    "miracle-wm": MIRACLE_CONFIG,
 }
 
 
@@ -1146,6 +1392,7 @@ def differential_adapter(compositor, adapter_args, run_dir, scenario=None):
             config = "".join(line + "\n" for line in config.splitlines()
                              if not line.startswith('output "headless-1"'))
         adapter.config_text = config
+    adapter.differential = True
     return adapter
 
 
@@ -1188,7 +1435,7 @@ def start_differential(args, base, adapters, versions, logs, scenario=None):
         logs.append(log)
         versions.append(adapter.start(log))
         adapters.append(adapter)
-        reply = adapter.command_reply("output * mode --custom 1280x720@60Hz")
+        reply = adapter.set_differential_mode()
         if not reply or not reply[0].get("success"):
             raise RuntimeError(f"could not set differential output mode: {reply}")
     if scenario and scenario.get("output_layout"):
@@ -1310,7 +1557,7 @@ def differential_online(args, gen, steps, scenario=None, commands=None):
         try:
             start_differential(args, Path(directory), adapters, versions, logs, scenario)
             labels = (args.a, args.b)
-            rules = load_rules()
+            rules = load_rules(args.a, args.b)
             prelude = gen.prelude()
             state = {"tree": ipc(adapters[0].socket, "tree"),
                      "workspaces": ipc(adapters[0].socket, "workspaces")}
@@ -1350,7 +1597,7 @@ def differential_once(args, commands, keep_state=False, scenario=None, settle=Fa
         try:
             start_differential(args, base, adapters, versions, logs, scenario)
             labels = (args.a, args.b)
-            rules = load_rules()
+            rules = load_rules(args.a, args.b)
             for step, text in enumerate(commands, 1):
                 observations = guarded_step(adapters, labels, text, settle, step)
                 found = first_difference(observations, rules)
@@ -1494,7 +1741,8 @@ def query_state(adapter, compositor):
     return {
         request: ipc(adapter.socket, request)
         for request in QUERY_REQUESTS
-        if compositor != "i3" or applicability[request].get("applicable", True)
+        if (compositor != "i3" or applicability[request].get("applicable", True))
+        and request not in adapter.unsupported_requests
     }
 
 
@@ -1669,7 +1917,7 @@ def i3_derived_main(args, parser):
         if unknown:
             raise RuntimeError("unknown i3-derived scenarios: " + ", ".join(sorted(unknown)))
         scenarios = [item for item in scenarios if item["name"] in args.scenario]
-    rules, applicability, rows = load_rules(), load_applicability(), []
+    rules, applicability, rows = load_rules(args.compositor), load_applicability(), []
     for scenario in scenarios:
         version_reply, actual = replay_i3_derived_scenario(args, scenario)
         expected = json.loads((I3_DERIVED / f"{scenario['name']}.json").read_text())
@@ -1831,12 +2079,22 @@ def random_capture_in(args, objects, sequences, scratch):
     print(f"captured {args.seeds} seeds; {len(objects)} distinct observations")
     return 0
 
+
+def adapted_line(compositor):
+    """The [run] `adapted` line for a compositor whose adapter translates every row."""
+    rules = ADAPTERS[compositor].adapted if compositor in ADAPTERS else ()
+    return ["adapted = [" + ", ".join(map(toml_string, rules)) + "]"] if rules else []
+
+
 def write_random_results(path, args, version, commit, rows):
     counts = {key: sum(row["verdict"] == key for row in rows)
               for key in ("match", "mismatch", "unstable", "not applicable")}
+    crashes = sum(row["verdict"] == "crash" for row in rows)
+    if crashes:
+        counts["crash"] = crashes
     grouped = []
     for row in rows:
-        if row["verdict"] == "match":
+        if row["verdict"] in ("match", "crash"):
             grouped.append(row)
             continue
         key = (tuple(row["commands"]), row["request"], tuple(row["differences"]))
@@ -1845,7 +2103,7 @@ def write_random_results(path, args, version, commit, rows):
             existing["seeds"].append(row["seed"])
         else:
             grouped.append({**row, "key": key, "seeds": [row["seed"]]})
-    rules = load_rules()
+    rules = load_rules(args.compositor)
     lines = [
         "# Generated by contrib/sway-ipc-run random"
         + ("." if args.generator == "v1" else f" --generator {args.generator}."),
@@ -1858,6 +2116,7 @@ def write_random_results(path, args, version, commit, rows):
         'normalization = "sway-ipc/normalize.toml"',
         "normalization_rules = [" + ", ".join(toml_string(name) for name in rule_names(rules)) + "]",
         'scenario_isolation = "fresh compositor per seed"',
+        *adapted_line(args.compositor),
         *([] if args.generator == "v1" else [f"generator = {toml_string(args.generator)}"]),
         f"seeds = {len(rows)}", f"steps = {args.steps}",
         *[f"{key.replace(' ', '_')} = {counts[key]}" for key in counts], "",
@@ -1870,11 +2129,15 @@ def write_random_results(path, args, version, commit, rows):
                       f"step = {row['step']}", f"request = {toml_string(row['request'])}",
                       "commands = [" + ", ".join(toml_string(x) for x in row["commands"]) + "]",
                       "differences = [" + ", ".join(toml_string(x) for x in row["differences"]) + "]"]
+        elif row["verdict"] == "crash":
+            lines += [f"step = {row['step']}",
+                      "commands = [" + ", ".join(toml_string(x) for x in row["commands"]) + "]",
+                      "exits = [" + ", ".join(toml_string(x) for x in row["exits"]) + "]"]
         lines.append("")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines))
     print("; ".join(f"{key}: {value}" for key, value in counts.items()))
-    return bool(counts["mismatch"])
+    return bool(counts["mismatch"] or crashes)
 
 def selected_random_sequences(manifest, seeds):
     sequences = manifest["sequences"]
@@ -1904,7 +2167,7 @@ def random_main(args, parser):
     args.steps = manifest["steps"]
     args.unstable_seeds = {row["seed"] for row in manifest.get("unstable", [])}
     sequences = selected_random_sequences(manifest, args.seeds)
-    rows, rules = [], load_rules()
+    rows, rules = [], load_rules(args.compositor)
     with tempfile.TemporaryDirectory(prefix="sio-") as directory:
         return random_replay(args, sequences, objects, rows, rules, Path(directory))
 
@@ -1920,11 +2183,18 @@ def random_sequence_run(args, sequence, scratch, suffix="", objects=None):
     with open(run_dir / "compositor.log", "w") as log:
         try:
             version_reply = adapter.start(log)
-            reply = adapter.command_reply("output * mode --custom 1280x720@60Hz")
+            reply = adapter.set_differential_mode()
             if not reply or not reply[0].get("success"):
                 raise RuntimeError(f"could not set random output mode: {reply}")
             for step, text in enumerate(sequence["commands"], 1):
-                observation = random_observation(adapter, text)
+                try:
+                    observation = random_observation(adapter, text)
+                except (OSError, RuntimeError, ValueError) as error:
+                    code = exited_code(adapter)
+                    if code is None:
+                        raise
+                    raise CompositorCrash([(args.compositor, exit_description(code))],
+                                          error, step) from error
                 actual.append(observation)
                 if objects is not None and args.seeds is not None:
                     expected = objects[sequence["observations"][step - 1]]
@@ -1940,7 +2210,16 @@ def random_sequence_run(args, sequence, scratch, suffix="", objects=None):
 def random_replay(args, sequences, objects, rows, rules, scratch):
     version_reply = None
     for number, sequence in enumerate(sequences, 1):
-        version_reply, actual = random_sequence_run(args, sequence, scratch, objects=objects)
+        try:
+            version_reply, actual = random_sequence_run(args, sequence, scratch, objects=objects)
+        except CompositorCrash as crash:
+            # A health verdict, never a mismatch: there is no reply to compare.
+            rows.append({"seed": sequence["seed"], "verdict": "crash", "step": crash.step,
+                         "commands": sequence["commands"][:crash.step],
+                         "exits": [f"{label}: {how}" for label, how in crash.exits.items()]})
+            if number % 25 == 0:
+                print(f"replayed {number}/{len(sequences)} seeds", flush=True)
+            continue
         expected = [objects[digest] for digest in sequence["observations"]]
         result = random_result_rows(sequence["seed"], sequence["commands"],
                                     expected, actual, rules)
@@ -1981,6 +2260,9 @@ def write_results(path, compositor, version, commit, rows, rules, run_mode,
     verdicts = ("match", difference, "unstable", "not applicable") if unstable else (
         "match", difference, "not applicable"
     )
+    if any(row["verdict"] == "crash" for row in rows):
+        # A health verdict, as in fuzz and random results: no reply to compare.
+        verdicts += ("crash",)
     counts = {key: sum(row["verdict"] == key for row in rows) for key in verdicts}
     difference_fields = len({difference_path(item) for row in rows
                              for item in row.get("differences", [])})
@@ -1999,6 +2281,7 @@ def write_results(path, compositor, version, commit, rows, rules, run_mode,
         'normalization = "sway-ipc/normalize.toml"',
         "normalization_rules = [" + ", ".join(toml_string(name) for name in rule_names(rules)) + "]",
         f"scenario_isolation = {toml_string(run_mode)}",
+        *adapted_line(compositor),
         f"difference_fields = {difference_fields}",
         *[f"{key.replace(' ', '_')} = {counts[key]}" for key in verdicts],
         "",
@@ -2017,13 +2300,37 @@ def write_results(path, compositor, version, commit, rows, rules, run_mode,
     return counts, difference_fields
 
 
+def scenario_crash_rows(scenario, rows, message, corpus, compositor, applicability):
+    """Crash rows for the captures and probes of `scenario` that recorded no row."""
+    recorded = {(row["scenario"], row["request"]) for row in rows}
+    unsupported = ADAPTERS[compositor].unsupported_requests
+    crashed = []
+    for action in scenario["actions"]:
+        kind, value = action.split(":", 1)
+        if kind == "probe":
+            targets = [(value.split(":", 1)[0], "command", "crash", message)]
+        elif kind == "capture":
+            requests = (("events",) if corpus == "events" else
+                        (*applicable_requests(compositor, applicability), "commands"))
+            targets = [(value, request, "crash", message) for request in requests]
+            if corpus != "events":
+                targets += [(value, request, "not applicable", reason)
+                            for request, reason in unsupported.items()]
+        else:
+            continue
+        crashed += [{"scenario": name, "request": request, "verdict": verdict, "reason": reason}
+                    for name, request, verdict, reason in targets
+                    if (name, request) not in recorded]
+    return crashed
+
+
 def scenario_main(args, parser):
     if (args.capture or args.capture_events) and args.compositor != "sway":
         parser.error("capture is restricted to sway")
     if args.binary.resolve() == Path(sys.executable).resolve() or not args.binary.exists():
         parser.error("--binary must name an existing compositor")
     require_clean_binary(args.binary, args.compositor)
-    scenarios, rules, rows = selected_scenarios(args.scenario, args.corpus), load_rules(), []
+    scenarios, rules, rows = selected_scenarios(args.scenario, args.corpus), load_rules(args.compositor), []
     if args.capture_events:
         scenarios = []
     applicability = load_applicability()
@@ -2134,6 +2441,10 @@ def scenario_main(args, parser):
                                         if excluded:
                                             source = applicability["i3"][request]["sway_extension_source"]
                                             rows.append({"scenario": value, "request": request, "verdict": "not applicable", "reason": f"sway extension fields: {', '.join(excluded)}; source: {source}"})
+                                    if args.corpus != "events":
+                                        for request, reason in adapter.unsupported_requests.items():
+                                            rows.append({"scenario": value, "request": request,
+                                                         "verdict": "not applicable", "reason": reason})
                                     if args.compositor == "i3" and args.corpus != "events":
                                         for request in QUERY_REQUESTS:
                                             if request not in requests:
@@ -2152,9 +2463,14 @@ def scenario_main(args, parser):
                             code = exited_code(adapter)
                             if code is None:
                                 raise
-                            raise RuntimeError(
-                                f"{args.compositor} crashed ({exit_description(code)}) in scenario "
-                                f"{scenario['name']} at action {action!r}: {error}") from error
+                            message = (f"{args.compositor} crashed ({exit_description(code)}) in scenario "
+                                       f"{scenario['name']} at action {action!r}: {error}")
+                            if not args.fresh_per_scenario or args.capture or args.compositor == "sway":
+                                raise RuntimeError(message) from error
+                            # A health verdict for every row the scenario had left to
+                            # capture; the next scenario starts a fresh compositor.
+                            rows.extend(scenario_crash_rows(scenario, rows, message, args.corpus,
+                                                            args.compositor, applicability))
                         finally:
                             if subscription:
                                 subscription.close()
@@ -2173,14 +2489,29 @@ def scenario_main(args, parser):
     counts, difference_fields = write_results(out, args.compositor, version, commit, rows, rules, run_mode)
     print("; ".join([*(f"{key}: {counts[key]}" for key in counts),
                      f"difference fields: {difference_fields}"]))
-    return bool(counts.get("mismatch", 0))
+    return bool(counts.get("mismatch", 0) or counts.get("crash", 0))
 
 
 def fuzz_result_path(compositor, corpus):
     return ROOT / "sway-ipc/results" / f"{PINS['snapshot'][compositor]}-{corpus}.toml"
 
 
-def write_fuzz_results(path, compositor, corpus, rows, seed, budget):
+def fuzz_view(observation, rules):
+    """The observation without GET_VERSION keys that normalize.toml declares as extensions."""
+    extensions = {item.removeprefix("$version.") for rule in rules.get("extension_key", [])
+                  for item in rule.get("paths", []) if item.startswith("$version.")}
+    if not extensions or not isinstance(observation.get("replies"), list):
+        return observation
+    view = copy.deepcopy(observation)
+    for reply in view["replies"]:
+        if reply.get("type") == TYPES["version"] and isinstance(reply.get("payload"), dict):
+            keys = reply["payload"].get("keys")
+            if isinstance(keys, list):
+                reply["payload"]["keys"] = [key for key in keys if key not in extensions]
+    return view
+
+
+def write_fuzz_results(path, compositor, corpus, rows, seed, budget, normalization_rules=()):
     difference = "differs" if compositor == "i3" else "mismatch"
     verdicts = ("match", difference, "not applicable", "crash", "hang")
     counts = {verdict: sum(row["verdict"] == verdict for row in rows)
@@ -2196,6 +2527,9 @@ def write_fuzz_results(path, compositor, corpus, rows, seed, budget):
         f"date = {toml_string(datetime.date.today().isoformat())}",
         f"corpus = {toml_string(corpus)}", f"seed = {seed}",
         f"budget = {toml_string(budget)}", f"cases = {len(rows)}",
+        *adapted_line(compositor),
+        *(["normalization_rules = [" + ", ".join(map(toml_string, normalization_rules)) + "]"]
+          if normalization_rules else []),
         *[f"{key.replace(' ', '_')} = {counts[key]}" for key in verdicts], "",
     ]
     for row in rows:
@@ -2261,7 +2595,7 @@ def fuzz_main(args, parser):
         fixture_cases = {row["case"]: row for row in fixture["cases"]}
         expected_by_name = {name: row["observation"] for name, row in fixture_cases.items()}
         cases = [case for case in cases if case["name"] in fixture_cases]
-    captured, rows = [], []
+    captured, rows, rules = [], [], load_rules(args.compositor)
     for case in cases:
         with tempfile.TemporaryDirectory(prefix="sio-") as directory:
             adapter = ADAPTERS[args.compositor](args, Path(directory))
@@ -2298,7 +2632,7 @@ def fuzz_main(args, parser):
         expected = expected_by_name[case["name"]]
         reason = fuzz_not_applicable(args.compositor, corpus, case["name"])
         verdict = health if health != "healthy" else (
-            "not applicable" if reason else "match" if observation == expected else
+            "not applicable" if reason else "match" if fuzz_view(observation, rules) == expected else
             "differs" if args.compositor == "i3" else "mismatch")
         rows.append({"case": case["name"], "verdict": verdict,
                      "expected": expected, "actual": observation,
@@ -2310,7 +2644,8 @@ def fuzz_main(args, parser):
         print(f"captured {len(captured)} {corpus} cases from sway")
         return 0
     out = args.out or fuzz_result_path(args.compositor, corpus)
-    return write_fuzz_results(out, args.compositor, corpus, rows, args.seed, args.budget)
+    return write_fuzz_results(out, args.compositor, corpus, rows, args.seed, args.budget,
+                              rule_names({"extension_key": rules.get("extension_key", [])}))
 
 
 def v3_determinism_self_test(binary, seeds=(3, 16), steps=40):
@@ -2404,7 +2739,7 @@ def write_differential_results(path, args, rows):
     counts = {"match": sum(row["verdict"] == "match" for row in rows),
               "mismatch": sum(row["verdict"] == "mismatch" for row in rows)}
     crashes = [row for row in rows if row["verdict"] == "crash"]
-    rules = load_rules()
+    rules = load_rules(args.a, args.b)
     difference_fields = len({difference_path(item) for row in rows
                              for item in row.get("differences", [])})
     grouped = []

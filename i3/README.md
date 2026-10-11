@@ -35,7 +35,7 @@ header defines each cause's signature, and each excerpt must show it.
 `contrib/validate` checks the entries against the committed result and
 classification. It requires an entry for every file whose unverified unreached
 rows stop at the same first assertion as swayward's verified kill or XTEST
-row, and it checks the README sway N-x11-all/N-harness split against the
+row, and it checks the `docs/results.md` sway N-x11-all/N-harness split against the
 evidence. Bucket rules move a file's
 unverified unreached rows to N-x11-all only for a `kill` or `xtest` cause; any
 other row stays N-harness. Evidence never edits results or classifications.

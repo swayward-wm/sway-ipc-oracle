@@ -3,6 +3,15 @@ i3 = "9be3249ac5b377ed3270e36bca83df53d8023337"
 sway = "88869399f421d9180dd8b6ed0b5a1f4a3585d252"
 wlroots = "c1d38536c926134698ff2615843e0d4103e84ac4"
 swayward = "ec03e0af1075e15cd97341602c84005533eea4f5"
+# SwayFX 0.6 builds against the wlroots pin above and scenefx 0.5.
+swayfx = "fd71a6bdc061bd633b488ae7b83e8a6981d22f86"
+scenefx = "37ccd723bef49e6891156ffafce8f549f01446cc"
+# scroll 1.12.21 builds its own in-tree wlroots 0.21-dev, not the wlroots pin.
+scroll = "f80c5820c0eebaad586f0008faecfe3ae62c307a"
+# miracle-wm 0.11.2 builds against Fedora 44's Mir packages (mir-devel 2.26).
+miracle-wm = "2df22b0e959f44e2e8cb91060f7f53c2ae8347a2"
+# swirl has no tags: main HEAD, a rebrand of scroll 1.12.17 with its in-tree wlroots.
+swirl = "dc6382f2ba80280759de6959b770ccb225d4d673"
 
 # Snapshot names: results live in <oracle>/results/<name>.toml. The name carries
 # the release; the exact commit is recorded above and inside each result.
@@ -11,3 +20,7 @@ swayward = "ec03e0af1075e15cd97341602c84005533eea4f5"
 i3 = "i3-4.25"
 sway = "sway-1.12"
 swayward = "swayward-ec03e0af"
+swayfx = "swayfx-0.6"
+scroll = "scroll-1.12.21"
+miracle-wm = "miracle-wm-0.11.2"
+swirl = "swirl-dc6382f2"

@@ -12,7 +12,8 @@ import sway_ipc_triage  # noqa: E402
 
 names = tomllib.load(open(ROOT / "pins.toml", "rb"))["snapshot"]
 name = names["swayward"]
-assert len(sway_ipc_triage.check(ROOT, names)) == 1
+# One count line per sway-IPC compositor other than i3 and sway.
+assert len(sway_ipc_triage.check(ROOT, names)) == len(set(names) - {"i3", "sway"})
 
 for corpus in sway_ipc_triage.CORPUS_KEYS:
     stem = name if corpus == "state" else f"{name}-{corpus}"
@@ -28,4 +29,23 @@ for corpus in sway_ipc_triage.CORPUS_KEYS:
                 assert stem in str(error), error
             else:
                 raise AssertionError(f"check passed without {kind}/{stem}.toml")
+
+# Each class set is closed to the other: swayward rows cannot be a design
+# difference, and another compositor's rows cannot be a swayward bug.
+for compositor, wrong in (("swayward", "design difference"), ("scroll", "swayward bug")):
+    stem = names[compositor]
+    with tempfile.TemporaryDirectory() as tmp:
+        copy = Path(tmp) / "sway-ipc"
+        for sub in ("results", "classifications"):
+            shutil.copytree(ROOT / "sway-ipc" / sub, copy / sub)
+        path = copy / "classifications" / f"{stem}.toml"
+        text = path.read_text()
+        triage = tomllib.loads(text)["classification"][0]["triage"]
+        path.write_text(text.replace(f'triage = "{triage}"', f'triage = "{wrong}"', 1))
+        try:
+            sway_ipc_triage.check(tmp, names)
+        except SystemExit as error:
+            assert "invalid triage" in str(error), error
+        else:
+            raise AssertionError(f"check accepted {wrong!r} for {compositor}")
 print("sway-ipc triage self-test passed")

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Bucket partition of the i3-suite results, and the README blocks built from it.
 
-Usage: i3_buckets.py [--write README]   (print, or rewrite, the generated regions)
+Usage: i3_buckets.py [--write docs/results.md]   (print, or rewrite, the generated regions)
 
 Every assertion of every pinned snapshot lands in exactly one bucket:
 P pass; S upstream skip; N-i3 i3-only premise; N-x11-all X11 premise neither
@@ -205,7 +205,9 @@ def snapshots(pending=None):
         pending = {row["path"] for row in load("pending.toml").get("pending", [])}
     unstable = {(u["compositor"], u["file"], a) for u in load("i3/unstable.toml").get("unstable", [])
                 for a in u["assertions"]}
-    snaps = {c: Snapshot(c, n, unstable, pending) for c, n in pins["snapshot"].items()}
+    # A pinned compositor gets an i3-suite region once it has an i3-suite result.
+    snaps = {c: Snapshot(c, n, unstable, pending) for c, n in pins["snapshot"].items()
+             if (ROOT / f"i3/results/{n}.toml").exists()}
     keys = {tuple(s.keys) for s in snaps.values()}
     if len(keys) != 1:
         raise SystemExit("i3 results do not cover the same assertions")
