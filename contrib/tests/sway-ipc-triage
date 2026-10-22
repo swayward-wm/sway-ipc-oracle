@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+"""Self-test: every swayward sway-IPC corpus needs a result and a classification."""
+import shutil
+import sys
+import tempfile
+import tomllib
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "contrib"))
+import sway_ipc_triage  # noqa: E402
+
+names = tomllib.load(open(ROOT / "pins.toml", "rb"))["snapshot"]
+name = names["swayward"]
+# One count line per sway-IPC compositor other than i3 and sway.
+assert len(sway_ipc_triage.check(ROOT, names)) == len(set(names) - {"i3", "sway"})
+
+for corpus in sway_ipc_triage.CORPUS_KEYS:
+    stem = name if corpus == "state" else f"{name}-{corpus}"
+    for kind in ("results", "classifications"):
+        with tempfile.TemporaryDirectory() as tmp:
+            copy = Path(tmp) / "sway-ipc"
+            for sub in ("results", "classifications"):
+                shutil.copytree(ROOT / "sway-ipc" / sub, copy / sub)
+            (copy / kind / f"{stem}.toml").unlink()
+            try:
+                sway_ipc_triage.check(tmp, names)
+            except SystemExit as error:
+                assert stem in str(error), error
+            else:
+                raise AssertionError(f"check passed without {kind}/{stem}.toml")
+
+# Each class set is closed to the other: swayward rows cannot be a design
+# difference, and another compositor's rows cannot be a swayward bug.
+for compositor, wrong in (("swayward", "design difference"), ("scroll", "swayward bug")):
+    stem = names[compositor]
+    with tempfile.TemporaryDirectory() as tmp:
+        copy = Path(tmp) / "sway-ipc"
+        for sub in ("results", "classifications"):
+            shutil.copytree(ROOT / "sway-ipc" / sub, copy / sub)
+        path = copy / "classifications" / f"{stem}.toml"
+        text = path.read_text()
+        triage = tomllib.loads(text)["classification"][0]["triage"]
+        path.write_text(text.replace(f'triage = "{triage}"', f'triage = "{wrong}"', 1))
+        try:
+            sway_ipc_triage.check(tmp, names)
+        except SystemExit as error:
+            assert "invalid triage" in str(error), error
+        else:
+            raise AssertionError(f"check accepted {wrong!r} for {compositor}")
+# An unstable row is counted on the line, and a classification naming it fails.
+stem = names["swayward"]
+with tempfile.TemporaryDirectory() as tmp:
+    copy = Path(tmp) / "sway-ipc"
+    for sub in ("results", "classifications"):
+        shutil.copytree(ROOT / "sway-ipc" / sub, copy / sub)
+    scenario, request = tomllib.loads((copy / "classifications" / f"{stem}.toml").read_text())[
+        "classification"][0]["rows"][0].split(".", 1)
+    path = copy / "results" / f"{stem}.toml"
+    old = f'scenario = "{scenario}"\nrequest = "{request}"\nverdict = "mismatch"'
+    assert old in path.read_text(), old
+    path.write_text(path.read_text().replace(old, old.replace('"mismatch"', '"unstable"'), 1))
+    try:
+        sway_ipc_triage.check(tmp, names)
+    except SystemExit as error:
+        assert "does not name a measured mismatch" in str(error), error
+    else:
+        raise AssertionError("check accepted a classification of an unstable row")
+    (copy / "classifications" / f"{stem}.toml").unlink()
+    (copy / "classifications" / f"{stem}.toml").write_text("")
+    lines = sway_ipc_triage.check(tmp, names)
+    line = next(line for line in lines if line.startswith(f"{stem} "))
+    assert "; 1 unstable" in line, line
+print("sway-ipc triage self-test passed")

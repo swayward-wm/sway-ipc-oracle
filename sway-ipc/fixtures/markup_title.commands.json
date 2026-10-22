@@ -1,0 +1,10 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-markup --title='<b>bold literal</b>' sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

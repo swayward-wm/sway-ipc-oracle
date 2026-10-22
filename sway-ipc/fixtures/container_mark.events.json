@@ -1,0 +1,932 @@
+[
+  {
+    "first": true,
+    "payload": ""
+  },
+  {
+    "change": "new",
+    "container": {
+      "allow_tearing": false,
+      "app_id": "fixture-1",
+      "border": "none",
+      "current_border_width": 0,
+      "deco_rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "floating": "auto_off",
+      "floating_nodes": [],
+      "focus": [],
+      "focused": false,
+      "foreign_toplevel_identifier": "a4061697fe1a47ce28171c5bdfa9d226",
+      "fullscreen_mode": 0,
+      "geometry": {
+        "height": 491,
+        "width": 696,
+        "x": 0,
+        "y": 0
+      },
+      "id": 7,
+      "idle_inhibitors": {
+        "application": "none",
+        "user": "none"
+      },
+      "inhibit_idle": false,
+      "layout": "none",
+      "marks": [],
+      "max_render_time": 0,
+      "name": null,
+      "nodes": [],
+      "orientation": "none",
+      "percent": 0.0,
+      "pid": 2529019,
+      "rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "sandbox_app_id": null,
+      "sandbox_engine": null,
+      "sandbox_instance_id": null,
+      "scratchpad_state": "none",
+      "shell": "xdg_shell",
+      "sticky": false,
+      "tag": null,
+      "type": "con",
+      "urgent": false,
+      "visible": true,
+      "window": null,
+      "window_rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      }
+    }
+  },
+  {
+    "change": "title",
+    "container": {
+      "allow_tearing": false,
+      "app_id": "fixture-1",
+      "border": "none",
+      "current_border_width": 0,
+      "deco_rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "floating": "auto_off",
+      "floating_nodes": [],
+      "focus": [],
+      "focused": false,
+      "foreign_toplevel_identifier": "a4061697fe1a47ce28171c5bdfa9d226",
+      "fullscreen_mode": 0,
+      "geometry": {
+        "height": 491,
+        "width": 696,
+        "x": 0,
+        "y": 0
+      },
+      "id": 7,
+      "idle_inhibitors": {
+        "application": "none",
+        "user": "none"
+      },
+      "inhibit_idle": false,
+      "layout": "none",
+      "marks": [],
+      "max_render_time": 0,
+      "name": "fixture-1",
+      "nodes": [],
+      "orientation": "none",
+      "percent": 0.0,
+      "pid": 2529019,
+      "rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "sandbox_app_id": null,
+      "sandbox_engine": null,
+      "sandbox_instance_id": null,
+      "scratchpad_state": "none",
+      "shell": "xdg_shell",
+      "sticky": false,
+      "tag": null,
+      "type": "con",
+      "urgent": false,
+      "visible": true,
+      "window": null,
+      "window_rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      }
+    }
+  },
+  {
+    "change": "focus",
+    "container": {
+      "allow_tearing": false,
+      "app_id": "fixture-1",
+      "border": "none",
+      "current_border_width": 0,
+      "deco_rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "floating": "auto_off",
+      "floating_nodes": [],
+      "focus": [],
+      "focused": true,
+      "foreign_toplevel_identifier": "a4061697fe1a47ce28171c5bdfa9d226",
+      "fullscreen_mode": 0,
+      "geometry": {
+        "height": 491,
+        "width": 696,
+        "x": 0,
+        "y": 0
+      },
+      "id": 7,
+      "idle_inhibitors": {
+        "application": "none",
+        "user": "none"
+      },
+      "inhibit_idle": false,
+      "layout": "none",
+      "marks": [],
+      "max_render_time": 0,
+      "name": "fixture-1",
+      "nodes": [],
+      "orientation": "none",
+      "percent": 1.0,
+      "pid": 2529019,
+      "rect": {
+        "height": 1408,
+        "width": 1270,
+        "x": 0,
+        "y": 0
+      },
+      "sandbox_app_id": null,
+      "sandbox_engine": null,
+      "sandbox_instance_id": null,
+      "scratchpad_state": "none",
+      "shell": "xdg_shell",
+      "sticky": false,
+      "tag": null,
+      "type": "con",
+      "urgent": false,
+      "visible": true,
+      "window": null,
+      "window_rect": {
+        "height": 1379,
+        "width": 1266,
+        "x": 2,
+        "y": 0
+      }
+    }
+  },
+  {
+    "change": "new",
+    "container": {
+      "allow_tearing": false,
+      "app_id": "fixture-2",
+      "border": "none",
+      "current_border_width": 0,
+      "deco_rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "floating": "auto_off",
+      "floating_nodes": [],
+      "focus": [],
+      "focused": false,
+      "foreign_toplevel_identifier": "b384465829e63683268704ed9803c472",
+      "fullscreen_mode": 0,
+      "geometry": {
+        "height": 491,
+        "width": 696,
+        "x": 0,
+        "y": 0
+      },
+      "id": 8,
+      "idle_inhibitors": {
+        "application": "none",
+        "user": "none"
+      },
+      "inhibit_idle": false,
+      "layout": "none",
+      "marks": [],
+      "max_render_time": 0,
+      "name": null,
+      "nodes": [],
+      "orientation": "none",
+      "percent": 0.0,
+      "pid": 2529063,
+      "rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "sandbox_app_id": null,
+      "sandbox_engine": null,
+      "sandbox_instance_id": null,
+      "scratchpad_state": "none",
+      "shell": "xdg_shell",
+      "sticky": false,
+      "tag": null,
+      "type": "con",
+      "urgent": false,
+      "visible": true,
+      "window": null,
+      "window_rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      }
+    }
+  },
+  {
+    "change": "title",
+    "container": {
+      "allow_tearing": false,
+      "app_id": "fixture-2",
+      "border": "none",
+      "current_border_width": 0,
+      "deco_rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "floating": "auto_off",
+      "floating_nodes": [],
+      "focus": [],
+      "focused": false,
+      "foreign_toplevel_identifier": "b384465829e63683268704ed9803c472",
+      "fullscreen_mode": 0,
+      "geometry": {
+        "height": 491,
+        "width": 696,
+        "x": 0,
+        "y": 0
+      },
+      "id": 8,
+      "idle_inhibitors": {
+        "application": "none",
+        "user": "none"
+      },
+      "inhibit_idle": false,
+      "layout": "none",
+      "marks": [],
+      "max_render_time": 0,
+      "name": "fixture-2",
+      "nodes": [],
+      "orientation": "none",
+      "percent": 0.0,
+      "pid": 2529063,
+      "rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "sandbox_app_id": null,
+      "sandbox_engine": null,
+      "sandbox_instance_id": null,
+      "scratchpad_state": "none",
+      "shell": "xdg_shell",
+      "sticky": false,
+      "tag": null,
+      "type": "con",
+      "urgent": false,
+      "visible": true,
+      "window": null,
+      "window_rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      }
+    }
+  },
+  {
+    "change": "focus",
+    "container": {
+      "allow_tearing": false,
+      "app_id": "fixture-2",
+      "border": "none",
+      "current_border_width": 0,
+      "deco_rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "floating": "auto_off",
+      "floating_nodes": [],
+      "focus": [],
+      "focused": true,
+      "foreign_toplevel_identifier": "b384465829e63683268704ed9803c472",
+      "fullscreen_mode": 0,
+      "geometry": {
+        "height": 491,
+        "width": 696,
+        "x": 0,
+        "y": 0
+      },
+      "id": 8,
+      "idle_inhibitors": {
+        "application": "none",
+        "user": "none"
+      },
+      "inhibit_idle": false,
+      "layout": "none",
+      "marks": [],
+      "max_render_time": 0,
+      "name": "fixture-2",
+      "nodes": [],
+      "orientation": "none",
+      "percent": 0.5,
+      "pid": 2529063,
+      "rect": {
+        "height": 704,
+        "width": 1270,
+        "x": 0,
+        "y": 704
+      },
+      "sandbox_app_id": null,
+      "sandbox_engine": null,
+      "sandbox_instance_id": null,
+      "scratchpad_state": "none",
+      "shell": "xdg_shell",
+      "sticky": false,
+      "tag": null,
+      "type": "con",
+      "urgent": false,
+      "visible": true,
+      "window": null,
+      "window_rect": {
+        "height": 675,
+        "width": 1266,
+        "x": 2,
+        "y": 0
+      }
+    }
+  },
+  {
+    "change": "new",
+    "container": {
+      "allow_tearing": false,
+      "app_id": "fixture-3",
+      "border": "none",
+      "current_border_width": 0,
+      "deco_rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "floating": "auto_off",
+      "floating_nodes": [],
+      "focus": [],
+      "focused": false,
+      "foreign_toplevel_identifier": "3cffd00fef3ec8c653e436467612a597",
+      "fullscreen_mode": 0,
+      "geometry": {
+        "height": 491,
+        "width": 696,
+        "x": 0,
+        "y": 0
+      },
+      "id": 10,
+      "idle_inhibitors": {
+        "application": "none",
+        "user": "none"
+      },
+      "inhibit_idle": false,
+      "layout": "none",
+      "marks": [],
+      "max_render_time": 0,
+      "name": null,
+      "nodes": [],
+      "orientation": "none",
+      "percent": 0.0,
+      "pid": 2529085,
+      "rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "sandbox_app_id": null,
+      "sandbox_engine": null,
+      "sandbox_instance_id": null,
+      "scratchpad_state": "none",
+      "shell": "xdg_shell",
+      "sticky": false,
+      "tag": null,
+      "type": "con",
+      "urgent": false,
+      "visible": true,
+      "window": null,
+      "window_rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      }
+    }
+  },
+  {
+    "change": "title",
+    "container": {
+      "allow_tearing": false,
+      "app_id": "fixture-3",
+      "border": "none",
+      "current_border_width": 0,
+      "deco_rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "floating": "auto_off",
+      "floating_nodes": [],
+      "focus": [],
+      "focused": false,
+      "foreign_toplevel_identifier": "3cffd00fef3ec8c653e436467612a597",
+      "fullscreen_mode": 0,
+      "geometry": {
+        "height": 491,
+        "width": 696,
+        "x": 0,
+        "y": 0
+      },
+      "id": 10,
+      "idle_inhibitors": {
+        "application": "none",
+        "user": "none"
+      },
+      "inhibit_idle": false,
+      "layout": "none",
+      "marks": [],
+      "max_render_time": 0,
+      "name": "fixture-3",
+      "nodes": [],
+      "orientation": "none",
+      "percent": 0.0,
+      "pid": 2529085,
+      "rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "sandbox_app_id": null,
+      "sandbox_engine": null,
+      "sandbox_instance_id": null,
+      "scratchpad_state": "none",
+      "shell": "xdg_shell",
+      "sticky": false,
+      "tag": null,
+      "type": "con",
+      "urgent": false,
+      "visible": true,
+      "window": null,
+      "window_rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      }
+    }
+  },
+  {
+    "change": "focus",
+    "container": {
+      "allow_tearing": false,
+      "app_id": "fixture-3",
+      "border": "none",
+      "current_border_width": 0,
+      "deco_rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "floating": "auto_off",
+      "floating_nodes": [],
+      "focus": [],
+      "focused": true,
+      "foreign_toplevel_identifier": "3cffd00fef3ec8c653e436467612a597",
+      "fullscreen_mode": 0,
+      "geometry": {
+        "height": 491,
+        "width": 696,
+        "x": 0,
+        "y": 0
+      },
+      "id": 10,
+      "idle_inhibitors": {
+        "application": "none",
+        "user": "none"
+      },
+      "inhibit_idle": false,
+      "layout": "none",
+      "marks": [],
+      "max_render_time": 0,
+      "name": "fixture-3",
+      "nodes": [],
+      "orientation": "none",
+      "percent": 0.5,
+      "pid": 2529085,
+      "rect": {
+        "height": 704,
+        "width": 635,
+        "x": 635,
+        "y": 704
+      },
+      "sandbox_app_id": null,
+      "sandbox_engine": null,
+      "sandbox_instance_id": null,
+      "scratchpad_state": "none",
+      "shell": "xdg_shell",
+      "sticky": false,
+      "tag": null,
+      "type": "con",
+      "urgent": false,
+      "visible": true,
+      "window": null,
+      "window_rect": {
+        "height": 675,
+        "width": 631,
+        "x": 2,
+        "y": 0
+      }
+    }
+  },
+  {
+    "change": "mark",
+    "container": {
+      "border": "none",
+      "current_border_width": 0,
+      "deco_rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "floating": "auto_off",
+      "floating_nodes": [],
+      "focus": [
+        10,
+        8
+      ],
+      "focused": true,
+      "fullscreen_mode": 0,
+      "geometry": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "id": 9,
+      "layout": "splith",
+      "marks": [],
+      "name": null,
+      "nodes": [
+        {
+          "allow_tearing": false,
+          "app_id": "fixture-2",
+          "border": "normal",
+          "current_border_width": 2,
+          "deco_rect": {
+            "height": 27,
+            "width": 635,
+            "x": 0,
+            "y": 0
+          },
+          "floating": "auto_off",
+          "floating_nodes": [],
+          "focus": [],
+          "focused": false,
+          "foreign_toplevel_identifier": "b384465829e63683268704ed9803c472",
+          "fullscreen_mode": 0,
+          "geometry": {
+            "height": 491,
+            "width": 696,
+            "x": 0,
+            "y": 0
+          },
+          "id": 8,
+          "idle_inhibitors": {
+            "application": "none",
+            "user": "none"
+          },
+          "inhibit_idle": false,
+          "layout": "none",
+          "marks": [],
+          "max_render_time": 0,
+          "name": "fixture-2",
+          "nodes": [],
+          "orientation": "none",
+          "percent": 0.5,
+          "pid": 2529063,
+          "rect": {
+            "height": 677,
+            "width": 635,
+            "x": 0,
+            "y": 731
+          },
+          "sandbox_app_id": null,
+          "sandbox_engine": null,
+          "sandbox_instance_id": null,
+          "scratchpad_state": "none",
+          "shell": "xdg_shell",
+          "sticky": false,
+          "tag": null,
+          "type": "con",
+          "urgent": false,
+          "visible": true,
+          "window": null,
+          "window_rect": {
+            "height": 675,
+            "width": 631,
+            "x": 2,
+            "y": 0
+          }
+        },
+        {
+          "allow_tearing": false,
+          "app_id": "fixture-3",
+          "border": "normal",
+          "current_border_width": 2,
+          "deco_rect": {
+            "height": 27,
+            "width": 635,
+            "x": 635,
+            "y": 0
+          },
+          "floating": "auto_off",
+          "floating_nodes": [],
+          "focus": [],
+          "focused": false,
+          "foreign_toplevel_identifier": "3cffd00fef3ec8c653e436467612a597",
+          "fullscreen_mode": 0,
+          "geometry": {
+            "height": 491,
+            "width": 696,
+            "x": 0,
+            "y": 0
+          },
+          "id": 10,
+          "idle_inhibitors": {
+            "application": "none",
+            "user": "none"
+          },
+          "inhibit_idle": false,
+          "layout": "none",
+          "marks": [],
+          "max_render_time": 0,
+          "name": "fixture-3",
+          "nodes": [],
+          "orientation": "none",
+          "percent": 0.5,
+          "pid": 2529085,
+          "rect": {
+            "height": 677,
+            "width": 635,
+            "x": 635,
+            "y": 731
+          },
+          "sandbox_app_id": null,
+          "sandbox_engine": null,
+          "sandbox_instance_id": null,
+          "scratchpad_state": "none",
+          "shell": "xdg_shell",
+          "sticky": false,
+          "tag": null,
+          "type": "con",
+          "urgent": false,
+          "visible": true,
+          "window": null,
+          "window_rect": {
+            "height": 675,
+            "width": 631,
+            "x": 2,
+            "y": 0
+          }
+        }
+      ],
+      "orientation": "horizontal",
+      "percent": 0.5,
+      "rect": {
+        "height": 704,
+        "width": 1270,
+        "x": 0,
+        "y": 704
+      },
+      "scratchpad_state": "none",
+      "sticky": false,
+      "type": "con",
+      "urgent": false,
+      "window": null,
+      "window_rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      }
+    }
+  },
+  {
+    "change": "mark",
+    "container": {
+      "border": "none",
+      "current_border_width": 0,
+      "deco_rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "floating": "auto_off",
+      "floating_nodes": [],
+      "focus": [
+        10,
+        8
+      ],
+      "focused": true,
+      "fullscreen_mode": 0,
+      "geometry": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "id": 9,
+      "layout": "splith",
+      "marks": [
+        "containermark"
+      ],
+      "name": null,
+      "nodes": [
+        {
+          "allow_tearing": false,
+          "app_id": "fixture-2",
+          "border": "normal",
+          "current_border_width": 2,
+          "deco_rect": {
+            "height": 27,
+            "width": 635,
+            "x": 0,
+            "y": 0
+          },
+          "floating": "auto_off",
+          "floating_nodes": [],
+          "focus": [],
+          "focused": false,
+          "foreign_toplevel_identifier": "b384465829e63683268704ed9803c472",
+          "fullscreen_mode": 0,
+          "geometry": {
+            "height": 491,
+            "width": 696,
+            "x": 0,
+            "y": 0
+          },
+          "id": 8,
+          "idle_inhibitors": {
+            "application": "none",
+            "user": "none"
+          },
+          "inhibit_idle": false,
+          "layout": "none",
+          "marks": [],
+          "max_render_time": 0,
+          "name": "fixture-2",
+          "nodes": [],
+          "orientation": "none",
+          "percent": 0.5,
+          "pid": 2529063,
+          "rect": {
+            "height": 677,
+            "width": 635,
+            "x": 0,
+            "y": 731
+          },
+          "sandbox_app_id": null,
+          "sandbox_engine": null,
+          "sandbox_instance_id": null,
+          "scratchpad_state": "none",
+          "shell": "xdg_shell",
+          "sticky": false,
+          "tag": null,
+          "type": "con",
+          "urgent": false,
+          "visible": true,
+          "window": null,
+          "window_rect": {
+            "height": 675,
+            "width": 631,
+            "x": 2,
+            "y": 0
+          }
+        },
+        {
+          "allow_tearing": false,
+          "app_id": "fixture-3",
+          "border": "normal",
+          "current_border_width": 2,
+          "deco_rect": {
+            "height": 27,
+            "width": 635,
+            "x": 635,
+            "y": 0
+          },
+          "floating": "auto_off",
+          "floating_nodes": [],
+          "focus": [],
+          "focused": false,
+          "foreign_toplevel_identifier": "3cffd00fef3ec8c653e436467612a597",
+          "fullscreen_mode": 0,
+          "geometry": {
+            "height": 491,
+            "width": 696,
+            "x": 0,
+            "y": 0
+          },
+          "id": 10,
+          "idle_inhibitors": {
+            "application": "none",
+            "user": "none"
+          },
+          "inhibit_idle": false,
+          "layout": "none",
+          "marks": [],
+          "max_render_time": 0,
+          "name": "fixture-3",
+          "nodes": [],
+          "orientation": "none",
+          "percent": 0.5,
+          "pid": 2529085,
+          "rect": {
+            "height": 677,
+            "width": 635,
+            "x": 635,
+            "y": 731
+          },
+          "sandbox_app_id": null,
+          "sandbox_engine": null,
+          "sandbox_instance_id": null,
+          "scratchpad_state": "none",
+          "shell": "xdg_shell",
+          "sticky": false,
+          "tag": null,
+          "type": "con",
+          "urgent": false,
+          "visible": true,
+          "window": null,
+          "window_rect": {
+            "height": 675,
+            "width": 631,
+            "x": 2,
+            "y": 0
+          }
+        }
+      ],
+      "orientation": "horizontal",
+      "percent": 0.5,
+      "rect": {
+        "height": 704,
+        "width": 1270,
+        "x": 0,
+        "y": 704
+      },
+      "scratchpad_state": "none",
+      "sticky": false,
+      "type": "con",
+      "urgent": false,
+      "window": null,
+      "window_rect": {
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      }
+    }
+  }
+]

@@ -1,0 +1,126 @@
+# Comparison rules ported from swayward src/tests/ipc/fixtures.rs.
+# Every ignored field has a reason; all other JSON values and array lengths are
+# compared exactly. Tree-specific checks retain layout information hidden here.
+
+[[ignore_key]]
+name = "runtime-identifiers"
+keys = ["id", "pid", "foreign_toplevel_identifier"]
+reason = "IDs and process metadata are allocated independently by each run."
+
+[[ignore_key]]
+name = "focus-by-child-position"
+keys = ["focus"]
+reason = "Focus arrays contain dynamic node IDs; compare them by child position."
+
+[[ignore_key]]
+name = "rectangle-semantics"
+keys = ["rect", "deco_rect", "window_rect", "geometry"]
+reason = "Rectangles vary with font metrics; compare outer tree rectangles with 10 px tolerance and preserve rectangle-role relationships."
+
+[[ignore_key]]
+name = "backend-output-reference"
+keys = ["output"]
+reason = "Output names depend on the nested Wayland, headless, or X11 backend."
+
+[[ignore_key]]
+name = "backend-output-properties"
+keys = ["make", "model", "serial", "adaptive_sync_status", "modes"]
+reason = "Output identity, modes, and adaptive-sync support depend on the backend."
+
+[[ignore_path]]
+name = "backend-output-capabilities"
+suffixes = [".current_mode.refresh", ".features.adaptive_sync"]
+reason = "Refresh and adaptive-sync support depend on the backend."
+
+[[shape_path]]
+name = "version-runtime-identity"
+paths = ["$version.major", "$version.minor", "$version.patch", "$version.human_readable", "$version.loaded_config_file_name", "$version.variant"]
+reason = "GET_VERSION identifies the compositor build and the config path used by that run; compare each field's presence and JSON type, not its compositor- or run-specific value."
+evidence = "sway-ipc(7) defines GET_VERSION as version information about the sway process, documents major/minor/patch as integers, human_readable as a string likely containing the git hash and branch, and loaded_config_file_name as the loaded config path: https://man.archlinux.org/man/sway-ipc.7.en#7._GET_VERSION"
+
+[[ignore_output_key]]
+name = "backend-output-name"
+keys = ["name"]
+reason = "Output names depend on the backend."
+
+[[tree_field_rule]]
+name = "floating-rect-run-variance"
+field = "rect"
+action = "ignore"
+selector = { floating = "user_on" }
+reason = "Sway 1.12 chooses floating defaults from client state that is not stable across fresh runs."
+evidence = "Five fresh runs each of one_floating, two_floating, and three_floating_raise observed x=285,y=458 with either 700x493/percent=0.20356120257695062 or 1270x664/percent=0.49076704545454547; three_floating_raise run 1 contained both defaults while runs 2-5 contained only 700x493."
+
+[[tree_field_rule]]
+name = "tree-rect-tolerance"
+field = "rect"
+action = "rect_tolerance"
+tolerance = 10
+reason = "The sway capture used host font metrics; 10 px admits titlebar differences but rejects a wrong layout or unit placeholder."
+
+[[tree_field_rule]]
+name = "floating-percent-run-variance"
+field = "percent"
+action = "ignore"
+selector = { floating = "user_on" }
+reason = "Floating percent changes with sway's variable default floating rectangle."
+evidence = "Five fresh runs each of one_floating, two_floating, and three_floating_raise observed percent=0.20356120257695062 at 700x493 and percent=0.49076704545454547 at 1270x664."
+
+[[tree_field_rule]]
+name = "floating-descendant-percent-run-variance"
+field = "percent"
+action = "ignore"
+selector = { under_floating = true }
+reason = "Descendant percentages within a floating container change with sway's variable floating geometry."
+evidence = "Fresh sway 1.12 random replays varied descendant percentages for seeds 226, 290, 363 and 440: 0.5/0.5 versus 0.5009523809523809/0.4990476190476191, and 2.5806451612903225 versus 2.585278276481149."
+
+[[tree_field_rule]]
+name = "hidden-scratchpad-descendant-rect"
+field = "rect"
+action = "ignore"
+selector = { under_hidden_scratchpad = true }
+reason = "Sway never arranges the children of a hidden scratchpad container, so GET_TREE reports whatever box each child last had: for a container sent straight from tiling to the scratchpad that is its pre-float tiled box. The floating root's own rect is still compared."
+evidence = "root_scratchpad_add_container floats the container with container_set_floating, whose floating_natural_resize sizes only the container (sway/tree/root.c:76-110, sway/tree/container.c:850-856); view_autoconfigure returns early for scratchpad-hidden views (sway/tree/view.c:353-356). Pinned sway 1.12 after 'window; focus parent; move scratchpad' reports the lone child at 0,0 1270x1408 (percent 2.67) inside a 635x1056 hidden group, and random seeds 19, 20, 27, 96, 204, 323, 338 and 380 differ only there; after 'scratchpad show' the child is arranged and both compositors agree."
+
+[[tree_field_rule]]
+name = "hidden-scratchpad-descendant-percent"
+field = "percent"
+action = "ignore"
+selector = { under_hidden_scratchpad = true }
+reason = "A hidden scratchpad container's children report percent from their unarranged stale boxes (see hidden-scratchpad-descendant-rect)."
+evidence = "The same pinned sway 1.12 capture reports percent 2.6666666666666665 for the lone child of a hidden group, from its stale 1270x1408 box over the group's 635x1056."
+
+[[tree_field_rule]]
+name = "tree-percent-tolerance"
+field = "percent"
+action = "numeric_tolerance"
+tolerance = 1e-9
+reason = "All non-floating percentages, including workspace percentages, are semantic layout values and are compared within floating-point tolerance."
+
+[focus]
+name = "focus-child-position-comparison"
+mode = "child_position"
+reason = "Child position maps independently allocated IDs while preserving focus membership and order."
+
+[arrays]
+name = "backend-mode-array-length"
+ignore_length_suffixes = [".modes"]
+reason = "Sway's nested output advertised no modes while headless backends advertise synthetic modes."
+
+# Keys a compositor adds to sway's replies as a documented extension. The key is
+# removed before comparison only for the compositors listed; every key sway
+# sends is still compared, so a missing or changed sway key remains a mismatch.
+
+[[extension_key]]
+name = "swayfx-version-original-version"
+compositors = ["swayfx"]
+paths = ["$version.sway_original_version"]
+reason = "SwayFX adds the sway release it is based on to GET_VERSION; sway has no such key."
+evidence = "swayfx 0.6 (fd71a6bd) sway/ipc-json.c:236 adds sway_original_version from SWAY_ORIGINAL_VERSION, set by meson.build:15,182 to '1.12.0'. The pinned build answers \"sway_original_version\": \"1.12.0\"."
+
+[[extension_key]]
+name = "swayfx-output-layer-shell-surfaces"
+compositors = ["swayfx"]
+output_keys = ["layer_shell_surfaces"]
+reason = "SwayFX adds the layer-shell surfaces of each enabled output, with their effect settings, to GET_OUTPUTS and to output nodes in GET_TREE; sway has no such key."
+evidence = "swayfx 0.6 (fd71a6bd) sway/ipc-json.c:369-445 (ipc_json_describe_enabled_output, also used for output nodes at ipc-json.c:923) adds layer_shell_surfaces; documented in sway/sway-ipc.7.scd:265 and README.md:45. The oracle opens no layer-shell client, so the measured array is empty."

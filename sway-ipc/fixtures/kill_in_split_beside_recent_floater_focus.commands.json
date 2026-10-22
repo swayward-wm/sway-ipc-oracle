@@ -1,0 +1,58 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-ksbf-1 --title=fixture-ksbf-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-ksbf-2 --title=fixture-ksbf-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "splitv",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-ksbf-3 --title=fixture-ksbf-3 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-ksbf-4 --title=fixture-ksbf-4 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "[app_id=\"fixture-ksbf-3\"] floating enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "kill",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

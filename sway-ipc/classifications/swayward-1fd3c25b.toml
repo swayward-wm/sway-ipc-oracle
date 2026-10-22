@@ -1,0 +1,32 @@
+# Human-reviewed triage of swayward-1fd3c25b sway IPC state mismatches, keyed by
+# scenario.request, against the committed result (T4 measurement: oracle b70abe84, swayward 1fd3c25b, image rc-1fd3c25b, two agreeing runs).
+# contrib/validate prints the untriaged count.
+
+[[classification]]
+rows = ["fullscreen_global_two_outputs.tree"]
+triage = "documented deviation"
+finding = "Global fullscreen on several outputs"
+reason = "Sway sizes a global fullscreen view to the root box spanning both outputs, so percent is root area over workspace area (2.0); swayward covers one output and reports 1.0 ($tree.nodes[1].nodes[0].nodes[0].percent). Spanning outputs is the planned swayward feature feature-global-fullscreen-span-outputs."
+source = "sway/sway/tree/arrange.c:349-355; sway/sway/tree/view.c:365-369; sway/sway/ipc-json.c:744-755; swayward docs/KNOWN_DEVIATIONS.md#global-fullscreen-on-several-outputs"
+
+[[classification]]
+rows = [
+    "floating_split_fullscreen_child_move_scratchpad.tree",
+    "floating_split_fullscreen_child_move_scratchpad_tiled_sibling_hidden.tree",
+    "floating_split_fullscreen_child_move_scratchpad_tiled_sibling_shown.tree",
+    "floating_split_fullscreen_child_move_scratchpad_tiled_sibling_shown.workspaces",
+    "floating_split_fullscreen_child_move_scratchpad_tiled_sibling.tree",
+    "floating_split_fullscreen_child_move_scratchpad_tiled_sibling.workspaces",
+    "floating_split_fullscreen_child_move_scratchpad_tiled_sibling.outputs",
+]
+triage = "documented deviation"
+finding = "Fullscreen view inside a floating split sent to the scratchpad"
+reason = "Sway's move scratchpad clears fullscreen only on the hidden split's root, so the view keeps fullscreen_mode 1 and the stale workspace fullscreen pointer keeps focus on the hidden view and hides the tiled sibling; workspace 1 is then refused. Swayward clears fullscreen on every container of the hidden split (fullscreen_mode 0) and the tiled sibling keeps focus and visibility. Every difference in these rows is fullscreen_mode, focused, visible or current_workspace."
+source = "sway/sway/commands/move.c:934-945; sway/sway/tree/root.c:109-112,223-224; sway/sway/tree/container.c:570-578,1440-1442; swayward docs/KNOWN_DEVIATIONS.md#fullscreen-view-inside-a-floating-split-sent-to-the-scratchpad"
+
+[[classification]]
+rows = ["floating_split_on_fresh_workspace_representation.tree"]
+triage = "harness issue"
+finding = "host-captured-fixture-floating-split"
+reason = "The committed sway capture was taken on the host, not in the pinned image: the host foot config (Hack Nerd Font 12, 8x8 padding) makes the client 696x491, where the image gives 696x496. The tree rect tolerance (10 px) usually absorbs that difference, but in this scenario it grows to 14 px of height. Pinned sway fails the capture the same way (the T4 sway-1.12 and swayfx-0.6 results, plus 3 of 3 further runs). Two in-image recaptures are identical apart from runtime IDs: split 634x1085 and view 634x1058, where the committed capture has 630x1071 and 630x1044. Against the in-image capture, sway and swayward both match. The recapture changes every compositor's state inputs, so it waits for the next state regeneration. Random seeds 249 and 363 are a separate swayward difference: the random captures already use the image geometry, and sway matches them."
+source = "sway-ipc/fixtures/floating_split_on_fresh_workspace_representation.tree.json; recapture evidence in the beta1 orchestration notes (scratch/t4/fsf-evidence: sway1-3.toml mismatch; new-sway.toml and new-swayward.toml match against the recaptured fixture)"

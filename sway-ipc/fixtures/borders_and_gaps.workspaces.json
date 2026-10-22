@@ -1,0 +1,55 @@
+[
+  {
+    "border": "none",
+    "current_border_width": 0,
+    "deco_rect": {
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "floating": null,
+    "floating_nodes": [],
+    "focus": [
+      9,
+      8,
+      7
+    ],
+    "focused": true,
+    "fullscreen_mode": 1,
+    "geometry": {
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "id": 6,
+    "layout": "splitv",
+    "marks": [],
+    "name": "1",
+    "nodes": [],
+    "num": 1,
+    "orientation": "vertical",
+    "output": "HEADLESS-1",
+    "percent": null,
+    "rect": {
+      "height": 1328,
+      "width": 1190,
+      "x": 40,
+      "y": 40
+    },
+    "representation": "V[fixture-normal fixture-pixel fixture-none]",
+    "scratchpad_state": null,
+    "sticky": false,
+    "type": "workspace",
+    "urgent": false,
+    "visible": true,
+    "window": null,
+    "window_rect": {
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    }
+  }
+]

@@ -1,0 +1,160 @@
+# Human-reviewed triage of swirl-dc6382f2 sway IPC command-fuzz mismatches, keyed by case.
+# swirl is a rebrand of scroll 1.12.17. Every row here measured the same as the scroll-1.12.21 row
+# and has the same cause in the same code, so it reuses the scroll classification (finding, triage,
+# reason) with its sources re-cited at swirl dc6382f2 (the pin). design difference: the compositor
+# documents or deliberately builds the behaviour; deviation: an undocumented difference from sway.
+# contrib/validate prints the untriaged count.
+
+[[classification]]
+case = "family-layout-invalid"
+triage = "design difference"
+finding = "scroll-removed-split-layout"
+reason = "split, splith, splitv, splitt and layout were removed from scroll, so every malformed form answers \"Unknown/invalid command '<name>'\" instead of sway's argument error (and 'splitt' with no argument fails where sway succeeds)."
+source = "swirl dc6382f2 inherits scroll commit 7e5f5391 'commands: remove unsupported commands' (deletes sway/commands/layout.c and split.c); sway/commands.c:45-209 (no split, splith, splitv, splitt or layout handler); sway/commands/focus.c:400-423 (focus parent and focus child only change the insertion mode) (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-layout-quote"
+triage = "design difference"
+finding = "scroll-removed-split-layout"
+reason = "split, splith, splitv, splitt and layout were removed from scroll, so every malformed form answers \"Unknown/invalid command '<name>'\" instead of sway's argument error (and 'splitt' with no argument fails where sway succeeds)."
+source = "swirl dc6382f2 inherits scroll commit 7e5f5391 'commands: remove unsupported commands' (deletes sway/commands/layout.c and split.c); sway/commands.c:45-209 (no split, splith, splitv, splitt or layout handler); sway/commands/focus.c:400-423 (focus parent and focus child only change the insertion mode) (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-split-invalid"
+triage = "design difference"
+finding = "scroll-removed-split-layout"
+reason = "split, splith, splitv, splitt and layout were removed from scroll, so every malformed form answers \"Unknown/invalid command '<name>'\" instead of sway's argument error (and 'splitt' with no argument fails where sway succeeds)."
+source = "swirl dc6382f2 inherits scroll commit 7e5f5391 'commands: remove unsupported commands' (deletes sway/commands/layout.c and split.c); sway/commands.c:45-209 (no split, splith, splitv, splitt or layout handler); sway/commands/focus.c:400-423 (focus parent and focus child only change the insertion mode) (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-split-quote"
+triage = "design difference"
+finding = "scroll-removed-split-layout"
+reason = "split, splith, splitv, splitt and layout were removed from scroll, so every malformed form answers \"Unknown/invalid command '<name>'\" instead of sway's argument error (and 'splitt' with no argument fails where sway succeeds)."
+source = "swirl dc6382f2 inherits scroll commit 7e5f5391 'commands: remove unsupported commands' (deletes sway/commands/layout.c and split.c); sway/commands.c:45-209 (no split, splith, splitv, splitt or layout handler); sway/commands/focus.c:400-423 (focus parent and focus child only change the insertion mode) (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-splith-extra"
+triage = "design difference"
+finding = "scroll-removed-split-layout"
+reason = "split, splith, splitv, splitt and layout were removed from scroll, so every malformed form answers \"Unknown/invalid command '<name>'\" instead of sway's argument error (and 'splitt' with no argument fails where sway succeeds)."
+source = "swirl dc6382f2 inherits scroll commit 7e5f5391 'commands: remove unsupported commands' (deletes sway/commands/layout.c and split.c); sway/commands.c:45-209 (no split, splith, splitv, splitt or layout handler); sway/commands/focus.c:400-423 (focus parent and focus child only change the insertion mode) (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-splith-quote"
+triage = "design difference"
+finding = "scroll-removed-split-layout"
+reason = "split, splith, splitv, splitt and layout were removed from scroll, so every malformed form answers \"Unknown/invalid command '<name>'\" instead of sway's argument error (and 'splitt' with no argument fails where sway succeeds)."
+source = "swirl dc6382f2 inherits scroll commit 7e5f5391 'commands: remove unsupported commands' (deletes sway/commands/layout.c and split.c); sway/commands.c:45-209 (no split, splith, splitv, splitt or layout handler); sway/commands/focus.c:400-423 (focus parent and focus child only change the insertion mode) (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-splitt-invalid"
+triage = "design difference"
+finding = "scroll-removed-split-layout"
+reason = "split, splith, splitv, splitt and layout were removed from scroll, so every malformed form answers \"Unknown/invalid command '<name>'\" instead of sway's argument error (and 'splitt' with no argument fails where sway succeeds)."
+source = "swirl dc6382f2 inherits scroll commit 7e5f5391 'commands: remove unsupported commands' (deletes sway/commands/layout.c and split.c); sway/commands.c:45-209 (no split, splith, splitv, splitt or layout handler); sway/commands/focus.c:400-423 (focus parent and focus child only change the insertion mode) (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-splitt-missing"
+triage = "design difference"
+finding = "scroll-removed-split-layout"
+reason = "split, splith, splitv, splitt and layout were removed from scroll, so every malformed form answers \"Unknown/invalid command '<name>'\" instead of sway's argument error (and 'splitt' with no argument fails where sway succeeds)."
+source = "swirl dc6382f2 inherits scroll commit 7e5f5391 'commands: remove unsupported commands' (deletes sway/commands/layout.c and split.c); sway/commands.c:45-209 (no split, splith, splitv, splitt or layout handler); sway/commands/focus.c:400-423 (focus parent and focus child only change the insertion mode) (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-splitv-extra"
+triage = "design difference"
+finding = "scroll-removed-split-layout"
+reason = "split, splith, splitv, splitt and layout were removed from scroll, so every malformed form answers \"Unknown/invalid command '<name>'\" instead of sway's argument error (and 'splitt' with no argument fails where sway succeeds)."
+source = "swirl dc6382f2 inherits scroll commit 7e5f5391 'commands: remove unsupported commands' (deletes sway/commands/layout.c and split.c); sway/commands.c:45-209 (no split, splith, splitv, splitt or layout handler); sway/commands/focus.c:400-423 (focus parent and focus child only change the insertion mode) (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-splitv-invalid"
+triage = "design difference"
+finding = "scroll-removed-split-layout"
+reason = "split, splith, splitv, splitt and layout were removed from scroll, so every malformed form answers \"Unknown/invalid command '<name>'\" instead of sway's argument error (and 'splitt' with no argument fails where sway succeeds)."
+source = "swirl dc6382f2 inherits scroll commit 7e5f5391 'commands: remove unsupported commands' (deletes sway/commands/layout.c and split.c); sway/commands.c:45-209 (no split, splith, splitv, splitt or layout handler); sway/commands/focus.c:400-423 (focus parent and focus child only change the insertion mode) (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-default_border-quote"
+triage = "design difference"
+finding = "scroll-border-csd"
+reason = "scroll accepts 'csd' as a border style, so the usage text of default_border and default_floating_border (and their deprecated aliases new_window and new_float) lists <none|normal|pixel|csd>."
+source = "swirl dc6382f2 sway/commands/default_border.c:18-22, sway/commands/default_floating_border.c:19-24, sway/commands/new_window.c:5-13, sway/commands/new_float.c:5-13; sway/scroll.5.scd:1462, 1487 (default_border and default_floating_border accept csd) (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-new_float-invalid"
+triage = "design difference"
+finding = "scroll-border-csd"
+reason = "scroll accepts 'csd' as a border style, so the usage text of default_border and default_floating_border (and their deprecated aliases new_window and new_float) lists <none|normal|pixel|csd>."
+source = "swirl dc6382f2 sway/commands/default_border.c:18-22, sway/commands/default_floating_border.c:19-24, sway/commands/new_window.c:5-13, sway/commands/new_float.c:5-13; sway/scroll.5.scd:1462, 1487 (default_border and default_floating_border accept csd) (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-new_float-unicode"
+triage = "design difference"
+finding = "scroll-border-csd"
+reason = "scroll accepts 'csd' as a border style, so the usage text of default_border and default_floating_border (and their deprecated aliases new_window and new_float) lists <none|normal|pixel|csd>."
+source = "swirl dc6382f2 sway/commands/default_border.c:18-22, sway/commands/default_floating_border.c:19-24, sway/commands/new_window.c:5-13, sway/commands/new_float.c:5-13; sway/scroll.5.scd:1462, 1487 (default_border and default_floating_border accept csd) (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-new_window-invalid"
+triage = "design difference"
+finding = "scroll-border-csd"
+reason = "scroll accepts 'csd' as a border style, so the usage text of default_border and default_floating_border (and their deprecated aliases new_window and new_float) lists <none|normal|pixel|csd>."
+source = "swirl dc6382f2 sway/commands/default_border.c:18-22, sway/commands/default_floating_border.c:19-24, sway/commands/new_window.c:5-13, sway/commands/new_float.c:5-13; sway/scroll.5.scd:1462, 1487 (default_border and default_floating_border accept csd) (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-focus_follows_mouse-invalid"
+triage = "design difference"
+finding = "scroll-focus-follows-mouse-full"
+reason = "scroll adds focus_follows_mouse 'full', so its usage text reads no|yes|always|full."
+source = "swirl dc6382f2 sway/commands/focus_follows_mouse.c:16-20; sway/scroll.5.scd:1512 (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-move-invalid"
+triage = "design difference"
+finding = "scroll-move-beginning-end"
+reason = "scroll adds 'move beginning|end' and 'nomode', so the move usage text starts 'move left|right|up|down|beginning|end [<amount> [px]|nomode]'."
+source = "swirl dc6382f2 sway/commands/move.c:754-756; sway/scroll.5.scd:676 ('move left|right|up|down|beginning|end [<px> px] [nomode]') (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-move-unicode"
+triage = "design difference"
+finding = "scroll-move-beginning-end"
+reason = "scroll adds 'move beginning|end' and 'nomode', so the move usage text starts 'move left|right|up|down|beginning|end [<amount> [px]|nomode]'."
+source = "swirl dc6382f2 sway/commands/move.c:754-756; sway/scroll.5.scd:676 ('move left|right|up|down|beginning|end [<px> px] [nomode]') (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-kill-invalid"
+triage = "design difference"
+finding = "scroll-kill-arguments"
+reason = "scroll's kill takes focused|unfocused|all and rejects any other argument (\"Unknown command: kill oracle_invalid\"); sway's kill ignores its arguments and succeeds."
+source = "swirl dc6382f2 sway/commands/kill.c:28-57; sway/scroll.5.scd:1606-1611 ('kill <focused>|unfocused|all'); sway 88869399 sway/commands/kill.c:15-30 (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-floating-quote"
+triage = "design difference"
+finding = "scroll-floating-empty-workspace"
+reason = "On an empty workspace scroll answers \"'floating' needs a container\" where sway answers \"Can't float an empty workspace\": scroll removed workspace_wrap_children and takes the workspace's focused tiling container instead."
+source = "swirl dc6382f2 sway/commands/floating.c:23-31; inherited scroll commit 3b2ed15b 'Remove workspace_wrap_children() and modify commands to use the inactive tiling focused container'; sway 88869399 sway/commands/floating.c:25-27 (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-floating-unicode"
+triage = "design difference"
+finding = "scroll-floating-empty-workspace"
+reason = "On an empty workspace scroll answers \"'floating' needs a container\" where sway answers \"Can't float an empty workspace\": scroll removed workspace_wrap_children and takes the workspace's focused tiling container instead."
+source = "swirl dc6382f2 sway/commands/floating.c:23-31; inherited scroll commit 3b2ed15b 'Remove workspace_wrap_children() and modify commands to use the inactive tiling focused container'; sway 88869399 sway/commands/floating.c:25-27 (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-titlebar_border_thickness-extra"
+triage = "design difference"
+finding = "scroll-titlebar-border-thickness-deprecated"
+reason = "titlebar_border_thickness is deprecated in scroll and always fails with \"Invalid command\", whatever its arguments."
+source = "swirl dc6382f2 sway/commands/titlebar_border_thickness.c:5-11 (the same code as scroll f80c5820, inherited through scroll 1.12.17)"
+
+[[classification]]
+case = "family-titlebar_border_thickness-quote"
+triage = "design difference"
+finding = "scroll-titlebar-border-thickness-deprecated"
+reason = "titlebar_border_thickness is deprecated in scroll and always fails with \"Invalid command\", whatever its arguments."
+source = "swirl dc6382f2 sway/commands/titlebar_border_thickness.c:5-11 (the same code as scroll f80c5820, inherited through scroll 1.12.17)"

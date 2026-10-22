@@ -1,0 +1,127 @@
+#!/usr/bin/env python3
+"""State and events rows: a mismatch or crash that changes on a fresh retry is unstable.
+
+Fake rows and a fake scenario runner stand in for the compositors.
+"""
+
+import argparse
+import importlib.machinery
+from pathlib import Path
+import sys
+import tempfile
+import tomllib
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.dont_write_bytecode = True
+runner = importlib.machinery.SourceFileLoader(
+    "sway_ipc_run", str(ROOT / "contrib/sway-ipc-run")
+).load_module()
+
+
+def row(scenario, request, verdict, differences=(), **extra):
+    return {"scenario": scenario, "request": request, "verdict": verdict,
+            "differences": list(differences), **extra}
+
+
+# The retry's (verdict, differences) decides; match and not-applicable rows stay.
+first = [
+    row("a", "tree", "mismatch", ["$.x"]),        # same on retry: stays mismatch
+    row("a", "workspaces", "mismatch", ["$.y"]),  # different differences: unstable
+    row("a", "outputs", "mismatch", ["$.z"]),     # matches on retry: unstable
+    row("a", "marks", "match"),                   # mismatches on retry: still match
+    row("b", "tree", "crash", reason="died"),     # crashes again: stays crash
+    row("c", "tree", "crash", reason="died"),     # absent from the retry: unstable
+    row("d", "events", "differs", ["$.e"]),       # i3: same rule as mismatch
+    row("d", "events", "not applicable", reason="sway extension fields: x"),
+]
+retry = [
+    row("a", "tree", "mismatch", ["$.x"]),
+    row("a", "workspaces", "mismatch", ["$.w"]),
+    row("a", "outputs", "match"),
+    row("a", "marks", "mismatch", ["$.m"]),
+    row("b", "tree", "crash", reason="died again"),
+    row("d", "events", "differs", ["$.f"]),
+    row("d", "events", "not applicable", reason="sway extension fields: x"),
+]
+runner.classify_scenario_instability(first, retry)
+assert [item["verdict"] for item in first] == [
+    "mismatch", "unstable", "unstable", "match", "crash", "unstable", "unstable", "not applicable",
+], [item["verdict"] for item in first]
+
+
+class Adapter:
+    @staticmethod
+    def version_details(_reply):
+        return "1", "c"
+
+
+FIRST_RUN = [row("s", "tree", "mismatch", ["$.a"]), row("s", "marks", "match")]
+
+
+def scenario_run(retry_rows, capture=False, fresh=True, first_rows=FIRST_RUN):
+    """Run scenario_main with a fake runner; return its result doc and run calls.
+
+    retry_rows may be an exception, which the fake retry raises.
+    """
+    calls = []
+
+    def fake_batches(args, batches, rules, applicability, suffix=""):
+        calls.append(suffix)
+        rows = [dict(item) for item in first_rows]
+        if suffix:
+            if isinstance(retry_rows, Exception):
+                raise retry_rows
+            rows = [dict(item) for item in retry_rows]
+        return [(batches[0][0], rows)], Adapter(), {}
+
+    saved = (runner.run_scenario_batches, runner.require_clean_binary, runner.selected_scenarios)
+    runner.run_scenario_batches = fake_batches
+    runner.require_clean_binary = lambda *_: None
+    runner.selected_scenarios = lambda *_: [{"name": "s", "actions": []}]
+    try:
+        with tempfile.TemporaryDirectory() as directory:
+            out = Path(directory) / "sway-ipc/results/x.toml"
+            args = argparse.Namespace(
+                capture=capture, capture_events=False, compositor="sway" if capture else "scroll",
+                binary=Path("/bin/sh"), scenario=None, corpus="state", fresh_per_scenario=fresh, out=out,
+            )
+            runner.scenario_main(args, argparse.ArgumentParser())
+            return tomllib.loads(out.read_text()), calls
+    finally:
+        runner.run_scenario_batches, runner.require_clean_binary, runner.selected_scenarios = saved
+
+
+# A changed retry makes the row unstable, counted in [run] beside the others.
+doc, calls = scenario_run([row("s", "tree", "mismatch", ["$.b"]), row("s", "marks", "match")])
+assert calls == ["", "-retry"], calls
+assert [item["verdict"] for item in doc["result"]] == ["unstable", "match"]
+assert {key: doc["run"][key] for key in ("match", "mismatch", "unstable", "not_applicable")} == {
+    "match": 1, "mismatch": 0, "unstable": 1, "not_applicable": 0}
+
+# A repeated mismatch stays a mismatch.
+doc, calls = scenario_run([row("s", "tree", "mismatch", ["$.a"]), row("s", "marks", "match")])
+assert [item["verdict"] for item in doc["result"]] == ["mismatch", "match"]
+assert doc["run"]["unstable"] == 0
+
+# A crash that passes on the retry is unstable, and a crash row adds [run] crash.
+crashed = [row("s", "tree", "crash", reason="scroll crashed"), row("s", "marks", "crash", reason="scroll crashed")]
+doc, calls = scenario_run([row("s", "tree", "match"), row("s", "marks", "match")], first_rows=crashed)
+assert calls == ["", "-retry"], calls
+assert [item["verdict"] for item in doc["result"]] == ["unstable", "unstable"]
+assert doc["run"]["unstable"] == 2 and doc["run"].get("crash", 0) == 0, doc["run"]
+
+# A retry that fails without a crash verdict keeps the first run's rows.
+doc, calls = scenario_run(RuntimeError("socket vanished"))
+assert calls == ["", "-retry"], calls
+assert [item["verdict"] for item in doc["result"]] == ["mismatch", "match"]
+
+# Capture writes the reference: it never retries.
+doc, calls = scenario_run([], capture=True)
+assert calls == [""], calls
+
+# A sequential run measures leaked state: it never retries either.
+doc, calls = scenario_run([], fresh=False)
+assert calls == [""], calls
+assert doc["result"][0]["verdict"] == "mismatch"
+
+print("scenario retry self-test passed")

@@ -1,0 +1,3004 @@
+#!/usr/bin/env python3
+"""Run data-driven sway IPC scenarios against an isolated compositor."""
+
+import argparse
+import copy
+import datetime
+import hashlib
+import json
+import os
+from pathlib import Path
+import random
+import re
+import shutil
+import signal
+import shlex
+import socket
+import struct
+import subprocess
+import sys
+import tempfile
+import time
+import tomllib
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "contrib"))
+import provenance  # noqa: E402
+import sway_ipc_v3  # noqa: E402
+FIXTURES = ROOT / "sway-ipc/fixtures"
+MAGIC = b"i3-ipc"
+TYPES = {"command": 0, "workspaces": 1, "subscribe": 2, "outputs": 3, "tree": 4, "marks": 5, "version": 7, "binding_modes": 8, "binding_state": 12, "inputs": 100, "seats": 101, "tick": 10}
+QUERY_REQUESTS = (
+    "tree", "workspaces", "outputs", "marks", "binding_modes",
+    "binding_state", "seats", "inputs", "version",
+)
+EVENTS = ("workspace", "output", "mode", "window", "barconfig_update", "binding", "shutdown", "tick", "input")
+NORMAL = "__oracle_normalized__"
+RUN_MARKER = "SWAY_IPC_ORACLE_RUN"
+I3_DERIVED = ROOT / "sway-ipc/i3-derived"
+RANDOM = ROOT / "sway-ipc/random"
+# random-v2 widens the generator; v1 stays byte-identical so its numbers stay comparable.
+RANDOM_V2 = ROOT / "sway-ipc/random-v2"
+# random-v3 generates online from sway state (contrib/sway_ipc_v3.py); v2 stays byte-identical.
+RANDOM_ROOTS = {"v1": RANDOM, "v2": RANDOM_V2, "v3": sway_ipc_v3.RANDOM_V3}
+RANDOM_SUFFIXES = {"v1": "-random", "v2": "-random-v2", "v3": "-random-v3"}
+FUZZ_FIXTURES = ROOT / "sway-ipc/fuzz"
+COMMAND_FAMILIES = FUZZ_FIXTURES / "command-families.json"
+FUZZ_BUDGETS = {"ci": (2, 10), "local": (None, 16)}
+with (ROOT / "pins.toml").open("rb") as file:
+    PINS = tomllib.load(file)
+
+# Commands are deliberately conservative: every entry is accepted by sway 1.12,
+# and state-dependent failures are useful command-reply observations.
+COMMANDS = (
+    "splith", "splitv", "layout splith", "layout splitv", "layout tabbed",
+    "layout stacking", "focus left", "focus right", "focus up", "focus down",
+    "focus parent", "focus child", "move left", "move right", "move up",
+    "move down", "resize grow width 10 px", "resize shrink height 10 px",
+    "floating toggle", "fullscreen toggle", "mark oracle", "unmark oracle",
+    "workspace 1", "workspace 2", "workspace oracle", "scratchpad show",
+    "move scratchpad", "sticky toggle", "move container to workspace 1",
+    "move container to workspace 2", "kill",
+)
+
+
+def require_clean_binary(binary: Path, compositor: str) -> str:
+    probe = binary.resolve().parent
+    while probe != probe.parent and not (probe / ".git").exists():
+        probe = probe.parent
+    if not (probe / ".git").exists():
+        raise RuntimeError(f"cannot find source checkout for {binary}")
+    commit = subprocess.check_output(
+        ["git", "-C", probe, "rev-parse", "HEAD"], text=True
+    ).strip()
+    description = subprocess.check_output(
+        ["git", "-C", probe, "describe", "--always", "--dirty"], text=True
+    ).strip()
+    dirty = subprocess.check_output(
+        ["git", "-C", probe, "status", "--porcelain"], text=True
+    ).strip()
+    if commit != PINS[compositor]:
+        raise RuntimeError(
+            f"{compositor} source is {commit}, expected pinned commit {PINS[compositor]}"
+        )
+    if dirty or description.endswith("-dirty"):
+        raise RuntimeError(f"refusing to measure dirty {compositor} build ({description})")
+    return commit
+
+
+def reject_dirty_version(compositor: str, version: str, commit: str) -> None:
+    if re.search(r"(?:-dirty|-modified)\b", version) or commit.endswith(("-dirty", "-modified")):
+        raise RuntimeError(f"refusing to record dirty {compositor} build: {version}")
+
+
+def fake_output_count(scenario):
+    return len(scenario.get("output_layout") or []) or scenario.get("outputs", 1)
+
+
+def fake_output_name(prefix, index, count):
+    """i3's fake-<index> as a headless output name.
+
+    wlroots' headless backend announces its outputs last-first, so the
+    compositor gives workspace 1 to <prefix>-<count>. i3 gives it to fake-0.
+    Mapping fake-N to the output announced N-th keeps i3's premise that fake-0
+    is the first output, holds workspace 1 and has the initial focus. The i3
+    suite adapters use the same mapping.
+    """
+    return f"{prefix}-{count - index}"
+
+
+def translate_fake_outputs(text, prefix, count):
+    return re.sub(r"\bfake-(\d+)\b", lambda match: fake_output_name(prefix, int(match[1]), count), text)
+
+
+def initial_fake_focus(scenario):
+    focus = scenario.get("initial_focus")
+    if focus is not None:
+        return focus
+    layout = scenario.get("output_layout") or []
+    return next((index for index, (*_, primary) in enumerate(layout) if primary), 0)
+
+
+def generate_commands(seed, steps):
+    """Return a reproducible sequence of sway command strings."""
+    rng = random.Random(seed)
+    commands, next_window = [
+        "exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'"
+    ], 2
+    for _ in range(max(0, steps - 1)):
+        if rng.random() < 0.22:
+            ident = f"fixture-diff-{next_window}"
+            next_window += 1
+            commands.append(
+                f"exec foot --app-id={ident} --title={ident} sh -c 'sleep 300'"
+            )
+        else:
+            commands.append(rng.choice(COMMANDS))
+    return commands
+
+
+def random_v2_vocabulary():
+    """Flat command list of sway-ipc/random-v2/vocabulary.json, in file order."""
+    vocabulary = json.loads((RANDOM_V2 / "vocabulary.json").read_text())
+    return vocabulary, [command for family in vocabulary["families"]
+                        if family["name"] != vocabulary["window_family"]
+                        for command in family["commands"]]
+
+
+def generate_commands_v2(seed, steps):
+    """Return a reproducible random-v2 sequence drawn from the vocabulary.
+
+    The prelude runs as observed steps so a minimised reproducer carries it.
+    """
+    vocabulary, commands_pool = random_v2_vocabulary()
+    window = next(family for family in vocabulary["families"]
+                  if family["name"] == vocabulary["window_family"])["commands"][0]
+    rng = random.Random(f"random-v2:{seed}")
+    commands = [*vocabulary["prelude"], window.format(ident="fixture-diff-1")]
+    next_window = 2
+    while len(commands) < steps:
+        if rng.random() < vocabulary["window_probability"]:
+            commands.append(window.format(ident=f"fixture-diff-{next_window}"))
+            next_window += 1
+        else:
+            commands.append(rng.choice(commands_pool))
+    return commands[:max(0, steps)]
+
+
+GENERATORS = {"v1": generate_commands, "v2": generate_commands_v2}
+# v3 is not a (seed, steps) -> commands function: it reads sway state between steps.
+GENERATOR_CHOICES = (*GENERATORS, "v3")
+
+
+def minimize_commands(commands, reproduces):
+    """Delta-debug COMMANDS to a 1-minimal reproducing subsequence."""
+    current, chunks = list(commands), 2
+    while len(current) >= 2:
+        size = (len(current) + chunks - 1) // chunks
+        reduced = False
+        for start in range(0, len(current), size):
+            candidate = current[:start] + current[start + size:]
+            if candidate and reproduces(candidate):
+                current, chunks, reduced = candidate, max(chunks - 1, 2), True
+                break
+        if not reduced:
+            if chunks >= len(current):
+                break
+            chunks = min(len(current), chunks * 2)
+    return current
+
+
+def ipc(sock_path, kind, payload=""):
+    body = payload.encode()
+    with socket.socket(socket.AF_UNIX) as stream:
+        stream.settimeout(5)
+        stream.connect(os.fspath(sock_path))
+        stream.sendall(MAGIC + struct.pack("=II", len(body), TYPES[kind]) + body)
+        header = recv_exact(stream, 14)
+        if header[:6] != MAGIC:
+            raise RuntimeError("invalid IPC magic")
+        length, reply_type = struct.unpack("=II", header[6:])
+        if reply_type != TYPES[kind]:
+            raise RuntimeError(f"IPC type {reply_type}, expected {TYPES[kind]}")
+        return json.loads(recv_exact(stream, length))
+
+
+def recv_exact(stream, length):
+    chunks = []
+    while length:
+        chunk = stream.recv(length)
+        if not chunk:
+            raise RuntimeError("IPC connection closed before reply")
+        chunks.append(chunk)
+        length -= len(chunk)
+    return b"".join(chunks)
+
+
+class EventSubscription:
+    def __init__(self, sock_path, families=EVENTS):
+        self.stream = socket.socket(socket.AF_UNIX)
+        self.stream.settimeout(8)
+        self.stream.connect(os.fspath(sock_path))
+        body = json.dumps(families).encode()
+        self.stream.sendall(MAGIC + struct.pack("=II", len(body), TYPES["subscribe"]) + body)
+        header = recv_exact(self.stream, 14)
+        length, reply_type = struct.unpack("=II", header[6:])
+        self.reply = json.loads(recv_exact(self.stream, length))
+        self.active = reply_type == TYPES["subscribe"] and self.reply.get("success")
+
+    def checkpoint(self, sock_path, token):
+        if not self.active:
+            return {"subscription": self.reply}
+        ipc(sock_path, "tick", token)
+        events = []
+        while True:
+            header = recv_exact(self.stream, 14)
+            length, reply_type = struct.unpack("=II", header[6:])
+            event = json.loads(recv_exact(self.stream, length))
+            if not reply_type & (1 << 31):
+                raise RuntimeError(f"expected event, got IPC type {reply_type}")
+            if event.get("payload") == token:
+                return events
+            events.append(event)
+
+    def close(self):
+        self.stream.close()
+
+
+def command_fuzz_cases(seed=0):
+    """Commands derived from sway's criteria and command grammar."""
+    fixed = [
+        ("empty", ""),
+        ("whitespace", " \t "),
+        ("unknown-command", "oracle_unknown"),
+        ("bad-criteria-open", '[app_id="foot" focus'),
+        ("bad-criteria-regex", '[app_id="["] focus'),
+        ("bad-criteria-name", "[oracle_field=value] focus"),
+        ("missing-argument", "workspace"),
+        ("extra-argument", "fullscreen toggle extra"),
+        ("resize-missing-unit", "resize grow width 10"),
+        ("resize-px", "resize grow width 10 px"),
+        ("resize-ppt", "resize grow width 10 ppt"),
+        ("resize-odd-unit", "resize grow width 10 em"),
+        ("semicolon-chain", "nop first; nop second"),
+        ("comma-chain", "nop first, nop second"),
+        ("mixed-chain", "nop first, nop second; nop third"),
+        ("quoted-semicolon", 'nop "one;two"'),
+        ("quoted-comma", 'nop "one,two"'),
+        ("unterminated-quote", 'nop "unterminated'),
+        ("escaped-quote", 'nop "one\\\"two"'),
+        ("unicode", "nop λ-日本語-🙂"),
+        ("unicode-workspace", "workspace λ-日本語-🙂"),
+        ("nul", "nop before\0after"),
+        ("leading-separator", "; nop after"),
+        ("trailing-separator", "nop before,"),
+        ("criteria-unterminated-quote", '[app_id="foot] focus'),
+        ("criteria-escaped-quote", r'[title="one\"two"] focus'),
+        ("criteria-missing-value", "[con_mark=] focus"),
+        ("criteria-invalid-con-id", "[con_id=not-a-number] focus"),
+        ("mark-missing-name", "mark"),
+        ("mark-invalid-option", "mark --replace fuzz"),
+        ("mark-quoted-separator", 'mark "one;two"'),
+        ("mark-unmark-extra", "unmark one two"),
+        ("gaps-missing-arguments", "gaps"),
+        ("gaps-invalid-scope", "gaps inner nowhere set 10"),
+        ("gaps-negative", "gaps outer current set -5"),
+        ("gaps-overflow", "gaps inner current set 2147483648"),
+        ("border-missing-style", "border"),
+        ("border-invalid-style", "border rounded"),
+        ("border-negative-width", "border pixel -1"),
+        ("border-extra-argument", "border none 2"),
+        ("resize-set-missing-size", "resize set"),
+        ("resize-set-width-missing-value", "resize set width"),
+        ("resize-set-negative", "resize set -1 px 20 px"),
+        ("resize-set-invalid-unit", "resize set 10 em 20 px"),
+        ("move-position-missing", "move position"),
+        ("move-position-one-coordinate", "move position 10 px"),
+        ("move-position-absolute-ppt", "move absolute position 10 ppt 20 ppt"),
+        ("move-position-invalid-unit", "move position 10 em 20 px"),
+        ("workspace-number-missing", "workspace number"),
+        ("workspace-number-invalid", "workspace number nope"),
+        ("workspace-rename-missing-to", "rename workspace fuzz"),
+        ("workspace-rename-quoted", 'rename workspace to "one;two"'),
+        ("output-missing-target", "output"),
+        ("output-scale-missing-value", "output * scale"),
+        ("output-invalid-transform", "output * transform diagonal"),
+        ("output-position-missing-y", "output * position 10"),
+    ]
+    generated = []
+    manifest = json.loads(COMMAND_FAMILIES.read_text())
+    for family in manifest["families"]:
+        name, probe = family["name"], family["probe"]
+        candidates = ([
+            ("criteria-open", '[app_id="unterminated] exit'),
+            ("criteria-value", "[app_id=] exit"),
+            ("criteria-name", "[oracle_field=value] exit"),
+        ] if name == "exit" else [
+            ("missing", name),
+            ("extra", probe + " oracle_extra"),
+            ("invalid", name + " oracle_invalid"),
+            ("quote", name + ' "unterminated'),
+            ("unicode", name + " λ-日本語-🙂"),
+        ])
+        if "[" in probe:
+            candidates += [
+                ("criteria-quote", re.sub(r"\[[^]]*]", '[app_id="unterminated]', probe, count=1)),
+                ("criteria-value", re.sub(r"\[[^]]*]", "[app_id=]", probe, count=1)),
+            ]
+        if re.search(r"(?<![.$])\b-?\d+\b", probe):
+            candidates += [
+                ("negative", re.sub(r"(?<![.$])\b-?\d+\b", "-1", probe, count=1)),
+                ("overflow", re.sub(r"(?<![.$])\b-?\d+\b", "2147483648", probe, count=1)),
+            ]
+        if re.search(r"\b(?:px|ppt)\b", probe):
+            candidates += [
+                ("unit-px", re.sub(r"\b(?:px|ppt)\b", "px", probe, count=1)),
+                ("unit-ppt", re.sub(r"\b(?:px|ppt)\b", "ppt", probe, count=1)),
+                ("unit-invalid", re.sub(r"\b(?:px|ppt)\b", "em", probe, count=1)),
+            ]
+        rng = random.Random(f"{seed}:{name}")
+        rng.shuffle(candidates)
+        generated.extend((f"family-{name}-{kind}", command) for kind, command in candidates)
+    return fixed + generated + [("very-long", "nop " + "x" * 65536)]
+
+
+def wire_fuzz_cases():
+    return [
+        {"name": "bad-magic", "data": b"bad-ip" + struct.pack("=II", 0, 7), "shutdown": True},
+        {"name": "truncated-header", "data": MAGIC + b"\x00\x00", "shutdown": True},
+        {"name": "truncated-payload", "data": MAGIC + struct.pack("=II", 10, 0) + b"nop", "shutdown": True},
+        {"name": "oversized-length", "data": MAGIC + struct.pack("=II", 0xffffffff, 0), "shutdown": True},
+        {"name": "unknown-type", "data": MAGIC + struct.pack("=II", 0, 0x7fffffff)},
+        {"name": "subscribe-invalid-json", "data": MAGIC + struct.pack("=II", 1, 2) + b"{"},
+        {"name": "subscribe-wrong-json", "data": MAGIC + struct.pack("=II", 2, 2) + b"{}"},
+        {"name": "command-invalid-json", "data": MAGIC + struct.pack("=II", 1, 0) + b"{"},
+        {"name": "command-invalid-utf8", "data": MAGIC + struct.pack("=II", 1, 0) + b"\xff"},
+        {"name": "many-clients", "clients": 32},
+        {"name": "zero-command", "data": MAGIC + struct.pack("=II", 0, 0)},
+        {"name": "two-frames", "data": (MAGIC + struct.pack("=II", 0, 7)) * 2, "replies": 2},
+        {"name": "event-type-as-request", "data": MAGIC + struct.pack("=II", 0, 1 << 31)},
+        {"name": "length-one-version", "data": MAGIC + struct.pack("=II", 1, 7) + b"x"},
+        {"name": "subscribe-null", "data": MAGIC + struct.pack("=II", 4, 2) + b"null"},
+        {"name": "subscribe-empty", "data": MAGIC + struct.pack("=II", 2, 2) + b"[]"},
+    ]
+
+
+def recv_wire_reply(stream):
+    header = recv_exact(stream, 14)
+    length, reply_type = struct.unpack("=II", header[6:])
+    body = recv_exact(stream, length)
+    try:
+        payload = json.loads(body)
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        payload = {"raw_hex": body.hex()}
+    if reply_type == TYPES["version"] and isinstance(payload, dict):
+        # Version values name the build and config path; framing is what this corpus tests.
+        payload = {"keys": sorted(payload)}
+    return {"magic": header[:6].decode(errors="backslashreplace"),
+            "type": reply_type, "payload": payload}
+
+
+def wire_observation(sock_path, case):
+    if "clients" in case:
+        streams = []
+        try:
+            for _ in range(case["clients"]):
+                stream = socket.socket(socket.AF_UNIX)
+                stream.settimeout(2)
+                deadline = time.monotonic() + 2
+                while True:
+                    try:
+                        stream.connect(os.fspath(sock_path))
+                        break
+                    except BlockingIOError:
+                        # Python does not retry EAGAIN from a full Unix listen backlog.
+                        if time.monotonic() > deadline:
+                            raise socket.timeout("listen backlog stayed full")
+                        time.sleep(0.01)
+                stream.sendall(MAGIC + struct.pack("=II", 0, TYPES["version"]))
+                streams.append(stream)
+            replies = sum(recv_wire_reply(stream)["type"] == TYPES["version"]
+                          for stream in streams)
+            return {"outcome": "reply", "clients": len(streams), "replies": replies}
+        except (ConnectionError, OSError, RuntimeError, socket.timeout) as error:
+            return {"outcome": "error", "error": type(error).__name__}
+        finally:
+            for stream in streams:
+                stream.close()
+    try:
+        with socket.socket(socket.AF_UNIX) as stream:
+            stream.settimeout(2)
+            stream.connect(os.fspath(sock_path))
+            stream.sendall(case["data"])
+            if case.get("shutdown"):
+                stream.shutdown(socket.SHUT_WR)
+            replies = [recv_wire_reply(stream) for _ in range(case.get("replies", 1))]
+            return {"outcome": "reply", "replies": replies}
+    except socket.timeout:
+        return {"outcome": "timeout"}
+    except (BrokenPipeError, ConnectionResetError, RuntimeError):
+        return {"outcome": "disconnect"}
+    except OSError as error:
+        return {"outcome": "error", "error": type(error).__name__}
+
+
+def subprocess_health(adapter):
+    if adapter.process.poll() is not None:
+        return "crash"
+    try:
+        ipc(adapter.socket, "version")
+    except socket.timeout:
+        return "hang"
+    except (OSError, RuntimeError, ValueError):
+        # A compositor that is exiting refuses connections before it is reaped.
+        return "crash" if exited_code(adapter) is not None else "hang"
+    return "healthy"
+
+
+def subscribed_event(sock_path, family, trigger):
+    subscription = EventSubscription(sock_path, (family,))
+    trigger()
+    try:
+        events = subscription.checkpoint(sock_path, "individual-event-barrier")
+    finally:
+        subscription.close()
+    if not events:
+        raise RuntimeError(f"expected {family} event")
+    return events[0]
+
+
+def command(sock_path, text):
+    reply = ipc(sock_path, "command", text)
+    if not isinstance(reply, list) or not all(item.get("success") for item in reply):
+        raise RuntimeError(f"command failed: {text}: {reply}")
+
+
+def fixture_window_count(value):
+    if not isinstance(value, dict):
+        return 0
+    identity = value.get("app_id") or (value.get("window_properties") or {}).get("instance", "")
+    return int(str(identity).startswith("fixture-")) + sum(
+        fixture_window_count(child)
+        for key in ("nodes", "floating_nodes")
+        for child in value.get(key, [])
+    )
+
+
+def wait_for(predicate, message, seconds=8):
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline:
+        value = predicate()
+        if value:
+            return value
+        time.sleep(0.05)
+    raise RuntimeError(f"timed out waiting for {message}")
+
+
+def marked_processes(marker):
+    needle = f"{RUN_MARKER}={marker}".encode()
+    found = []
+    for path in Path("/proc").glob("[0-9]*/environ"):
+        try:
+            if needle in path.read_bytes().split(b"\0"):
+                found.append(int(path.parent.name))
+        except (FileNotFoundError, PermissionError, ProcessLookupError):
+            pass
+    return found
+
+
+def reap_marked_processes(marker, grace=0.5):
+    for pid in marked_processes(marker):
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+    deadline = time.monotonic() + grace
+    while time.monotonic() < deadline and marked_processes(marker):
+        time.sleep(0.05)
+    for pid in marked_processes(marker):
+        try:
+            os.kill(pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+
+
+def load_rules(*compositors):
+    """normalize.toml; a rule with a `compositors` list applies only to those compositors."""
+    with open(ROOT / "sway-ipc/normalize.toml", "rb") as file:
+        rules = tomllib.load(file)
+    for kind, value in rules.items():
+        if isinstance(value, list):
+            rules[kind] = [rule for rule in value
+                           if "compositors" not in rule or set(rule["compositors"]) & set(compositors)]
+    return rules
+
+
+def rule_names(rules):
+    names = []
+    for value in rules.values():
+        entries = value if isinstance(value, list) else [value]
+        names.extend(entry["name"] for entry in entries
+                     if isinstance(entry, dict) and "name" in entry)
+    return names
+
+
+def tree_field_rules(rules, field, action=None):
+    return [rule for rule in rules["tree_field_rule"]
+            if rule["field"] == field and (action is None or rule["action"] == action)]
+
+
+def rule_matches(rule, value, under_floating=False, under_hidden=False):
+    def matches(key, expected):
+        if key == "under_floating":
+            return under_floating == expected
+        if key == "under_hidden_scratchpad":
+            return under_hidden == expected
+        return value.get(key) == expected
+    return all(matches(key, expected) for key, expected in rule.get("selector", {}).items())
+
+
+def tree_context(value, under_floating, under_hidden, in_scratch):
+    """Context flags for `value`'s children: below a floating root, and below a
+    floating root that sits in sway's synthetic `__i3_scratch` workspace."""
+    in_scratch = in_scratch or (value.get("type") == "workspace"
+                                and value.get("name") == "__i3_scratch")
+    floating_root = value.get("type") == "floating_con"
+    return (under_floating or floating_root,
+            under_hidden or (floating_root and in_scratch),
+            in_scratch)
+
+
+def difference_path(difference):
+    return difference.split(":", 1)[0]
+
+
+def load_applicability():
+    with open(ROOT / "sway-ipc/applicability.toml", "rb") as file:
+        return tomllib.load(file)
+
+
+def applicable_requests(compositor, applicability):
+    if compositor != "i3":
+        unsupported = ADAPTERS[compositor].unsupported_requests if compositor in ADAPTERS else {}
+        return tuple(request for request in QUERY_REQUESTS if request not in unsupported)
+    return tuple(request for request in QUERY_REQUESTS
+                 if applicability["i3"][request].get("applicable", True))
+
+
+def i3_protocol_view(expected, actual, request, applicability):
+    if request == "commands":
+        left, right, excluded = [], [], set()
+        for expected_item, actual_item in zip(expected, actual):
+            expected_reply, actual_reply, item_excluded = i3_protocol_view(
+                expected_item["reply"], actual_item["reply"], "command", applicability
+            )
+            left.append({"command": expected_item["command"], "reply": expected_reply})
+            right.append({"command": actual_item["command"], "reply": actual_reply})
+            excluded.update(item_excluded)
+        return left, right, sorted(excluded)
+    fields = applicability["i3"][request].get("fields")
+    if fields is None:
+        return copy.deepcopy(expected), copy.deepcopy(actual), []
+    fields = set(fields)
+    excluded = set()
+
+    def project(value, collect=False, protocol_object=True):
+        if isinstance(value, dict):
+            if not protocol_object:
+                return copy.deepcopy(value)
+            if collect:
+                excluded.update(value.keys() - fields)
+            return {
+                key: project(child, collect, key in ("nodes", "floating_nodes"))
+                for key, child in value.items()
+                if key in fields
+            }
+        if isinstance(value, list):
+            return [project(child, collect, protocol_object) for child in value]
+        return value
+
+    return project(expected, True), project(actual), sorted(excluded)
+
+
+def shape_view(value):
+    if isinstance(value, dict):
+        return {key: shape_view(child) for key, child in value.items()}
+    if isinstance(value, list):
+        return [shape_view(child) for child in value]
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "boolean"
+    if isinstance(value, (int, float)):
+        return "number"
+    return "string"
+
+
+def command_observation(text, reply):
+    return {"command": text, "reply": reply}
+
+
+def normalize(value, rules, path="$", is_output=False, under_floating=False,
+              under_hidden=False, in_scratch=False):
+    if isinstance(value, dict):
+        output = value.get("type") == "output"
+        child_under_floating, child_under_hidden, child_in_scratch = tree_context(
+            value, under_floating, under_hidden, in_scratch)
+        ignored = {key for rule in rules["ignore_key"] for key in rule["keys"]}
+        output_ignored = {key for rule in rules["ignore_output_key"] for key in rule["keys"]}
+        suffixes = tuple(suffix for rule in rules["ignore_path"] for suffix in rule["suffixes"])
+        shape_paths = {item for rule in rules["shape_path"] for item in rule["paths"]}
+        for rule in rules.get("extension_key", []):
+            for key in rule.get("output_keys", []) if output else []:
+                value.pop(key, None)
+            for key in [key for key in value if f"{path}.{key}" in rule.get("paths", [])]:
+                value.pop(key)
+        conditional_ignores = [rule for rule in rules["tree_field_rule"]
+                               if rule["action"] == "ignore"
+                               and rule_matches(rule, value, under_floating, under_hidden)]
+        for key, child in value.items():
+            child_path = f"{path}.{key}"
+            if child_path in shape_paths:
+                value[key] = shape_view(child)
+            elif (key in ignored or (output and key in output_ignored)
+                    or child_path.endswith(suffixes)
+                    or any(rule["field"] == key for rule in conditional_ignores)):
+                value[key] = NORMAL
+            else:
+                normalize(child, rules, child_path, output, child_under_floating,
+                          child_under_hidden, child_in_scratch)
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            normalize(child, rules, f"{path}[{index}]", is_output, under_floating,
+                      under_hidden, in_scratch)
+
+
+def diff_values(expected, actual, path, differences, ignored_array_suffixes, numeric_tolerances):
+    if type(expected) is not type(actual):
+        differences.append(f"{path}: type {type(expected).__name__} != {type(actual).__name__}")
+    elif isinstance(expected, dict):
+        if expected.keys() != actual.keys():
+            differences.append(f"{path}: keys differ")
+        for key in sorted(expected.keys() & actual.keys()):
+            diff_values(expected[key], actual[key], f"{path}.{key}", differences,
+                        ignored_array_suffixes, numeric_tolerances)
+    elif isinstance(expected, list):
+        if not path.endswith(ignored_array_suffixes) and len(expected) != len(actual):
+            differences.append(f"{path}: length {len(expected)} != {len(actual)}")
+        for index, (left, right) in enumerate(zip(expected, actual)):
+            diff_values(left, right, f"{path}[{index}]", differences,
+                        ignored_array_suffixes, numeric_tolerances)
+    elif expected != actual:
+        tolerance = next((value for suffix, value in numeric_tolerances
+                          if path.endswith(suffix)), None)
+        if (tolerance is None or not isinstance(expected, (int, float))
+                or not isinstance(actual, (int, float))
+                or abs(expected - actual) >= tolerance):
+            differences.append(f"{path}: {expected!r} != {actual!r}")
+
+
+def tree_pairs(expected, actual, path="$tree", under_floating=False, under_hidden=False,
+               in_scratch=False):
+    yield expected, actual, path, under_floating, under_hidden
+    child_context = tree_context(expected, under_floating, under_hidden, in_scratch)
+    for key in ("nodes", "floating_nodes"):
+        for index, pair in enumerate(zip(expected.get(key, []), actual.get(key, []))):
+            yield from tree_pairs(*pair, f"{path}.{key}[{index}]", *child_context)
+
+
+def semantic_tree_diffs(expected, actual, rules):
+    differences = []
+    rect_rule = tree_field_rules(rules, "rect", "rect_tolerance")[0]
+    percent_rule = tree_field_rules(rules, "percent", "numeric_tolerance")[0]
+    rect_ignores = tree_field_rules(rules, "rect", "ignore")
+    percent_ignores = tree_field_rules(rules, "percent", "ignore")
+    tolerance = rect_rule["tolerance"]
+    epsilon = percent_rule["tolerance"]
+    for left, right, path, under_floating, under_hidden in tree_pairs(expected, actual):
+        rect_ignored = any(rule_matches(rule, left, under_floating, under_hidden)
+                           for rule in rect_ignores)
+        if not rect_ignored:
+            for key in ("x", "y", "width", "height"):
+                if abs(left["rect"][key] - right["rect"][key]) > tolerance:
+                    differences.append(f"{path}.rect.{key}: outside {tolerance}px tolerance")
+        expected_children = left.get("nodes", []) + left.get("floating_nodes", [])
+        actual_children = right.get("nodes", []) + right.get("floating_nodes", [])
+        mapping = {a.get("id"): b.get("id") for a, b in zip(expected_children, actual_children)}
+        mapped_focus = [mapping[item] for item in left.get("focus", []) if item in mapping]
+        actual_ids = {child.get("id") for child in actual_children}
+        actual_focus = [item for item in right.get("focus", []) if item in actual_ids]
+        if mapped_focus != actual_focus:
+            differences.append(f"{path}.focus: child-position order differs")
+        if not any(rule_matches(rule, left, under_floating, under_hidden)
+                   for rule in percent_ignores):
+            lp, rp = left.get("percent"), right.get("percent")
+            if ((lp is None) != (rp is None)
+                    or (lp is not None and (not isinstance(lp, (int, float))
+                        or not isinstance(rp, (int, float)) or abs(lp - rp) >= epsilon))):
+                differences.append(f"{path}.percent: differs")
+        if left.get("type") == "con" and not left.get("nodes"):
+            # The relationship compares a role with the outer rect, so it is
+            # meaningless where the rect itself is exempt.
+            for role in ("window_rect", "deco_rect", "geometry"):
+                if rect_ignored:
+                    break
+                if (left.get(role) == left.get("rect")) != (right.get(role) == right.get("rect")):
+                    differences.append(f"{path}.{role}: outer-rect relationship differs")
+            if (left["deco_rect"]["height"] > 0) != (right["deco_rect"]["height"] > 0):
+                differences.append(f"{path}.deco_rect: titlebar presence differs")
+    return differences
+
+
+def align_outputs_by_name(expected, actual):
+    if not isinstance(expected, list) or not isinstance(actual, list):
+        return actual
+    by_name = {
+        item.get("name", "").casefold(): item
+        for item in actual
+        if isinstance(item, dict) and isinstance(item.get("name"), str)
+    }
+    names = [
+        item.get("name", "").casefold()
+        for item in expected
+        if isinstance(item, dict) and isinstance(item.get("name"), str)
+    ]
+    if len(names) != len(expected) or len(by_name) != len(actual) or set(names) != set(by_name):
+        return actual
+    return [by_name[name] for name in names]
+
+
+def compare(expected, actual, request, rules):
+    differences = []
+    ignored = tuple(rules["arrays"]["ignore_length_suffixes"])
+    left, right = copy.deepcopy(expected), copy.deepcopy(actual)
+    if request == "outputs":
+        right = align_outputs_by_name(left, right)
+    normalize(left, rules, f"${request}")
+    normalize(right, rules, f"${request}")
+    numeric_tolerances = [(f".{rule['field']}", rule["tolerance"])
+                          for rule in rules["tree_field_rule"]
+                          if rule["action"] == "numeric_tolerance"]
+    diff_values(left, right, f"${request}", differences, ignored, numeric_tolerances)
+    if request == "tree" and not differences:
+        differences.extend(semantic_tree_diffs(expected, actual, rules))
+    return list(dict.fromkeys(differences))
+
+
+class Adapter:
+    capabilities = frozenset()
+    # Config translations that apply to every row this adapter measures; written
+    # once to each result's [run] table as `adapted` (see the adapter README).
+    adapted = ()
+    # Requests the compositor does not implement, with the reason and source; each
+    # capture records them as not applicable instead of sending them.
+    unsupported_requests = {}
+    # Set by differential_adapter for random and differential runs.
+    differential = False
+    def __init__(self, args, run_dir, scenario=None):
+        self.args, self.run_dir, self.scenario = args, run_dir, scenario or {}
+        wayland_socket = run_dir / "wayland-1"
+        if len(os.fsencode(wayland_socket)) >= 100:
+            raise RuntimeError(
+                f"run directory is too long for a Wayland socket: {wayland_socket}"
+            )
+        self.socket = run_dir / "ipc.sock"
+        self.process = None
+        self.clients = []
+        self.env = os.environ.copy()
+        self.marker = f"{os.getpid()}-{time.monotonic_ns()}"
+        self.env[RUN_MARKER] = self.marker
+        for name in ("SWAYSOCK", "SCROLLSOCK", "MIRACLESOCK", "I3SOCK", "WAYLAND_DISPLAY", "DISPLAY"):
+            self.env.pop(name, None)
+        self.env["FOOT_SERVER_SOCKET"] = str(run_dir / "no-foot-server")
+
+    def wrapped(self, command):
+        limited = ["timeout", "--kill-after=5", str(self.args.timeout), *command]
+        if os.environ.get("ORACLE_CONTAINER") == "1":
+            return limited
+        return ["systemd-run", "--user", "--scope", "--quiet", "-p", "MemoryMax=2G",
+                "-p", "MemorySwapMax=0", *limited]
+
+    def check_started_build(self, version_reply):
+        """Every started process must be the pinned build.
+
+        The source checkout is checked once before a run, but a binary rebuilt
+        from a later commit mid-run would otherwise be measured and recorded
+        under the earlier pin.
+        """
+        name = next(key for key, adapter in ADAPTERS.items() if adapter is type(self))
+        details = getattr(type(self), "version_details", None)
+        if details is None:
+            return version_reply
+        version, commit = details(version_reply)
+        if commit == "unknown" or not PINS[name].startswith(commit):
+            raise RuntimeError(
+                f"started {name} reports {version!r}, expected pinned commit "
+                f"{PINS[name][:8]}; was the binary rebuilt during the run?"
+            )
+        return version_reply
+
+    def start_process(self, command, log):
+        runtime = self.env.pop("XDG_RUNTIME_DIR", None)
+        if runtime:
+            command = ["env", f"XDG_RUNTIME_DIR={runtime}", *command]
+        self.process = subprocess.Popen(self.wrapped(command), env=self.env, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+        wait_for(lambda: self.socket.exists() or self.process.poll() is not None, "private IPC socket")
+        if self.process.poll() is not None:
+            log.flush()
+            tail = Path(log.name).read_text(errors="replace").splitlines()[-40:]
+            detail = "\n" + "\n".join(tail) if tail else ""
+            raise RuntimeError(f"compositor exited with {self.process.returncode}{detail}")
+
+    def stop(self):
+        for client in self.clients:
+            if client.poll() is None:
+                client.terminate()
+        for client in self.clients:
+            try:
+                client.wait(1)
+            except subprocess.TimeoutExpired:
+                client.kill()
+                client.wait()
+        if self.process and self.process.poll() is None:
+            os.killpg(self.process.pid, signal.SIGTERM)
+            try:
+                self.process.wait(3)
+            except subprocess.TimeoutExpired:
+                os.killpg(self.process.pid, signal.SIGKILL)
+                self.process.wait()
+        reap_marked_processes(self.marker)
+        self.reap_children()
+
+    @staticmethod
+    def reap_children():
+        while True:
+            try:
+                pid, _ = os.waitpid(-1, os.WNOHANG)
+            except ChildProcessError:
+                return
+            if pid == 0:
+                return
+
+    def command_reply(self, text):
+        if "@con:" in text:
+            text = sway_ipc_v3.resolve_con_tokens(ipc(self.socket, "tree"), text)
+        return ipc(self.socket, "command", self.translate_command(text))
+
+    def translate_command(self, text):
+        return text
+
+    def run_command(self, text):
+        reply = self.command_reply(text)
+        if not isinstance(reply, list) or not all(item.get("success") for item in reply):
+            raise RuntimeError(f"command failed: {text}: {reply}")
+
+    def reset(self):
+        reply = ipc(self.socket, "command", '[app_id="^fixture-"] kill')
+        if not isinstance(reply, list) or not all(item.get("success") or item.get("error") == "No matching node." for item in reply):
+            raise RuntimeError(f"fixture cleanup failed: {reply}")
+        wait_for(lambda: fixture_window_count(ipc(self.socket, "tree")) == 0, "fixture windows to close")
+        self.run_command("workspace __fixture_reset")
+        self.run_command("workspace 1")
+
+    def open_window(self, ident):
+        raise NotImplementedError
+
+    def set_differential_mode(self):
+        """Give every output the 1280x720 mode that random and differential runs use."""
+        return self.command_reply("output * mode --custom 1280x720@60Hz")
+
+
+class FixtureUnavailable(RuntimeError):
+    pass
+
+
+class WaylandAdapter(Adapter):
+    capabilities = frozenset({"xdg-toplevel-size-hints", "wlr-foreign-toplevel-management"})
+    config_text = ""
+
+    def rendered_config(self):
+        return self.config_text
+
+    def fixture_client(self):
+        binary = self.run_dir / "xdg-toplevel-fixture"
+        if binary.exists():
+            return binary
+        for tool in ("pkg-config", "wayland-scanner", "cc"):
+            if shutil.which(tool) is None:
+                raise FixtureUnavailable(f"fixture client unavailable (missing {tool})")
+        for package in ("wayland-protocols", "wayland-client"):
+            if subprocess.run(
+                ["pkg-config", "--exists", package], check=False
+            ).returncode:
+                raise FixtureUnavailable(
+                    f"fixture client unavailable (missing {package})"
+                )
+        protocols = subprocess.check_output(
+            ["pkg-config", "--variable=pkgdatadir", "wayland-protocols"], text=True
+        ).strip()
+        protocol = Path(protocols) / "stable/xdg-shell/xdg-shell.xml"
+        header = self.run_dir / "xdg-shell-client-protocol.h"
+        code = self.run_dir / "xdg-shell-protocol.c"
+        try:
+            subprocess.run(["wayland-scanner", "client-header", protocol, header], check=True)
+            subprocess.run(["wayland-scanner", "private-code", protocol, code], check=True)
+            flags = shlex.split(subprocess.check_output(
+                ["pkg-config", "--cflags", "--libs", "wayland-client"], text=True
+            ))
+            subprocess.run([
+                "cc", "-std=c11", "-Wall", "-Wextra", "-Werror", f"-I{self.run_dir}",
+                ROOT / "contrib/xdg-toplevel-fixture.c", code, "-o", binary, *flags,
+            ], check=True)
+        except subprocess.CalledProcessError as error:
+            raise FixtureUnavailable("fixture client unavailable (build failed)") from error
+        return binary
+
+    def foreign_toplevel_client(self):
+        binary = self.run_dir / "foreign-toplevel-request"
+        if binary.exists():
+            return binary
+        for tool in ("pkg-config", "wayland-scanner", "cc"):
+            if shutil.which(tool) is None:
+                raise FixtureUnavailable(f"foreign-toplevel client unavailable (missing {tool})")
+        if subprocess.run(["pkg-config", "--exists", "wayland-client"], check=False).returncode:
+            raise FixtureUnavailable("foreign-toplevel client unavailable (missing wayland-client)")
+        protocol = ROOT / "contrib/protocols/wlr-foreign-toplevel-management-unstable-v1.xml"
+        header = self.run_dir / "wlr-foreign-toplevel-management-unstable-v1-client-protocol.h"
+        code = self.run_dir / "wlr-foreign-toplevel-management-unstable-v1-protocol.c"
+        try:
+            subprocess.run(["wayland-scanner", "client-header", protocol, header], check=True)
+            subprocess.run(["wayland-scanner", "private-code", protocol, code], check=True)
+            flags = shlex.split(subprocess.check_output(
+                ["pkg-config", "--cflags", "--libs", "wayland-client"], text=True
+            ))
+            subprocess.run([
+                "cc", "-std=c11", "-Wall", "-Wextra", "-Werror", f"-I{self.run_dir}",
+                ROOT / "contrib/foreign-toplevel-request.c", code, "-o", binary, *flags,
+            ], check=True)
+        except subprocess.CalledProcessError as error:
+            raise FixtureUnavailable("foreign-toplevel client unavailable (build failed)") from error
+        return binary
+
+    def foreign_toplevel_request(self, ident, request):
+        """Send one wlr foreign-toplevel request to the toplevel with app_id `ident`."""
+        arguments = [ident, request]
+        subprocess.run(
+            [self.foreign_toplevel_client(), *arguments], env={
+                **self.env, "WAYLAND_DISPLAY": self.display,
+                "XDG_RUNTIME_DIR": str(self.run_dir),
+            }, stdout=subprocess.DEVNULL, check=True, timeout=10,
+        )
+        text = "foreign-toplevel-request " + " ".join(arguments)
+        return command_observation(text, [{"success": True}])
+
+    def open_window_command(self, ident, title):
+        return f"exec foot --app-id={shlex.quote(ident)} --title={shlex.quote(title)} sh -c 'sleep 300'"
+
+    def start(self, log):
+        config = self.run_dir / self.config_name
+        config.write_text(self.rendered_config())
+        self.env.update({"WLR_BACKENDS": "headless", "WLR_HEADLESS_OUTPUTS": str(self.scenario.get("outputs", 1)), "SWAYSOCK": str(self.socket), "XDG_RUNTIME_DIR": str(self.run_dir)})
+        self.start_process([str(self.args.binary), "-c", str(config)], log)
+        version = self.check_started_build(ipc(self.socket, "version"))
+        self.display = wait_for(self.find_display, "private Wayland socket")
+        return version
+
+    def find_display(self):
+        sockets = [path for path in self.run_dir.glob("wayland-*") if not path.name.endswith(".lock")]
+        return sockets[0].name if sockets else None
+
+    def open_window(self, ident, title=None):
+        before = fixture_window_count(ipc(self.socket, "tree"))
+        title = title or ident
+        text = self.open_window_command(ident, title)
+        reply = self.command_reply(text)
+        if not isinstance(reply, list) or not all(item.get("success") for item in reply):
+            raise RuntimeError(f"command failed: {text}: {reply}")
+        wait_for(lambda: fixture_window_count(ipc(self.socket, "tree")) == before + 1, ident)
+        return command_observation(text, reply)
+
+    def open_hinted_window(self, ident, min_width, min_height, max_width, max_height,
+                           parent):
+        before = fixture_window_count(ipc(self.socket, "tree"))
+        arguments = [ident, min_width, min_height, max_width, max_height, int(parent)]
+        client = subprocess.Popen(
+            [self.fixture_client(), *map(str, arguments)], env={
+                **self.env, "WAYLAND_DISPLAY": self.display,
+                "XDG_RUNTIME_DIR": str(self.run_dir),
+            }, stdout=subprocess.DEVNULL,
+        )
+        self.clients.append(client)
+        added = 2 if parent else 1
+        wait_for(lambda: fixture_window_count(ipc(self.socket, "tree")) == before + added,
+                 ident)
+        text = "xdg-toplevel-fixture " + " ".join(map(str, arguments))
+        return command_observation(text, [{"success": True}])
+
+
+class SwayAdapter(WaylandAdapter):
+    capabilities = WaylandAdapter.capabilities | {"sway-command-language"}
+    config_name = "config"
+    config_text = "font monospace 10\ndefault_border normal 2\noutput * mode 1270x1408\noutput * bg #000000 solid_color\nmode resize {\n    bindsym Escape mode default\n}\nbindsym Shift+Ctrl+t nop\n"
+
+    def rendered_config(self):
+        output_layout = self.scenario.get("output_layout", [])
+        outputs = "".join(
+            f"output {fake_output_name('HEADLESS', index, len(output_layout))} "
+            f"mode {width}x{height} position {x} {y}\n"
+            for index, (width, height, x, y, _primary) in enumerate(output_layout)
+        )
+        focus = (
+            f"focus output {fake_output_name('HEADLESS', initial_fake_focus(self.scenario), len(output_layout))}\n"
+            if output_layout else ""
+        )
+        assignments = "".join(
+            self.translate_command(line) + "\n"
+            for line in self.scenario.get("workspace_outputs", [])
+        )
+        return self.config_text + outputs + assignments + focus
+
+    def translate_command(self, text):
+        return translate_fake_outputs(text, "HEADLESS", fake_output_count(self.scenario))
+
+    @staticmethod
+    def version_details(reply):
+        version = reply.get("human_readable", "unknown")
+        target = json.loads((FIXTURES / "schema-version.json").read_text())
+        commit = target["commit"] if target["version"] in version else "unknown"
+        return version, commit
+
+
+class SwaywardAdapter(WaylandAdapter):
+    capabilities = WaylandAdapter.capabilities | {"sway-command-language"}
+    config_name = "config.kdl"
+    config_text = "layout { default-border \"normal\" width=2; default-floating-border \"normal\" width=2; border { on; width 2; }; }\nmode \"resize\" { Escape { command \"mode default\"; }; }\n"
+
+    def rendered_config(self):
+        output_layout = self.scenario.get("output_layout", [])
+        focus = initial_fake_focus(self.scenario)
+        outputs = (
+            f'output "{fake_output_name("headless", index, len(output_layout))}" '
+            f'{{ mode custom=true "{width}x{height}@60"; position x={x} y={y}; scale 1;'
+            + (' focus-at-startup;' if index == focus else '') + ' }\n'
+            for index, (width, height, x, y, _primary) in enumerate(output_layout)
+        ) if output_layout else (
+            f'output "headless-{number}" {{ mode custom=true "1270x1408@60"; scale 1; }}\n'
+            for number in range(1, self.scenario.get("outputs", 1) + 1)
+        )
+        assignments = "".join(
+            f'workspace {json.dumps(match[1])} {{ sway-output-assignment '
+            + " ".join(json.dumps(self.translate_command(name)) for name in match[2].split()) + "; }\n"
+            for line in self.scenario.get("workspace_outputs", [])
+            if (match := re.fullmatch(r"workspace\s+(.+?)\s+output\s+(.+)", line))
+        )
+        return "".join(outputs) + assignments + self.config_text
+
+    def translate_command(self, text):
+        return translate_fake_outputs(text, "headless", fake_output_count(self.scenario))
+
+    @staticmethod
+    def version_details(reply):
+        version = reply.get("human_readable", "unknown")
+        commit = next((part.rsplit("g", 1)[-1].rstrip(")") for part in version.split() if "-g" in part), None)
+        if commit is None:
+            commit = next((part.strip("()") for part in version.split()
+                           if re.fullmatch(r"\(?[0-9a-f]{8,40}\)?", part)), "unknown")
+        return version, commit
+
+    def start(self, log):
+        config = self.run_dir / self.config_name
+        config.write_text(self.rendered_config())
+        self.env.update({"WLR_HEADLESS_OUTPUTS": str(self.scenario.get("outputs", 1)), "SWAYSOCK": str(self.socket), "I3SOCK": str(self.socket), "XDG_RUNTIME_DIR": str(self.run_dir)})
+        self.start_process([str(self.args.binary), "-c", str(config)], log)
+        version = self.check_started_build(ipc(self.socket, "version"))
+        self.display = wait_for(self.find_display, "private Wayland socket")
+        return version
+
+
+class I3Adapter(Adapter):
+    def start(self, log):
+        if not shutil.which("Xvfb") or not shutil.which("xterm"):
+            raise RuntimeError("i3 adapter requires Xvfb and xterm")
+        display_number = next((number for number in range(200, 700) if not Path(f"/tmp/.X11-unix/X{number}").exists()), None)
+        if display_number is None:
+            raise RuntimeError("no private X display number available")
+        self.display = f":{display_number}"
+        config = self.run_dir / "config"
+        output_layout = self.scenario.get("output_layout", [])
+        fake_outputs = ""
+        if output_layout:
+            entries = [
+                f"{width}x{height}+{x}+{y}" + ("P" if primary else "")
+                for width, height, x, y, primary in output_layout
+            ]
+            fake_outputs = "fake-outputs " + ",".join(entries) + "\n"
+        assignments = "\n".join(self.scenario.get("workspace_outputs", []))
+        config.write_text(
+            f"font pango:monospace 10\nipc-socket {self.socket}\ndefault_border normal 2\n"
+            f"{fake_outputs}{assignments}\n"
+        )
+        self.env["DISPLAY"] = self.display
+        script = f'exec Xvfb {self.display} -screen 0 1270x1408x24 & xvfb=$!; trap "kill $xvfb" EXIT; for i in $(seq 1 100); do [ -S /tmp/.X11-unix/X{display_number} ] && break; sleep .05; done; {self.args.binary} -c {config}'
+        self.start_process(["sh", "-c", script], log)
+        return ipc(self.socket, "version")
+
+    @staticmethod
+    def version_details(reply):
+        version = reply.get("human_readable", "unknown")
+        commit = version.rsplit("g", 1)[-1] if "-g" in version else "unknown"
+        return version, commit
+
+    def command_reply(self, text):
+        reply = ipc(self.socket, "command", text.replace("app_id=", "instance="))
+        self.reap_children()
+        return reply
+
+    def reset(self):
+        reply = ipc(self.socket, "command", '[instance="^fixture-"] kill')
+        if not isinstance(reply, list) or not all(item.get("success") or item.get("error") == "No matching node." for item in reply):
+            raise RuntimeError(f"fixture cleanup failed: {reply}")
+        wait_for(lambda: fixture_window_count(ipc(self.socket, "tree")) == 0, "fixture windows to close")
+        self.run_command("workspace fixture-reset")
+        self.run_command("workspace 1")
+
+    def open_window(self, ident, title=None):
+        before = fixture_window_count(ipc(self.socket, "tree"))
+        title = title or ident
+        text = f"exec --no-startup-id xterm -name {shlex.quote(ident)} -title {shlex.quote(title)} -e sleep infinity"
+        # No shell: an interactive bash would retitle the window through
+        # PROMPT_COMMAND (user@container-id:cwd) at an arbitrary moment.
+        self.clients.append(subprocess.Popen(
+            ["xterm", "-name", ident, "-title", title, "-e", "sleep", "infinity"], env=self.env,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        ))
+        reply = [{"success": True}]
+        wait_for(lambda: fixture_window_count(ipc(self.socket, "tree")) == before + 1, ident)
+        self.reap_children()
+        return command_observation(text, reply)
+
+
+class SwayFXAdapter(SwayAdapter):
+    """SwayFX runs sway's config, commands and fake-output mapping unchanged.
+
+    Only the build identity differs: GET_VERSION reports `<release>-<commit>`.
+    See sway-ipc/adapters/swayfx.md.
+    """
+
+    @staticmethod
+    def version_details(reply):
+        version = reply.get("human_readable", "unknown")
+        match = re.match(r"\S+?-([0-9a-f]{7,40})\b", version)
+        return version, match.group(1) if match else "unknown"
+
+
+class ScrollAdapter(SwayAdapter):
+    """scroll reads sway's config and command language; two things differ.
+
+    It takes its IPC socket path from SCROLLSOCK (SWAYSOCK is ignored), and
+    its animations are on by default, so the rendered config turns them off.
+    See sway-ipc/adapters/scroll.md.
+    """
+
+    adapted = ("scroll-animations-off",)
+
+    def rendered_config(self):
+        return super().rendered_config() + "animations enabled no\n"
+
+    def start(self, log):
+        self.env["SCROLLSOCK"] = str(self.socket)
+        return super().start(log)
+
+    version_details = staticmethod(SwayFXAdapter.version_details)
+
+
+MIRACLE_CONFIG = (
+    "# Translated from the oracle's sway config; see sway-ipc/adapters/miracle-wm.md.\n"
+    "border:\n  size: 2\n  radius: 0\n"
+    "inner_gaps:\n  x: 0\n  y: 0\n"
+    "outer_gaps:\n  x: 0\n  y: 0\n"
+    "enable_animations: false\n"
+    "workspace_back_and_forth: false\n"
+)
+
+
+class MiracleAdapter(WaylandAdapter):
+    """miracle-wm 0.11.2, a Mir compositor that speaks i3/sway IPC.
+
+    Mir's virtual display and stub input platforms run it headless; the socket
+    path comes from MIRACLESOCK. The sway config is translated to miracle's
+    YAML, outputs to --virtual-output sizes and a display YAML, and reset closes
+    fixture windows client-side because miracle has no kill command.
+    See sway-ipc/adapters/miracle-wm.md.
+    """
+
+    capabilities = WaylandAdapter.capabilities | {"sway-command-language"}
+    adapted = ("miracle-config-yaml", "miracle-outputs-virtual", "miracle-reset-client-close")
+    config_name = "config.yaml"
+    config_text = MIRACLE_CONFIG
+    unsupported_requests = {
+        request: (f"miracle-wm 0.11.2 does not implement {name}: the request type has no case "
+                  "in src/ipc_message_handler.cpp:65-260 and the connection is closed without a "
+                  "reply; wiki/docs/ipc/index.md lists it as not yet implemented")
+        for request, name in (("inputs", "GET_INPUTS"), ("seats", "GET_SEATS"))
+    }
+
+    def output_layout(self):
+        """(width, height, x, y) per output, in fake-N order."""
+        layout = self.scenario.get("output_layout") or []
+        if layout:
+            return [(width, height, x, y) for width, height, x, y, _primary in layout]
+        width, height = (1280, 720) if self.differential else (1270, 1408)
+        return [(width, height, index * width, 0)
+                for index in range(self.scenario.get("outputs", 1))]
+
+    def display_config(self):
+        return "outputs:\n" + "".join(
+            f"  - name: Virtual-{index}\n    enabled: true\n"
+            f"    position:\n      x: {x}\n      y: {y}\n"
+            f"    size:\n      width: {width}\n      height: {height}\n"
+            "    orientation: normal\n    scale: 1\n    group_id: 0\n"
+            for index, (width, height, x, y) in enumerate(self.output_layout(), 1))
+
+    def translate_command(self, text):
+        # fake-0 holds workspace 1; miracle gives workspace 1 to Virtual-1.
+        return re.sub(r"\bfake-(\d+)\b", lambda match: f"Virtual-{int(match[1]) + 1}", text)
+
+    def start(self, log):
+        config = self.run_dir / self.config_name
+        config.write_text(self.rendered_config())
+        display = self.run_dir / "display.yaml"
+        display.write_text(self.display_config())
+        self.env.update({"MIRACLESOCK": str(self.socket), "XDG_RUNTIME_DIR": str(self.run_dir),
+                         "XDG_CONFIG_HOME": str(self.run_dir / "config-home")})
+        outputs = [f"--virtual-output={width}x{height}"
+                   for width, height, _x, _y in self.output_layout()]
+        self.start_process([
+            str(self.args.binary), "--config", str(config), "--display-config-path", str(display),
+            "--platform-display-libs=mir:virtual", "--platform-input-lib=mir:stub-input",
+            "--enable-x11", "false", *outputs,
+        ], log)
+        version = self.check_started_build(ipc(self.socket, "version"))
+        self.display = wait_for(self.find_display, "private Wayland socket")
+        if len(self.output_layout()) > 1:
+            # Mir focuses the last output it configures; sway starts on fake-0's.
+            self.run_command(f"focus output Virtual-{initial_fake_focus(self.scenario) + 1}")
+        return version
+
+    def check_started_build(self, version_reply):
+        """GET_VERSION carries no commit (and 0.11.2 reports 0.9.1), so re-check the checkout."""
+        require_clean_binary(self.args.binary, "miracle-wm")
+        return version_reply
+
+    @staticmethod
+    def version_details(reply):
+        return reply.get("human_readable", "unknown"), "unknown"
+
+    def set_differential_mode(self):
+        """miracle has no output command; the virtual outputs start at 1280x720."""
+        modes = {(item["current_mode"]["width"], item["current_mode"]["height"])
+                 for item in ipc(self.socket, "outputs") if item.get("active")}
+        return [{"success": modes == {(1280, 720)}}]
+
+    def open_window(self, ident, title=None):
+        """Open a foot window and wait for its window::new event.
+
+        miracle's GET_TREE omits scratchpad windows (it has no __i3_scratch), so a
+        window that a for_window rule sends to the scratchpad never raises the
+        fixture count that the other adapters wait for.
+        """
+        title = title or ident
+        text = self.open_window_command(ident, title)
+        subscription = EventSubscription(self.socket, ("window",))
+        try:
+            reply = self.command_reply(text)
+            if not isinstance(reply, list) or not all(item.get("success") for item in reply):
+                raise RuntimeError(f"command failed: {text}: {reply}")
+            deadline = time.monotonic() + 8
+            while True:
+                if time.monotonic() > deadline:
+                    raise RuntimeError(f"timed out waiting for {ident}")
+                header = recv_exact(subscription.stream, 14)
+                length, _ = struct.unpack("=II", header[6:])
+                event = json.loads(recv_exact(subscription.stream, length))
+                if event.get("change") == "new" and (event.get("container") or {}).get("app_id") == ident:
+                    break
+        finally:
+            subscription.close()
+        return command_observation(text, reply)
+
+    def foreign_toplevel_request(self, ident, request):
+        """Record a request the client cannot deliver as a failed reply, not a harness error.
+
+        Mir's wlr-foreign-toplevel handles carry the client's process name ("foot")
+        as app_id, not the xdg-toplevel app_id, so the client finds no fixture toplevel.
+        """
+        try:
+            return super().foreign_toplevel_request(ident, request)
+        except subprocess.CalledProcessError as error:
+            text = f"foreign-toplevel-request {ident} {request}"
+            return command_observation(text, [{"success": False,
+                                               "error": f"client exited with {error.returncode}"}])
+
+    def reset(self):
+        """Close every fixture window from the client side: miracle has no kill command."""
+        def fixture_pids(value):
+            identity = value.get("app_id") or ""
+            found = [value["pid"]] if str(identity).startswith("fixture-") and value.get("pid") else []
+            for key in ("nodes", "floating_nodes"):
+                for child in value.get(key, []):
+                    found += fixture_pids(child)
+            return found
+        # GET_TREE omits scratchpad windows, so also find this run's fixture clients
+        # by their command line (exec passes the run marker down to them).
+        launched = []
+        for pid in marked_processes(self.marker):
+            try:
+                arguments = Path(f"/proc/{pid}/cmdline").read_bytes().split(b"\0")
+            except (FileNotFoundError, ProcessLookupError):
+                continue
+            if any(argument.startswith(b"--app-id=fixture-") for argument in arguments):
+                launched.append(pid)
+        for pid in {*fixture_pids(ipc(self.socket, "tree")), *launched}:
+            try:
+                os.kill(pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+        wait_for(lambda: fixture_window_count(ipc(self.socket, "tree")) == 0, "fixture windows to close")
+        self.run_command("workspace __fixture_reset")
+        self.run_command("workspace 1")
+
+
+class SwirlAdapter(ScrollAdapter):
+    """swirl is a rebrand of scroll 1.12.17 and runs through the scroll adapter.
+
+    It still takes its socket from SCROLLSOCK, but its GET_VERSION carries no
+    commit, so a started build is checked by its version reply and by the
+    binary's content hash instead. See sway-ipc/adapters/swirl.md.
+    """
+
+    binary_digests = {}
+
+    @staticmethod
+    def version_details(reply):
+        return reply.get("human_readable", "unknown"), "unknown"
+
+    def check_started_build(self, version_reply):
+        """swirl reports no commit: require its variant and release, and the same binary all run."""
+        if (version_reply.get("variant"), version_reply.get("human_readable")) != ("swirl", "1.13-dev"):
+            raise RuntimeError(f"started swirl reports {version_reply!r}, expected swirl 1.13-dev")
+        binary = Path(self.args.binary).resolve()
+        digest = hashlib.sha256(binary.read_bytes()).hexdigest()
+        if self.binary_digests.setdefault(binary, digest) != digest:
+            raise RuntimeError(f"{binary} changed during the run; was it rebuilt?")
+        return version_reply
+
+
+ADAPTERS = {"sway": SwayAdapter, "swayward": SwaywardAdapter, "swayfx": SwayFXAdapter,
+            "scroll": ScrollAdapter, "swirl": SwirlAdapter, "miracle-wm": MiracleAdapter, "i3": I3Adapter}
+DIFFERENTIAL_CONFIGS = {
+    "sway": "font monospace 10\ndefault_border normal 2\noutput * mode 1280x720\noutput * bg #000000 solid_color\n",
+    "swayfx": "font monospace 10\ndefault_border normal 2\noutput * mode 1280x720\noutput * bg #000000 solid_color\n",
+    "scroll": "font monospace 10\ndefault_border normal 2\noutput * mode 1280x720\noutput * bg #000000 solid_color\n",
+    "swirl": "font monospace 10\ndefault_border normal 2\noutput * mode 1280x720\noutput * bg #000000 solid_color\n",
+    "swayward": "output \"headless-1\" { mode custom=true \"1280x720@60\"; scale 1; }\nlayout { default-border \"normal\" width=2; default-floating-border \"normal\" width=2; border { on; width 2; }; }\n",
+    "miracle-wm": MIRACLE_CONFIG,
+}
+
+
+def differential_adapter(compositor, adapter_args, run_dir, scenario=None):
+    adapter = ADAPTERS[compositor](adapter_args, run_dir, scenario)
+    if compositor in DIFFERENTIAL_CONFIGS:
+        config = DIFFERENTIAL_CONFIGS[compositor]
+        if compositor == "swayward" and scenario and scenario.get("output_layout"):
+            # rendered_config emits every declared output; a fixed headless-1 would duplicate one.
+            config = "".join(line + "\n" for line in config.splitlines()
+                             if not line.startswith('output "headless-1"'))
+        adapter.config_text = config
+    adapter.differential = True
+    return adapter
+
+
+def output_rects(adapter):
+    """Active output rectangles in position order, plus the focused one's rectangle."""
+    outputs = [item for item in ipc(adapter.socket, "outputs") if item.get("active")]
+    rect = lambda item: tuple(item["rect"][key] for key in ("x", "y", "width", "height"))
+    return sorted(map(rect, outputs)), [rect(item) for item in outputs if item.get("focused")]
+
+
+def differential_action(adapter, text):
+    if text.startswith("xdg-hinted "):
+        ident, *values = text.split()[1:]
+        min_width, min_height, max_width, max_height, parent = map(int, values)
+        adapter.open_hinted_window(ident, min_width, min_height, max_width, max_height, bool(parent))
+        return [{"success": True}]
+    before = fixture_window_count(ipc(adapter.socket, "tree"))
+    if isinstance(adapter, I3Adapter) and text.startswith("exec foot --app-id="):
+        ident = text.split("--app-id=", 1)[1].split(" ", 1)[0]
+        text = f"exec --no-startup-id xterm -name {ident} -title {ident} -e sleep infinity"
+    reply = adapter.command_reply(text)
+    if (text.startswith(("exec foot --app-id=", "exec --no-startup-id xterm -name "))
+            and reply and reply[0].get("success")):
+        wait_for(lambda: fixture_window_count(ipc(adapter.socket, "tree")) > before,
+                 "generated window")
+    else:
+        time.sleep(0.03)
+    return reply
+
+
+def start_differential(args, base, adapters, versions, logs, scenario=None):
+    for label, compositor, binary in (
+        ("a", args.a, args.a_binary), ("b", args.b, args.b_binary)
+    ):
+        run_dir = base / label
+        run_dir.mkdir()
+        adapter_args = argparse.Namespace(binary=binary, timeout=args.timeout)
+        adapter = differential_adapter(compositor, adapter_args, run_dir, scenario)
+        log = open(run_dir / "compositor.log", "w")
+        logs.append(log)
+        versions.append(adapter.start(log))
+        adapters.append(adapter)
+        reply = adapter.set_differential_mode()
+        if not reply or not reply[0].get("success"):
+            raise RuntimeError(f"could not set differential output mode: {reply}")
+    if scenario and scenario.get("output_layout"):
+        layouts = [output_rects(adapter) for adapter in adapters]
+        if layouts[0] != layouts[1]:
+            raise RuntimeError(f"harness issue: output layouts differ at step 0: {layouts}")
+
+
+def differential_step(adapters, text, settle):
+    if settle:
+        states = [random_observation(adapter, text) for adapter in adapters]
+        return {request: [state[request] for state in states]
+                for request in ("command", "tree", "workspaces")}
+    observations = {"command": [differential_action(adapter, text) for adapter in adapters]}
+    for request in ("tree", "workspaces"):
+        observations[request] = [ipc(adapter.socket, request) for adapter in adapters]
+    return observations
+
+
+def first_difference(observations, rules):
+    for request, pair in observations.items():
+        differences = compare(pair[0], pair[1], request, rules)
+        if differences:
+            return request, differences
+    return None
+
+
+class CompositorCrash(RuntimeError):
+    """A compositor died or stopped answering IPC during a sequence.
+
+    A finding, not a harness error, and never a mismatch: when the reference
+    (sway) crashes there is no reference reply to compare against. step is the
+    1-based command after which the death was observed (sway segfaults on a
+    later transaction, so it is usually the last command sent, not an earlier
+    one); exits maps each dead label to its exit description.
+    """
+    def __init__(self, dead, error, step=None):
+        labels = [label for label, _ in dead]
+        detail = ", ".join(f"{label} {how}" for label, how in dead)
+        super().__init__(f"{detail} (stopped answering IPC: {error})")
+        self.labels = labels
+        self.exits = dict(dead)
+        self.step = step
+
+
+def exit_description(code):
+    if code < 0:
+        try:
+            return f"killed by {signal.Signals(-code).name}"
+        except ValueError:
+            return f"killed by signal {-code}"
+    return f"exited with {code}"
+
+
+def exited_code(adapter, grace=1.0):
+    """The adapter process's exit code, waiting briefly for a dying process to be reaped."""
+    if not adapter.process:
+        return None
+    try:
+        return adapter.process.wait(grace)
+    except subprocess.TimeoutExpired:
+        return None
+
+
+def unresponsive(adapters, labels, settle=0.0):
+    """[(label, how)] for every compositor that exited or no longer answers IPC.
+
+    Sway applies a command's layout in a later transaction, so a crash can
+    follow a successful reply by ~0.15 s; settle waits for it first.
+    """
+    if settle:
+        time.sleep(settle)
+    dead = []
+    for adapter, label in zip(adapters, labels):
+        code = adapter.process.poll() if adapter.process else None
+        if code is not None:
+            dead.append((label, exit_description(code)))
+            continue
+        try:
+            ipc(adapter.socket, "version")
+        except (OSError, RuntimeError):
+            dead.append((label, "stopped answering IPC"))
+    return dead
+
+
+def guarded_step(adapters, labels, text, settle, step):
+    """differential_step, raising CompositorCrash when a compositor died during it."""
+    try:
+        return differential_step(adapters, text, settle)
+    except (OSError, RuntimeError) as error:
+        dead = unresponsive(adapters, labels, settle=0.5)
+        if dead:
+            raise CompositorCrash(dead, error, step) from error
+        raise
+
+
+def require_alive(adapters, labels, step, reason):
+    """Raise CompositorCrash if a compositor died just after a step that looked fine.
+
+    A divergence observed just before sway segfaults compares a state sway
+    never finished arranging; it must be reported as a crash, not a mismatch.
+    """
+    dead = unresponsive(adapters, labels, settle=0.3)
+    if dead:
+        raise CompositorCrash(dead, reason, step)
+
+
+def differential_online(args, gen, steps, scenario=None, commands=None):
+    """Like differential_once, but each command depends on sway's settled state.
+
+    Returns (divergence or None, versions, commands): commands is the emitted
+    list up to and including the divergent step, so the seed replays without
+    the generator. It fills in place, so the caller keeps it if a step raises;
+    a compositor that stops answering raises CompositorCrash.
+    """
+    with tempfile.TemporaryDirectory(prefix="sio-") as directory:
+        adapters, versions, logs = [], [], []
+        commands = [] if commands is None else commands
+        try:
+            start_differential(args, Path(directory), adapters, versions, logs, scenario)
+            labels = (args.a, args.b)
+            rules = load_rules(args.a, args.b)
+            prelude = gen.prelude()
+            state = {"tree": ipc(adapters[0].socket, "tree"),
+                     "workspaces": ipc(adapters[0].socket, "workspaces")}
+            for step in range(1, steps + 1):
+                if step <= len(prelude):
+                    text = prelude[step - 1]
+                else:
+                    text = gen.next(sway_ipc_v3.features(state["tree"], state["workspaces"]), step)
+                commands.append(text)
+                observations = guarded_step(adapters, labels, text, True, step)
+                gen.observe_reply(text, observations["command"][0])
+                state = {request: observations[request][0] for request in ("tree", "workspaces")}
+                found = first_difference(observations, rules)
+                if found:
+                    require_alive(adapters, labels, step, "died after a divergent step")
+                    return {"step": step, "command": text, "request": found[0],
+                            "differences": found[1]}, versions, commands
+            require_alive(adapters, labels, steps, "died after the last step")
+            return None, versions, commands
+        finally:
+            for adapter in reversed(adapters):
+                adapter.stop()
+            for log in logs:
+                log.close()
+
+
+def differential_once(args, commands, keep_state=False, scenario=None, settle=False):
+    """Run one sequence on fresh compositors and return its first divergence.
+
+    A compositor that dies during or just after a step raises CompositorCrash.
+    """
+    with tempfile.TemporaryDirectory(prefix="sio-") as directory:
+        base = Path(directory)
+        adapters = []
+        versions = []
+        logs = []
+        try:
+            start_differential(args, base, adapters, versions, logs, scenario)
+            labels = (args.a, args.b)
+            rules = load_rules(args.a, args.b)
+            for step, text in enumerate(commands, 1):
+                observations = guarded_step(adapters, labels, text, settle, step)
+                found = first_difference(observations, rules)
+                if found:
+                    require_alive(adapters, labels, step, "died after a divergent step")
+                    request, differences = found
+                    result = {
+                        "step": step, "command": text, "request": request,
+                        "differences": differences,
+                    }
+                    if keep_state:
+                        result["sway_state"] = {
+                            "command": observations["command"][0],
+                            "tree": observations["tree"][0],
+                            "workspaces": observations["workspaces"][0],
+                            "outputs": ipc(adapters[0].socket, "outputs"),
+                        }
+                    return result, versions
+            require_alive(adapters, labels, len(commands), "died after the last step")
+            return None, versions
+        finally:
+            for adapter in reversed(adapters):
+                adapter.stop()
+            for log in logs:
+                log.close()
+
+
+def append_regression_scenario(seed, commands, state, scenario=None):
+    name = f"differential_seed_{seed}"
+    scenario_path = ROOT / "sway-ipc/scenarios.toml"
+    existing = tomllib.loads(scenario_path.read_text())["scenario"]
+    if name not in {item["name"] for item in existing}:
+        actions = []
+        for index, text in enumerate(commands):
+            if text.startswith("exec foot --app-id=fixture-diff-"):
+                ident = text.split("--app-id=", 1)[1].split(" ", 1)[0]
+                actions.append(f"window:{ident}")
+            elif text.startswith("xdg-hinted "):
+                actions.append("hint_window:" + "|".join(text.split()[1:]))
+            elif index == len(commands) - 1:
+                actions.append(f"probe:{name}:{text}")
+            else:
+                actions.append(f"step:{text}")
+        actions.append(f"capture:{name}")
+        with open(scenario_path, "a") as file:
+            file.write(f"\n[[scenario]]\nname = {toml_string(name)}\n")
+            if scenario and scenario.get("output_layout"):
+                file.write(f"outputs = {len(scenario['output_layout'])}\n")
+                file.write("output_layout = " + json.dumps(scenario["output_layout"]) + "\n")
+                file.write('requires = ["xdg-toplevel-size-hints"]\n' if any(
+                    text.startswith("xdg-hinted ") for text in commands) else "")
+            elif any(text.startswith("xdg-hinted ") for text in commands):
+                file.write('requires = ["xdg-toplevel-size-hints"]\n')
+            file.write("actions = [" + ", ".join(toml_string(item) for item in actions) + "]\n")
+    has_probe = any(action.startswith(f"probe:{name}:") for action in actions)
+    for request, value in state.items():
+        if request == "command" and not has_probe:
+            continue
+        (FIXTURES / f"{name}.{request}.json").write_text(
+            json.dumps(value, indent=2, sort_keys=True) + "\n"
+        )
+    return name
+
+
+def capture_individual_events(adapter):
+    events = FIXTURES / "events"
+
+    def save(family, change, trigger):
+        event = subscribed_event(adapter.socket, family, trigger)
+        if event.get("change") != change:
+            raise RuntimeError(f"expected {family}::{change}, got {event.get('change')}")
+        (events / f"{family}.{change}.json").write_text(json.dumps(event, indent=2, sort_keys=True) + "\n")
+
+    adapter.reset()
+    save("workspace", "reload", lambda: adapter.run_command("reload"))
+    save("mode", "resize", lambda: adapter.run_command("mode resize"))
+    save("mode", "default", lambda: adapter.run_command("mode default"))
+
+    adapter.open_window("fixture-event-one")
+    save("window", "floating", lambda: adapter.run_command("floating enable"))
+    save("window", "fullscreen_mode", lambda: adapter.run_command("fullscreen enable"))
+    save("window", "mark", lambda: adapter.run_command("mark eventmark"))
+    save("window", "title", lambda: adapter.run_command("title_format event-title"))
+    save("window", "move", lambda: adapter.run_command("move workspace 2"))
+    adapter.run_command("workspace 1")
+    save("workspace", "urgent", lambda: adapter.run_command('[app_id="^fixture-event-one$"] urgent enable'))
+    save("window", "urgent", lambda: adapter.run_command('[app_id="^fixture-event-one$"] urgent disable, urgent enable'))
+    save("workspace", "focus", lambda: adapter.run_command("workspace 2"))
+    save("workspace", "rename", lambda: adapter.run_command("rename workspace 2 to event-renamed"))
+    save("window", "close", lambda: adapter.run_command('[app_id="^fixture-event-one$"] kill'))
+
+
+def shape_of(tree):
+    """Keep layout semantics while dropping runtime identity and geometry."""
+    def node(value):
+        result = {
+            key: value.get(key) for key in
+            ("type", "layout", "orientation", "floating", "fullscreen_mode", "sticky")
+            if key in value
+        }
+        result["nodes"] = [node(child) for child in value.get("nodes", [])]
+        result["floating_nodes"] = [node(child) for child in value.get("floating_nodes", [])]
+        return result
+    return node(tree)
+
+
+def load_i3_logs(directory):
+    records = []
+    for path in sorted(directory.glob("*.commands.jsonl")):
+        for line in path.read_text().splitlines():
+            if line.strip():
+                records.append(json.loads(line))
+    return records
+
+
+def i3_log_segments(records):
+    segments, segment = [], []
+    setup = {"outputs": 1, "workspace_outputs": []}
+    for record in records:
+        if record["kind"] == "reset":
+            if segment:
+                segments.append((setup, segment))
+                segment = []
+            value = record["value"]
+            setup = ({"outputs": value.get("outputs", 1),
+                      "output_layout": value.get("output_layout", []),
+                      "initial_focus": value.get("initial_focus"),
+                      "workspace_outputs": value.get("workspace_outputs", [])}
+                     if isinstance(value, dict) else
+                     {"outputs": 1, "output_layout": [], "initial_focus": None,
+                      "workspace_outputs": []})
+        else:
+            segment.append(record)
+    if segment:
+        segments.append((setup, segment))
+    return segments
+
+
+def query_state(adapter, compositor):
+    applicability = load_applicability()["i3"]
+    return {
+        request: ipc(adapter.socket, request)
+        for request in QUERY_REQUESTS
+        if (compositor != "i3" or applicability[request].get("applicable", True))
+        and request not in adapter.unsupported_requests
+    }
+
+
+def settled_state(adapter, compositor):
+    previous = None
+    consecutive = 0
+    for _ in range(40):
+        state = query_state(adapter, compositor)
+        encoded = json.dumps(state, sort_keys=True)
+        consecutive = consecutive + 1 if encoded == previous else 1
+        if consecutive == 3:
+            return state
+        previous = encoded
+        time.sleep(0.05)
+    raise RuntimeError("i3-derived state did not settle")
+
+
+def replay_i3_segment(adapter, records, capture, seen, scenarios, skips):
+    actions, command_replies = [], []
+    for index, record in enumerate(records, 1):
+        kind, value = record["kind"], record["value"]
+        if kind == "command":
+            session_bound = ("[id=", "[con_id=", "[class=", "[instance=",
+                             "[title=", "[window_role=", "[window_type=")
+            if (any(token in value for token in session_bound)
+                    or value.strip() in ("restart", "exit")
+                    or "exec " in value or "bar " in value):
+                skips.append({"test": record["test"], "line": record["line"],
+                              "reason": f"not replayable outside the originating X11 session: {value}"})
+                break
+        if kind == "window":
+            ident = f"fixture-i3-{len(actions) + 1}"
+            command_replies.append(adapter.open_window(ident))
+            time.sleep(0.15)
+            actions.append({"kind": "window", "value": ident})
+        elif kind == "command":
+            reply = adapter.command_reply(value)
+            actions.append({"kind": "command", "value": value})
+            command_replies.append(command_observation(value, reply))
+        else:
+            continue
+        try:
+            state = settled_state(adapter, "sway")
+        except OSError as error:
+            skips.append({"test": record["test"], "line": record["line"],
+                          "reason": f"replay terminated the compositor: {error}"})
+            break
+        setup = {
+            "outputs": len(state["outputs"]),
+            "output_layout": copy.deepcopy(adapter.scenario.get("output_layout", [])),
+            "initial_focus": adapter.scenario.get("initial_focus"),
+            "workspace_outputs": copy.deepcopy(adapter.scenario.get("workspace_outputs", [])),
+        }
+        shape = json.dumps(
+            {"setup": setup, "tree": shape_of(state["tree"])},
+            sort_keys=True, separators=(",", ":")
+        )
+        digest = hashlib.sha256(shape.encode()).hexdigest()[:16]
+        if digest in seen:
+            continue
+        seen.add(digest)
+        scenario = {
+            "name": digest,
+            "provenance": {"test": record["test"], "line": record["line"]},
+            **setup,
+            "actions": copy.deepcopy(actions),
+        }
+        scenarios.append(scenario)
+        if capture:
+            state["commands"] = copy.deepcopy(command_replies)
+            (I3_DERIVED / f"{digest}.json").write_text(
+                json.dumps(state, sort_keys=True, separators=(",", ":")) + "\n"
+            )
+
+
+def replay_i3_derived_scenario(args, scenario, suffix=""):
+    with tempfile.TemporaryDirectory(prefix="sio-") as directory:
+        run_dir = Path(directory)
+        adapter = ADAPTERS[args.compositor](args, run_dir, scenario)
+        with open(run_dir / f"compositor{suffix}.log", "w") as log:
+            try:
+                version_reply = adapter.start(log)
+                command_replies = []
+                for action in scenario["actions"]:
+                    if action["kind"] == "window":
+                        command_replies.append(adapter.open_window(action["value"]))
+                        time.sleep(0.15)
+                    else:
+                        reply = adapter.command_reply(action["value"])
+                        command_replies.append(command_observation(action["value"], reply))
+                actual = settled_state(adapter, args.compositor)
+                actual["commands"] = command_replies
+                return version_reply, actual
+            finally:
+                adapter.stop()
+
+
+def i3_derived_result_rows(args, scenario, expected, actual, rules, applicability):
+    rows = []
+    for request in (*QUERY_REQUESTS, "commands"):
+        applicable = applicability["i3"][request].get("applicable", True)
+        if args.compositor == "i3" and not applicable:
+            rows.append({
+                "scenario": f"i3-derived/{scenario['name']}", "request": request,
+                "verdict": "not applicable", "reason": applicability["i3"][request]["reason"],
+            })
+            continue
+        left, right, excluded = expected[request], actual[request], []
+        if request == "version":
+            left, right = shape_view(left), shape_view(right)
+        elif args.compositor == "i3":
+            left, right, excluded = i3_protocol_view(left, right, request, applicability)
+        differences = compare(left, right, request, rules)
+        verdict = "differs" if args.compositor == "i3" and differences else "mismatch" if differences else "match"
+        row = {"scenario": f"i3-derived/{scenario['name']}", "request": request,
+               "verdict": verdict, "differences": differences}
+        if scenario.get("output_layout"):
+            row["adapted"] = ["source-fake-output-layout"]
+        rows.append(row)
+        if excluded:
+            rows.append({
+                "scenario": f"i3-derived/{scenario['name']}", "request": request,
+                "verdict": "not applicable",
+                "reason": f"sway extension fields: {', '.join(excluded)}; source: {applicability['i3'][request]['sway_extension_source']}",
+            })
+    return rows
+
+
+def classify_i3_derived_instability(rows, retry_rows):
+    for row, retry in zip(rows, retry_rows, strict=True):
+        if row["verdict"] not in ("mismatch", "differs"):
+            continue
+        if (row["verdict"], row.get("differences")) != (retry["verdict"], retry.get("differences")):
+            row["verdict"] = "unstable"
+
+
+def i3_derived_main(args, parser):
+    if args.binary is None or args.compositor is None:
+        parser.error("i3-derived requires --compositor and --binary")
+    if args.capture and args.compositor != "sway":
+        parser.error("i3-derived capture is restricted to sway")
+    manifest_path = I3_DERIVED / "scenarios.json"
+    if args.capture:
+        if args.command_logs is None:
+            parser.error("i3-derived --capture requires --command-logs")
+        I3_DERIVED.mkdir(parents=True, exist_ok=True)
+        for path in I3_DERIVED.glob("*.json"):
+            path.unlink()
+        records = load_i3_logs(args.command_logs)
+        scenarios, skips, seen = [], [], set()
+        for setup, segment in i3_log_segments(records):
+            with tempfile.TemporaryDirectory(prefix="sio-") as directory:
+                adapter = ADAPTERS["sway"](args, Path(directory), setup)
+                with open(Path(directory) / "compositor.log", "w") as log:
+                    try:
+                        adapter.start(log)
+                        replay_i3_segment(adapter, segment, True, seen, scenarios, skips)
+                    finally:
+                        adapter.stop()
+        manifest = {
+            "description": "States reached by i3's unchanged tests, captured from sway 1.12",
+            "scenarios": scenarios, "skips": skips,
+        }
+        manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+        print(f"captured {len(scenarios)} distinct shapes; skipped {len(skips)} sequences")
+        return 0
+
+    manifest = json.loads(manifest_path.read_text())
+    scenarios = manifest["scenarios"]
+    if args.scenario:
+        unknown = set(args.scenario) - {item["name"] for item in scenarios}
+        if unknown:
+            raise RuntimeError("unknown i3-derived scenarios: " + ", ".join(sorted(unknown)))
+        scenarios = [item for item in scenarios if item["name"] in args.scenario]
+    rules, applicability, rows = load_rules(args.compositor), load_applicability(), []
+    for scenario in scenarios:
+        version_reply, actual = replay_i3_derived_scenario(args, scenario)
+        expected = json.loads((I3_DERIVED / f"{scenario['name']}.json").read_text())
+        result = i3_derived_result_rows(args, scenario, expected, actual, rules, applicability)
+        if any(row["verdict"] in ("mismatch", "differs") for row in result):
+            _, retry = replay_i3_derived_scenario(args, scenario, "-retry")
+            retry_rows = i3_derived_result_rows(
+                args, scenario, expected, retry, rules, applicability
+            )
+            classify_i3_derived_instability(result, retry_rows)
+        rows.extend(result)
+    version, commit = ADAPTERS[args.compositor].version_details(version_reply)
+    out = args.out or ROOT / "sway-ipc/results" / f"{PINS['snapshot'][args.compositor]}-i3-derived.toml"
+    counts, _ = write_results(out, args.compositor, version, commit, rows, rules,
+                              "fresh compositor per derived i3 state", unstable=True)
+    print("; ".join(f"{key}: {counts[key]}" for key in counts))
+    return bool(counts.get("mismatch", 0))
+
+
+def store_random_object(objects, value):
+    """Add one canonical JSON value to a content-addressed object map."""
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":"))
+    digest = hashlib.sha256(encoded.encode()).hexdigest()[:16]
+    objects.setdefault(digest, encoded)
+    return digest
+
+def random_result_rows(seed, commands, expected, actual, rules):
+    """Return the first per-step divergence, or one matching seed row."""
+    for index, (left, right) in enumerate(zip(expected, actual), 1):
+        for request in ("command", "tree", "workspaces"):
+            differences = compare(left[request], right[request], request, rules)
+            if differences:
+                return [{"seed": seed, "verdict": "mismatch", "step": index,
+                         "request": request, "commands": commands[:index],
+                         "differences": differences}]
+    if len(expected) != len(actual):
+        return [{"seed": seed, "verdict": "mismatch", "step": len(actual) + 1,
+                 "request": "sequence", "commands": commands[:len(actual) + 1],
+                 "differences": [f"$sequence: length {len(expected)} != {len(actual)}"]}]
+    return [{"seed": seed, "verdict": "match"}]
+
+def random_observation(adapter, text):
+    reply = differential_action(adapter, text)
+    previous = None
+    for _ in range(40):
+        state = {request: ipc(adapter.socket, request)
+                 for request in ("tree", "workspaces")}
+        encoded = json.dumps(state, sort_keys=True)
+        if encoded == previous:
+            return state | {"command": reply}
+        previous = encoded
+        time.sleep(0.05)
+    raise RuntimeError("random sequence state did not settle")
+
+def random_manifest(root=RANDOM):
+    manifest = json.loads((root / "sequences.json").read_text())
+    objects = {
+        path.stem: json.loads(path.read_text())
+        for path in (root / "objects").glob("*.json")
+    }
+    return manifest, objects
+
+def random_capture(args, parser):
+    if args.compositor != "sway":
+        parser.error("random --capture is restricted to sway")
+    require_clean_binary(args.binary, "sway")
+    objects, sequences = {}, []
+    with tempfile.TemporaryDirectory(prefix="sio-") as directory:
+        return random_capture_in(args, objects, sequences, Path(directory))
+
+
+def v3_online_observations(adapter, gen, steps, objects, commands=None, digests=None):
+    """Drive one sway adapter with the online v3 generator; return (commands, digests).
+
+    The lists fill in place, so a caller sees the prefix when a step raises.
+    """
+    commands = [] if commands is None else commands
+    digests = [] if digests is None else digests
+    prelude = gen.prelude()
+    state = {request: ipc(adapter.socket, request) for request in ("tree", "workspaces")}
+    for step in range(1, steps + 1):
+        text = prelude[step - 1] if step <= len(prelude) else gen.next(
+            sway_ipc_v3.features(state["tree"], state["workspaces"]), step)
+        commands.append(text)
+        state = random_observation(adapter, text)
+        gen.observe_reply(text, state["command"])
+        digests.append(store_random_object(objects, state))
+    return commands, digests
+
+
+def random_capture_in(args, objects, sequences, scratch):
+    excluded = []
+    if args.generator == "v3":
+        vocabulary, recipes = sway_ipc_v3.load_v3()
+    for seed in range(args.seed, args.seed + args.seeds):
+        gen = layout = None
+        if args.generator == "v3":
+            gen = sway_ipc_v3.V3Generator(seed, vocabulary, recipes, args.outputs, args.steps)
+            layout = gen.scenario()
+        else:
+            commands = GENERATORS[args.generator](seed, args.steps)
+        run_dir = scratch / str(seed)
+        shutil.rmtree(run_dir, ignore_errors=True)
+        run_dir.mkdir()
+        adapter = SwayAdapter(args, run_dir, layout)
+        adapter.config_text = DIFFERENTIAL_CONFIGS["sway"]
+        with open(run_dir / "compositor.log", "w") as log:
+            try:
+                adapter.start(log)
+                reply = adapter.command_reply("output * mode --custom 1280x720@60Hz")
+                if not reply or not reply[0].get("success"):
+                    raise RuntimeError(f"could not set random output mode: {reply}")
+                if gen is not None:
+                    commands, observations = [], []
+                    try:
+                        v3_online_observations(adapter, gen, args.steps, objects, commands, observations)
+                    except (OSError, RuntimeError) as error:
+                        # A crash or hang in sway is a finding: record it and keep capturing.
+                        process = adapter.process.poll() if adapter.process else None
+                        excluded.append({"seed": seed, "reason": f"{type(error).__name__}: {error}",
+                                         "sway_exit": process, "commands": commands})
+                        print(f"seed {seed}: excluded ({error}; sway exit {process})", flush=True)
+                        observations = None
+                else:
+                    observations = [store_random_object(objects, random_observation(adapter, text))
+                                    for text in commands]
+            finally:
+                adapter.stop()
+        if observations is not None:
+            sequences.append({"seed": seed, "commands": commands, "observations": observations,
+                              **({"outputs": gen.outputs, "recipes": gen.started,
+                                 "triggered": gen.triggered} if gen else {})})
+        shutil.rmtree(run_dir)
+        if (seed - args.seed + 1) % 25 == 0:
+            print(f"captured {seed - args.seed + 1}/{args.seeds} seeds", flush=True)
+    # v3 captures are measurement inputs, not a committed corpus yet: --out names a directory.
+    root = Path(args.out) if args.generator == "v3" and args.out else RANDOM_ROOTS[args.generator]
+    object_dir = root / "objects"
+    # Only captured data is replaced; random-v2 keeps its vocabulary file.
+    shutil.rmtree(object_dir, ignore_errors=True)
+    object_dir.mkdir(parents=True)
+    for digest, encoded in sorted(objects.items()):
+        (object_dir / f"{digest}.json").write_text(encoded + "\n")
+    manifest = {
+        "description": "Seeded command sequences and per-step replies captured from sway 1.12",
+        "sway_commit": PINS["sway"], "seed_start": args.seed,
+        "seeds": args.seeds, "steps": args.steps, "sequences": sequences,
+        "excluded": excluded,
+    }
+    if args.generator == "v3":
+        manifest["generator_sha256"] = sway_ipc_v3.v3_sha256()
+    if args.generator != "v1":
+        manifest["generator"] = args.generator
+        # Seeds whose repeated sway replays disagreed with this capture.
+        manifest["unstable"] = []
+    (root / "sequences.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+    )
+    print(f"captured {args.seeds} seeds; {len(objects)} distinct observations")
+    return 0
+
+
+def adapted_line(compositor):
+    """The [run] `adapted` line for a compositor whose adapter translates every row."""
+    rules = ADAPTERS[compositor].adapted if compositor in ADAPTERS else ()
+    return ["adapted = [" + ", ".join(map(toml_string, rules)) + "]"] if rules else []
+
+
+def write_random_results(path, args, version, commit, rows):
+    counts = {key: sum(row["verdict"] == key for row in rows)
+              for key in ("match", "mismatch", "unstable", "not applicable")}
+    crashes = sum(row["verdict"] == "crash" for row in rows)
+    if crashes:
+        counts["crash"] = crashes
+    grouped = []
+    for row in rows:
+        if row["verdict"] in ("match", "crash"):
+            grouped.append(row)
+            continue
+        # The verdict is part of the key: an unstable seed never joins a mismatch group.
+        key = (row["verdict"], tuple(row["commands"]), row["request"], tuple(row["differences"]))
+        existing = next((item for item in grouped if item.get("key") == key), None)
+        if existing:
+            existing["seeds"].append(row["seed"])
+        else:
+            grouped.append({**row, "key": key, "seeds": [row["seed"]]})
+    rules = load_rules(args.compositor)
+    lines = [
+        "# Generated by contrib/sway-ipc-run random"
+        + ("." if args.generator == "v1" else f" --generator {args.generator}."),
+        "# One row is one seed. Mismatches show the shortest captured prefix ending at",
+        "# the first divergent request; identical reproducers are grouped by seed.", "",
+        "[run]", f"compositor = {toml_string(args.compositor)}",
+        f"version = {toml_string(version)}", f"commit = {toml_string(commit)}",
+        provenance.run_line(Path(path), args.compositor),
+        f"date = {toml_string(datetime.date.today().isoformat())}",
+        'normalization = "sway-ipc/normalize.toml"',
+        "normalization_rules = [" + ", ".join(toml_string(name) for name in rule_names(rules)) + "]",
+        'scenario_isolation = "fresh compositor per seed"',
+        *adapted_line(args.compositor),
+        *([] if args.generator == "v1" else [f"generator = {toml_string(args.generator)}"]),
+        f"seeds = {len(rows)}", f"steps = {args.steps}",
+        *[f"{key.replace(' ', '_')} = {counts[key]}" for key in counts], "",
+    ]
+    for row in grouped:
+        lines += ["[[result]]", f"seed = {row['seed']}",
+                  f"verdict = {toml_string(row['verdict'])}"]
+        if row["verdict"] in ("mismatch", "unstable"):
+            lines += ["seeds = [" + ", ".join(str(seed) for seed in row["seeds"]) + "]",
+                      f"step = {row['step']}", f"request = {toml_string(row['request'])}",
+                      "commands = [" + ", ".join(toml_string(x) for x in row["commands"]) + "]",
+                      "differences = [" + ", ".join(toml_string(x) for x in row["differences"]) + "]"]
+        elif row["verdict"] == "crash":
+            lines += [f"step = {row['step']}",
+                      "commands = [" + ", ".join(toml_string(x) for x in row["commands"]) + "]",
+                      "exits = [" + ", ".join(toml_string(x) for x in row["exits"]) + "]"]
+        lines.append("")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines))
+    print("; ".join(f"{key}: {value}" for key, value in counts.items()))
+    return bool(counts["mismatch"] or crashes)
+
+def selected_random_sequences(manifest, seeds):
+    sequences = manifest["sequences"]
+    if seeds is None:
+        return sequences
+    try:
+        selected = [int(seed) for seed in seeds.split(",")]
+    except ValueError as error:
+        raise RuntimeError("--seeds must be a comma-separated list of seed numbers") from error
+    by_seed = {sequence["seed"]: sequence for sequence in sequences}
+    unknown = set(selected) - by_seed.keys()
+    if unknown:
+        raise RuntimeError("unknown random seeds: " + ", ".join(map(str, sorted(unknown))))
+    return [by_seed[seed] for seed in selected]
+
+
+def random_main(args, parser):
+    if args.compositor is None or args.binary is None:
+        parser.error("random requires --compositor and --binary")
+    if args.capture:
+        args.seeds = int(args.seeds or 5)
+        return random_capture(args, parser)
+    if args.generator == "v3":
+        parser.error("random --generator v3 has no committed corpus yet; use --capture --out DIR")
+    require_clean_binary(args.binary, args.compositor)
+    manifest, objects = random_manifest(RANDOM_ROOTS[args.generator])
+    args.steps = manifest["steps"]
+    args.unstable_seeds = {row["seed"] for row in manifest.get("unstable", [])}
+    sequences = selected_random_sequences(manifest, args.seeds)
+    rows, rules = [], load_rules(args.compositor)
+    with tempfile.TemporaryDirectory(prefix="sio-") as directory:
+        return random_replay(args, sequences, objects, rows, rules, Path(directory))
+
+
+def random_sequence_run(args, sequence, scratch, suffix="", objects=None):
+    run_dir = scratch / f"{sequence['seed']}{suffix}"
+    shutil.rmtree(run_dir, ignore_errors=True)
+    run_dir.mkdir()
+    layout = ({"outputs": 2, "output_layout": sway_ipc_v3.TWO_OUTPUT_LAYOUT}
+              if sequence.get("outputs") == 2 else None)
+    adapter = differential_adapter(args.compositor, args, run_dir, layout)
+    actual = []
+    with open(run_dir / "compositor.log", "w") as log:
+        try:
+            version_reply = adapter.start(log)
+            reply = adapter.set_differential_mode()
+            if not reply or not reply[0].get("success"):
+                raise RuntimeError(f"could not set random output mode: {reply}")
+            for step, text in enumerate(sequence["commands"], 1):
+                try:
+                    observation = random_observation(adapter, text)
+                except (OSError, RuntimeError, ValueError) as error:
+                    code = exited_code(adapter)
+                    if code is None:
+                        raise
+                    raise CompositorCrash([(args.compositor, exit_description(code))],
+                                          error, step) from error
+                actual.append(observation)
+                if objects is not None and args.seeds is not None:
+                    expected = objects[sequence["observations"][step - 1]]
+                    print(json.dumps({"seed": sequence["seed"], "step": step,
+                                      "command": text, "expected": expected,
+                                      "actual": observation}, sort_keys=True))
+        finally:
+            adapter.stop()
+    shutil.rmtree(run_dir)
+    return version_reply, actual
+
+
+def random_replay(args, sequences, objects, rows, rules, scratch):
+    version_reply = None
+    for number, sequence in enumerate(sequences, 1):
+        try:
+            version_reply, actual = random_sequence_run(args, sequence, scratch, objects=objects)
+        except CompositorCrash as crash:
+            # A health verdict, never a mismatch: there is no reply to compare.
+            rows.append({"seed": sequence["seed"], "verdict": "crash", "step": crash.step,
+                         "commands": sequence["commands"][:crash.step],
+                         "exits": [f"{label}: {how}" for label, how in crash.exits.items()]})
+            if number % 25 == 0:
+                print(f"replayed {number}/{len(sequences)} seeds", flush=True)
+            continue
+        expected = [objects[digest] for digest in sequence["observations"]]
+        result = random_result_rows(sequence["seed"], sequence["commands"],
+                                    expected, actual, rules)
+        if result[0]["verdict"] == "mismatch":
+            _, retry = random_sequence_run(args, sequence, scratch, "-retry")
+            retried = random_result_rows(sequence["seed"], sequence["commands"],
+                                         expected, retry, rules)
+            if retried != result or sequence["seed"] in args.unstable_seeds:
+                result[0]["verdict"] = "unstable"
+        rows += result
+        if number % 25 == 0:
+            print(f"replayed {number}/{len(sequences)} seeds", flush=True)
+    version, _ = ADAPTERS[args.compositor].version_details(version_reply)
+    commit = PINS[args.compositor]
+    out = args.out or ROOT / "sway-ipc/results" / (
+        PINS["snapshot"][args.compositor] + RANDOM_SUFFIXES[args.generator] + ".toml")
+    return write_random_results(out, args, version, commit, rows)
+
+def selected_scenarios(names, corpus="state"):
+    with open(ROOT / "sway-ipc/scenarios.toml", "rb") as file:
+        scenarios = [scenario for scenario in tomllib.load(file)["scenario"]
+                     if corpus in scenario.get("corpora", ("state", "events"))]
+    if names:
+        unknown = set(names) - {item["name"] for item in scenarios}
+        if unknown:
+            raise RuntimeError("unknown scenarios: " + ", ".join(sorted(unknown)))
+        scenarios = [item for item in scenarios if item["name"] in names]
+    return scenarios
+
+
+def toml_string(value):
+    return json.dumps(str(value), ensure_ascii=False)
+
+
+def write_results(path, compositor, version, commit, rows, rules, run_mode,
+                  unstable=False):
+    difference = "differs" if compositor == "i3" else "mismatch"
+    verdicts = ("match", difference, "unstable", "not applicable") if unstable else (
+        "match", difference, "not applicable"
+    )
+    if any(row["verdict"] == "crash" for row in rows):
+        # A health verdict, as in fuzz and random results: no reply to compare.
+        verdicts += ("crash",)
+    counts = {key: sum(row["verdict"] == key for row in rows) for key in verdicts}
+    difference_fields = len({difference_path(item) for row in rows
+                             for item in row.get("differences", [])})
+    lines = [
+        "# Generated by contrib/sway-ipc-run. One row is one IPC request at a",
+        "# captured scenario. Difference paths are JSON paths after documented normalization.",
+        "# These rows describe where i3's IPC differs from sway's captures; they are not a pass rate." if compositor == "i3" else "# Every sway fixture field applies to this compositor's sway-compatibility claim.",
+        "# Always report " + ", ".join(verdicts) + " together.",
+        "",
+        "[run]",
+        f"compositor = {toml_string(compositor)}",
+        f"version = {toml_string(version)}",
+        f"commit = {toml_string(commit)}",
+        provenance.run_line(Path(path), compositor),
+        f"date = {toml_string(datetime.date.today().isoformat())}",
+        'normalization = "sway-ipc/normalize.toml"',
+        "normalization_rules = [" + ", ".join(toml_string(name) for name in rule_names(rules)) + "]",
+        f"scenario_isolation = {toml_string(run_mode)}",
+        *adapted_line(compositor),
+        f"difference_fields = {difference_fields}",
+        *[f"{key.replace(' ', '_')} = {counts[key]}" for key in verdicts],
+        "",
+    ]
+    for row in rows:
+        lines += ["[[result]]", f"scenario = {toml_string(row['scenario'])}", f"request = {toml_string(row['request'])}", f"verdict = {toml_string(row['verdict'])}"]
+        if row.get("differences"):
+            lines.append("differences = [" + ", ".join(toml_string(item) for item in row["differences"]) + "]")
+        if row.get("reason"):
+            lines.append(f"reason = {toml_string(row['reason'])}")
+        if row.get("adapted"):
+            lines.append("adapted = [" + ", ".join(toml_string(item) for item in row["adapted"]) + "]")
+        lines.append("")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines))
+    return counts, difference_fields
+
+
+def scenario_crash_rows(scenario, rows, message, corpus, compositor, applicability):
+    """Crash rows for the captures and probes of `scenario` that recorded no row."""
+    recorded = {(row["scenario"], row["request"]) for row in rows}
+    unsupported = ADAPTERS[compositor].unsupported_requests
+    crashed = []
+    for action in scenario["actions"]:
+        kind, value = action.split(":", 1)
+        if kind == "probe":
+            targets = [(value.split(":", 1)[0], "command", "crash", message)]
+        elif kind == "capture":
+            requests = (("events",) if corpus == "events" else
+                        (*applicable_requests(compositor, applicability), "commands"))
+            targets = [(value, request, "crash", message) for request in requests]
+            if corpus != "events":
+                targets += [(value, request, "not applicable", reason)
+                            for request, reason in unsupported.items()]
+        else:
+            continue
+        crashed += [{"scenario": name, "request": request, "verdict": verdict, "reason": reason}
+                    for name, request, verdict, reason in targets
+                    if (name, request) not in recorded]
+    return crashed
+
+
+def run_scenario_batches(args, batches, rules, applicability, suffix=""):
+    """(scenario, rows) per scenario run, the last adapter and its version reply."""
+    results, adapter, version_reply = [], None, None
+    for batch in batches:
+        with tempfile.TemporaryDirectory(prefix="sio-") as directory:
+            run_dir = Path(directory)
+            adapter = ADAPTERS[args.compositor](args, run_dir, batch[0] if len(batch) == 1 else None)
+            with open(run_dir / f"compositor{suffix}.log", "w") as log:
+                try:
+                    version_reply = adapter.start(log)
+                    if args.capture_events:
+                        capture_individual_events(adapter)
+                        batch = []
+                    for scenario in batch:
+                        rows = []
+                        results.append((scenario, rows))
+                        command_replies = []
+                        required = set(scenario.get("requires", []))
+                        if not required <= adapter.capabilities:
+                            if scenario.get("not_applicable"):
+                                for action in scenario["actions"]:
+                                    kind, value = action.split(":", 1)
+                                    if kind == "capture":
+                                        for request in (*QUERY_REQUESTS, "commands"):
+                                            rows.append({"scenario": value, "request": request,
+                                                         "verdict": "not applicable",
+                                                         "reason": scenario["reason"]})
+                            continue
+                        # Look builders up only for required capabilities: adapters
+                        # without them (i3) have no such methods.
+                        builders = [getattr(adapter, name) for capability, name in (
+                            ("xdg-toplevel-size-hints", "fixture_client"),
+                            ("wlr-foreign-toplevel-management", "foreign_toplevel_client"),
+                        ) if capability in required]
+                        if builders:
+                            try:
+                                for build in builders:
+                                    build()
+                            except FixtureUnavailable as error:
+                                if os.environ.get("ORACLE_CONTAINER") == "1":
+                                    raise RuntimeError(str(error)) from error
+                                for action in scenario["actions"]:
+                                    kind, value = action.split(":", 1)
+                                    if kind == "capture":
+                                        requests = (("events",) if args.corpus == "events" else
+                                                    (*applicable_requests(args.compositor, applicability), "commands"))
+                                        for request in requests:
+                                            rows.append({"scenario": value, "request": request,
+                                                         "verdict": "not applicable",
+                                                         "reason": str(error)})
+                                continue
+                        adapter.reset()
+                        subscription = EventSubscription(adapter.socket) if args.corpus == "events" else None
+                        action = None
+                        try:
+                            for action in scenario["actions"]:
+                                kind, value = action.split(":", 1)
+                                if kind == "command":
+                                    command_replies.append(command_observation(value, adapter.command_reply(value)))
+                                elif kind == "step":
+                                    command_replies.append(command_observation(value, adapter.command_reply(value)))
+                                elif kind == "probe":
+                                    fixture_name, text = value.split(":", 1)
+                                    actual = adapter.command_reply(text)
+                                    fixture = FIXTURES / f"{fixture_name}.command.json"
+                                    if args.capture:
+                                        fixture.write_text(json.dumps(actual, indent=2, sort_keys=True) + "\n")
+                                    expected = json.loads(fixture.read_text())
+                                    differences = compare(expected, actual, "command", rules)
+                                    verdict = "differs" if args.compositor == "i3" and differences else "mismatch" if differences else "match"
+                                    rows.append({"scenario": fixture_name, "request": "command", "verdict": verdict, "differences": differences})
+                                elif kind == "window":
+                                    command_replies.append(adapter.open_window(value))
+                                elif kind == "window_title":
+                                    ident, title = value.split("|", 1)
+                                    command_replies.append(adapter.open_window(ident, title))
+                                elif kind == "hint_window":
+                                    ident, *values = value.split("|")
+                                    min_width, min_height, max_width, max_height, parent = map(int, values)
+                                    command_replies.append(adapter.open_hinted_window(
+                                        ident, min_width, min_height, max_width, max_height,
+                                        bool(parent),
+                                    ))
+                                elif kind == "foreign_toplevel":
+                                    ident, request = value.split("|", 1)
+                                    command_replies.append(adapter.foreign_toplevel_request(ident, request))
+                                elif kind == "capture":
+                                    time.sleep(0.15)
+                                    requests = (("events",) if args.corpus == "events" else
+                                                (*applicable_requests(args.compositor, applicability), "commands"))
+                                    for request in requests:
+                                        actual = (subscription.checkpoint(adapter.socket, f"oracle-{value}")
+                                                  if request == "events" else command_replies
+                                                  if request == "commands" else ipc(adapter.socket, request))
+                                        fixture = FIXTURES / f"{value}.{request}.json"
+                                        if args.capture:
+                                            fixture.write_text(json.dumps(actual, indent=2, sort_keys=True) + "\n")
+                                        expected = json.loads(fixture.read_text())
+                                        excluded = []
+                                        if args.compositor == "i3" and request != "events":
+                                            expected, actual, excluded = i3_protocol_view(expected, actual, request, applicability)
+                                        differences = compare(expected, actual, request, rules)
+                                        verdict = "differs" if args.compositor == "i3" and differences else "mismatch" if differences else "match"
+                                        rows.append({"scenario": value, "request": request, "verdict": verdict, "differences": differences})
+                                        if excluded:
+                                            source = applicability["i3"][request]["sway_extension_source"]
+                                            rows.append({"scenario": value, "request": request, "verdict": "not applicable", "reason": f"sway extension fields: {', '.join(excluded)}; source: {source}"})
+                                    if args.corpus != "events":
+                                        for request, reason in adapter.unsupported_requests.items():
+                                            rows.append({"scenario": value, "request": request,
+                                                         "verdict": "not applicable", "reason": reason})
+                                    if args.compositor == "i3" and args.corpus != "events":
+                                        for request in QUERY_REQUESTS:
+                                            if request not in requests:
+                                                rows.append({"scenario": value, "request": request,
+                                                             "verdict": "not applicable",
+                                                             "reason": applicability["i3"][request]["reason"]})
+                                else:
+                                    raise RuntimeError(f"unknown action {kind}")
+                            # Sway applies layout in a later transaction and can segfault
+                            # after its last reply; a scenario captured from a dying sway
+                            # is not a fixture.
+                            time.sleep(0.3)
+                            if adapter.process.poll() is not None:
+                                raise OSError("compositor exited after the last action")
+                        except (OSError, RuntimeError) as error:
+                            code = exited_code(adapter)
+                            if code is None:
+                                raise
+                            message = (f"{args.compositor} crashed ({exit_description(code)}) in scenario "
+                                       f"{scenario['name']} at action {action!r}: {error}")
+                            if not args.fresh_per_scenario or args.capture or args.compositor == "sway":
+                                raise RuntimeError(message) from error
+                            # A health verdict for every row the scenario had left to
+                            # capture; the next scenario starts a fresh compositor.
+                            rows.extend(scenario_crash_rows(scenario, rows, message, args.corpus,
+                                                            args.compositor, applicability))
+                        finally:
+                            if subscription:
+                                subscription.close()
+                finally:
+                    adapter.stop()
+    return results, adapter, version_reply
+
+
+def classify_scenario_instability(rows, retry_rows):
+    """Mark a mismatch or crash row unstable when a fresh retry disagrees.
+
+    Rows pair by (scenario, request, occurrence): an i3 row's not-applicable
+    sway-extension row shares its (scenario, request), and a crash drops it.
+    """
+    def keyed(items):
+        seen, keys = {}, []
+        for row in items:
+            key = (row["scenario"], row["request"])
+            seen[key] = seen.get(key, -1) + 1
+            keys.append((*key, seen[key]))
+        return dict(zip(keys, items))
+    retries = keyed(retry_rows)
+    for key, row in keyed(rows).items():
+        if row["verdict"] not in ("mismatch", "differs", "crash"):
+            continue
+        retry = retries.get(key, {})
+        if (row["verdict"], row.get("differences")) != (retry.get("verdict"), retry.get("differences")):
+            row["verdict"] = "unstable"
+
+
+def scenario_main(args, parser):
+    if (args.capture or args.capture_events) and args.compositor != "sway":
+        parser.error("capture is restricted to sway")
+    if args.binary.resolve() == Path(sys.executable).resolve() or not args.binary.exists():
+        parser.error("--binary must name an existing compositor")
+    require_clean_binary(args.binary, args.compositor)
+    scenarios, rules = selected_scenarios(args.scenario, args.corpus), load_rules(args.compositor)
+    if args.capture_events:
+        scenarios = []
+    applicability = load_applicability()
+    if args.capture_events:
+        batches = [[{"outputs": 2}]]
+    elif args.fresh_per_scenario:
+        batches = [[scenario] for scenario in scenarios]
+    else:
+        ordinary = [scenario for scenario in scenarios if "outputs" not in scenario]
+        batches = ([ordinary] if ordinary else []) + [[scenario] for scenario in scenarios if "outputs" in scenario]
+    results, adapter, version_reply = run_scenario_batches(args, batches, rules, applicability)
+    rows = []
+    for scenario, result in results:
+        # A mismatch or crash reruns once on a fresh compositor; one that changes
+        # is unstable, as for i3-derived states and random seeds. Captures write
+        # the reference, and a sequential run measures leaked state that a fresh
+        # retry cannot reproduce, so neither retries.
+        if args.fresh_per_scenario and not (args.capture or args.capture_events) and any(
+                row["verdict"] in ("mismatch", "differs", "crash") for row in result):
+            try:
+                retried, _, _ = run_scenario_batches(args, [[scenario]], rules, applicability, "-retry")
+            except Exception as error:  # noqa: BLE001 - a failed retry keeps the measurement
+                print(f"sway-ipc-run: warning: retry of scenario {scenario['name']} failed, "
+                      f"keeping the first run's rows: {error}", file=sys.stderr)
+            else:
+                classify_scenario_instability(result, [row for _, items in retried for row in items])
+        rows.extend(result)
+    if hasattr(adapter, "version_details"):
+        version, commit = adapter.version_details(version_reply)
+    else:
+        version = version_reply.get("human_readable", version_reply.get("loaded_config_file_name", "unknown"))
+        commit = version_reply.get("commit", "unknown")
+    reject_dirty_version(args.compositor, version, commit)
+    commit = PINS[args.compositor]
+    suffix = "-events" if args.corpus == "events" else ""
+    out = args.out or ROOT / "sway-ipc/results" / f"{PINS['snapshot'][args.compositor]}{suffix}.toml"
+    run_mode = "fresh compositor per scenario" if args.fresh_per_scenario else "sequential, with output-count scenarios isolated"
+    counts, difference_fields = write_results(out, args.compositor, version, commit, rows, rules, run_mode,
+                                              unstable=True)
+    print("; ".join([*(f"{key}: {counts[key]}" for key in counts),
+                     f"difference fields: {difference_fields}"]))
+    return bool(counts.get("mismatch", 0) or counts.get("crash", 0))
+
+
+def fuzz_result_path(compositor, corpus):
+    return ROOT / "sway-ipc/results" / f"{PINS['snapshot'][compositor]}-{corpus}.toml"
+
+
+def fuzz_view(observation, rules):
+    """The observation without GET_VERSION keys that normalize.toml declares as extensions."""
+    extensions = {item.removeprefix("$version.") for rule in rules.get("extension_key", [])
+                  for item in rule.get("paths", []) if item.startswith("$version.")}
+    if not extensions or not isinstance(observation.get("replies"), list):
+        return observation
+    view = copy.deepcopy(observation)
+    for reply in view["replies"]:
+        if reply.get("type") == TYPES["version"] and isinstance(reply.get("payload"), dict):
+            keys = reply["payload"].get("keys")
+            if isinstance(keys, list):
+                reply["payload"]["keys"] = [key for key in keys if key not in extensions]
+    return view
+
+
+def write_fuzz_results(path, compositor, corpus, rows, seed, budget, normalization_rules=()):
+    difference = "differs" if compositor == "i3" else "mismatch"
+    verdicts = ("match", difference, "not applicable", "crash", "hang")
+    counts = {verdict: sum(row["verdict"] == verdict for row in rows)
+              for verdict in verdicts}
+    lines = [
+        f"# Generated by contrib/sway-ipc-run {corpus}.",
+        "# Crash and hang are compositor-health verdicts, not mismatches.",
+        "# Always report every verdict count together.", "", "[run]",
+        f"compositor = {toml_string(compositor)}",
+        f"version = {toml_string(rows[0]['version'])}",
+        f"commit = {toml_string(PINS[compositor])}",
+        provenance.run_line(Path(path), compositor),
+        f"date = {toml_string(datetime.date.today().isoformat())}",
+        f"corpus = {toml_string(corpus)}", f"seed = {seed}",
+        f"budget = {toml_string(budget)}", f"cases = {len(rows)}",
+        *adapted_line(compositor),
+        *(["normalization_rules = [" + ", ".join(map(toml_string, normalization_rules)) + "]"]
+          if normalization_rules else []),
+        *[f"{key.replace(' ', '_')} = {counts[key]}" for key in verdicts], "",
+    ]
+    for row in rows:
+        lines += ["[[result]]", f"case = {toml_string(row['case'])}",
+                  f"verdict = {toml_string(row['verdict'])}"]
+        if row.get("reason"):
+            lines.append(f"reason = {toml_string(row['reason'])}")
+        if row.get("expected") != row.get("actual"):
+            lines += [f"expected = {toml_string(json.dumps(row.get('expected'), ensure_ascii=False, sort_keys=True))}",
+                      f"actual = {toml_string(json.dumps(row.get('actual'), ensure_ascii=False, sort_keys=True))}"]
+        lines.append("")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines))
+    print("; ".join(f"{key}: {counts[key]}" for key in verdicts))
+    return bool(counts[difference] or counts["crash"] or counts["hang"])
+
+
+def fuzz_not_applicable(compositor, corpus, case):
+    if compositor != "i3":
+        return None
+    for rule in load_applicability()["i3"].get("fuzz", []):
+        if rule["corpus"] == corpus and case in rule["cases"]:
+            return (f"{rule['reason']}; i3 source: {rule['i3_source']}; "
+                    f"sway extension source: {rule['sway_extension_source']}")
+    return None
+
+
+def fuzz_cases(args):
+    variants_per_family, wire_limit = FUZZ_BUDGETS[args.budget]
+    if args.mode == "command-fuzz":
+        cases = command_fuzz_cases(args.seed)
+        if variants_per_family is not None:
+            fixed = [(name, command) for name, command in cases
+                     if not name.startswith("family-")]
+            selected = []
+            for family in json.loads(COMMAND_FAMILIES.read_text())["families"]:
+                prefix = f"family-{family['name']}-"
+                selected += [(name, command) for name, command in cases
+                             if name.startswith(prefix)][:variants_per_family]
+            cases = fixed + selected
+        return [{"name": name, "command": text} for name, text in cases]
+    return wire_fuzz_cases()[:wire_limit]
+
+
+def fuzz_main(args, parser):
+    if args.compositor is None or args.binary is None:
+        parser.error(f"{args.mode} requires --compositor and --binary")
+    if args.capture and args.compositor != "sway":
+        parser.error("fuzz capture is restricted to sway")
+    require_clean_binary(args.binary, args.compositor)
+    corpus = args.mode
+    fixture_path = FUZZ_FIXTURES / f"{corpus}.json"
+    cases = fuzz_cases(args)
+    if args.capture:
+        # Capture the larger corpus once; CI snapshots replay its deterministic prefix.
+        original_budget = args.budget
+        args.budget = "local"
+        cases = fuzz_cases(args)
+        args.budget = original_budget
+    expected_by_name = {}
+    if not args.capture:
+        fixture = json.loads(fixture_path.read_text())
+        fixture_cases = {row["case"]: row for row in fixture["cases"]}
+        expected_by_name = {name: row["observation"] for name, row in fixture_cases.items()}
+        cases = [case for case in cases if case["name"] in fixture_cases]
+    captured, rows, rules = [], [], load_rules(args.compositor)
+    for case in cases:
+        with tempfile.TemporaryDirectory(prefix="sio-") as directory:
+            adapter = ADAPTERS[args.compositor](args, Path(directory))
+            with open(Path(directory) / "compositor.log", "w") as log:
+                try:
+                    version_reply = adapter.start(log)
+                    version, _ = adapter.version_details(version_reply)
+                    if corpus == "command-fuzz":
+                        before = {kind: ipc(adapter.socket, kind)
+                                  for kind in ("tree", "workspaces", "outputs")}
+                        try:
+                            reply = adapter.command_reply(case["command"])
+                            observation = {"outcome": "reply", "reply": reply}
+                        except socket.timeout:
+                            observation = {"outcome": "timeout"}
+                        except (OSError, RuntimeError, ValueError) as error:
+                            observation = {"outcome": "error", "error": type(error).__name__}
+                        time.sleep(0.03)
+                        health = subprocess_health(adapter)
+                        if health == "healthy":
+                            after = {kind: ipc(adapter.socket, kind)
+                                     for kind in ("tree", "workspaces", "outputs")}
+                            observation["state_changed"] = before != after
+                    else:
+                        observation = wire_observation(adapter.socket, case)
+                        health = subprocess_health(adapter)
+                finally:
+                    adapter.stop()
+        if args.capture:
+            captured.append({"case": case["name"], "input":
+                             case.get("command", case.get("data", b"").hex()),
+                             "observation": observation})
+            continue
+        expected = expected_by_name[case["name"]]
+        reason = fuzz_not_applicable(args.compositor, corpus, case["name"])
+        verdict = health if health != "healthy" else (
+            "not applicable" if reason else "match" if fuzz_view(observation, rules) == expected else
+            "differs" if args.compositor == "i3" else "mismatch")
+        rows.append({"case": case["name"], "verdict": verdict,
+                     "expected": expected, "actual": observation,
+                     "reason": reason, "version": version})
+    if args.capture:
+        FUZZ_FIXTURES.mkdir(parents=True, exist_ok=True)
+        fixture_path.write_text(json.dumps({"seed": args.seed, "cases": captured},
+                                           indent=2, ensure_ascii=False, sort_keys=True) + "\n")
+        print(f"captured {len(captured)} {corpus} cases from sway")
+        return 0
+    out = args.out or fuzz_result_path(args.compositor, corpus)
+    return write_fuzz_results(out, args.compositor, corpus, rows, args.seed, args.budget,
+                              rule_names({"extension_key": rules.get("extension_key", [])}))
+
+
+def v3_determinism_self_test(binary, seeds=(3, 16), steps=40):
+    """Generate each seed twice against a live sway: the command lists must be equal."""
+    vocabulary, recipes = sway_ipc_v3.load_v3()
+    args = argparse.Namespace(binary=binary, timeout=120)
+    for seed in seeds:
+        lists = []
+        for attempt in range(2):
+            gen = sway_ipc_v3.V3Generator(seed, vocabulary, recipes, "auto", steps)
+            with tempfile.TemporaryDirectory(prefix="sio-") as directory:
+                adapter = SwayAdapter(args, Path(directory), gen.scenario())
+                adapter.config_text = DIFFERENTIAL_CONFIGS["sway"]
+                with open(Path(directory) / "compositor.log", "w") as log:
+                    try:
+                        adapter.start(log)
+                        adapter.command_reply("output * mode --custom 1280x720@60Hz")
+                        commands, _ = v3_online_observations(adapter, gen, steps, {})
+                    finally:
+                        adapter.stop()
+            lists.append(commands)
+        if lists[0] != lists[1]:
+            first = next(i for i, (a, b) in enumerate(zip(*lists)) if a != b)
+            raise AssertionError(f"random-v3 seed {seed} is not deterministic against sway: step "
+                                 f"{first + 1}: {lists[0][first]!r} != {lists[1][first]!r}")
+        print(f"random-v3 seed {seed}: {len(lists[0])} commands, identical on two sway runs")
+
+
+def fuzz_self_test(binary=None):
+    sway_ipc_v3.self_test()
+    if binary is not None:
+        v3_determinism_self_test(binary)
+    else:
+        print("random-v3 live determinism check skipped (pass --binary <pinned sway>)")
+    assert command_fuzz_cases(7) == command_fuzz_cases(7)
+    assert command_fuzz_cases(7) != command_fuzz_cases(8)
+    names = {name for name, _ in command_fuzz_cases()}
+    assert {"bad-criteria-open", "resize-px", "resize-ppt", "mixed-chain",
+            "unicode", "very-long"} <= names
+    families = json.loads(COMMAND_FAMILIES.read_text())["families"]
+    assert len(families) == len({family["name"] for family in families})
+    assert all(any(name.startswith(f"family-{family['name']}-") for name in names)
+               for family in families)
+    assert all(sum(name.startswith(f"family-{family['name']}-") for name in names) >=
+               (3 if family["name"] == "exit" else 5) for family in families)
+    ci = argparse.Namespace(mode="command-fuzz", budget="ci", seed=0)
+    ci_names = {case["name"] for case in fuzz_cases(ci)}
+    assert all(sum(name.startswith(f"family-{family['name']}-") for name in ci_names) == 2
+               for family in families)
+    assert len(wire_fuzz_cases()) == FUZZ_BUDGETS["local"][1]
+    assert {case["name"] for case in wire_fuzz_cases()} >= {
+        "bad-magic", "truncated-header", "oversized-length", "unknown-type",
+        "subscribe-invalid-json", "command-invalid-json", "many-clients",
+    }
+    assert fuzz_not_applicable("i3", "command-fuzz", "bad-criteria-open")
+    assert not fuzz_not_applicable("i3", "command-fuzz", "unknown-command")
+    assert not fuzz_not_applicable("sway", "command-fuzz", "bad-criteria-open")
+    manifest = {"sequences": [{"seed": 1}, {"seed": 2}, {"seed": 3}]}
+    assert selected_random_sequences(manifest, None) == manifest["sequences"]
+    assert selected_random_sequences(manifest, "3,1") == [
+        manifest["sequences"][2], manifest["sequences"][0]
+    ]
+    try:
+        selected_random_sequences(manifest, "4")
+    except RuntimeError as error:
+        assert str(error) == "unknown random seeds: 4"
+    else:
+        raise AssertionError("unknown random seed was accepted")
+    with tempfile.TemporaryDirectory(prefix="sio-") as directory:
+        adapter = Adapter(argparse.Namespace(timeout=1), Path(directory))
+        old_container = os.environ.get("ORACLE_CONTAINER")
+        os.environ["ORACLE_CONTAINER"] = "1"
+        try:
+            with open(Path(directory) / "compositor.log", "w") as log:
+                try:
+                    adapter.start_process(["sh", "-c", "echo diagnostic-marker; exit 101"], log)
+                except RuntimeError as error:
+                    assert "compositor exited with 101\ndiagnostic-marker" in str(error)
+                else:
+                    raise AssertionError("failed compositor start was accepted")
+        finally:
+            if old_container is None:
+                os.environ.pop("ORACLE_CONTAINER", None)
+            else:
+                os.environ["ORACLE_CONTAINER"] = old_container
+    print("sway IPC fuzz self-test passed")
+    return 0
+
+
+def write_differential_results(path, args, rows):
+    counts = {"match": sum(row["verdict"] == "match" for row in rows),
+              "mismatch": sum(row["verdict"] == "mismatch" for row in rows)}
+    crashes = [row for row in rows if row["verdict"] == "crash"]
+    rules = load_rules(args.a, args.b)
+    difference_fields = len({difference_path(item) for row in rows
+                             for item in row.get("differences", [])})
+    grouped = []
+    for row in rows:
+        if row["verdict"] in ("match", "crash"):
+            grouped.append(row)
+            continue
+        key = (tuple(row["commands"]), row["request"], tuple(row["differences"]))
+        existing = next((item for item in grouped if item.get("key") == key), None)
+        if existing:
+            existing["seeds"].append(row["seed"])
+        else:
+            grouped.append({**row, "key": key, "seeds": [row["seed"]]})
+    lines = [
+        "# Generated by contrib/sway-ipc-run differential.",
+        "# One row is one seed; match and mismatch counts are always shown together.",
+        "# Mismatches contain delta-debugged reproducers and require triage.", "",
+        "[run]", f"a = {toml_string(args.a)}", f"b = {toml_string(args.b)}",
+        f"seed_start = {args.seed}", f"seed_end = {args.seed + len(rows) - 1}",
+        f"generator = {toml_string(args.generator)}",
+        f"steps = {args.steps}", f"seeds = {len(rows)}",
+        f"a_commit = {toml_string(PINS[args.a])}",
+        f"b_commit = {toml_string(PINS[args.b])}",
+        f"date = {toml_string(datetime.date.today().isoformat())}",
+        'normalization = "sway-ipc/normalize.toml"',
+        "normalization_rules = [" + ", ".join(toml_string(name) for name in rule_names(rules)) + "]",
+        f"difference_fields = {difference_fields}",
+        f"match = {counts['match']}", f"mismatch = {counts['mismatch']}",
+        *([f"crash = {len(crashes)}"] if crashes else []),
+        *([f"generator_sha256 = {toml_string(sway_ipc_v3.v3_sha256())}"]
+          if args.generator == "v3" else []), "",
+    ]
+    for row in grouped:
+        lines += ["[[result]]", f"seed = {row['seed']}",
+                  f"verdict = {toml_string(row['verdict'])}"]
+        if row["verdict"] == "mismatch":
+            lines += ["seeds = [" + ", ".join(str(seed) for seed in row["seeds"]) + "]",
+                      f"step = {row['step']}", f"request = {toml_string(row['request'])}",
+                      "commands = [" + ", ".join(toml_string(x) for x in row["commands"]) + "]",
+                      "differences = [" + ", ".join(toml_string(x) for x in row["differences"]) + "]",
+                      f"scenario = {toml_string(row['scenario'])}"]
+        if row["verdict"] == "crash":
+            # A crash of the reference (sway) is a harness finding: there is no
+            # sway reply to compare, so the seed cannot count as a mismatch.
+            triage = "harness issue" if args.a in row["crashed"] else "untriaged"
+            lines += ["crashed = [" + ", ".join(toml_string(x) for x in row["crashed"]) + "]",
+                      f"triage = {toml_string(triage)}",
+                      f"error = {toml_string(row['error'])}"]
+            if row.get("commands"):
+                lines += [f"step = {row['step']}",
+                          "exits = [" + ", ".join(toml_string(x) for x in row["exits"]) + "]",
+                          "commands = [" + ", ".join(toml_string(x) for x in row["commands"]) + "]"]
+        lines.append("")
+    # v3 commands depend on sway's state: record every seed's list (match rows included)
+    # so it replays without the generator.
+    for row in rows:
+        if "recorded" in row:
+            lines += ["[[recorded]]", f"seed = {row['seed']}", f"outputs = {row['outputs']}",
+                      "recipes = [" + ", ".join(toml_string(x) for x in row["recipes"]) + "]",
+                      "triggered = [" + ", ".join(toml_string(x) for x in row["triggered"]) + "]",
+                      "commands = [" + ", ".join(toml_string(x) for x in row["recorded"]) + "]", ""]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines))
+    print(f"match: {counts['match']}; mismatch: {counts['mismatch']}; "
+          + (f"crash: {len(crashes)}; " if crashes else "") +
+          f"difference fields: {difference_fields}")
+    return bool(counts["mismatch"] or crashes)
+
+
+def crash_row(seed, crash, commands, extra=None):
+    """A seed whose sequence killed a compositor: a harness finding, never a mismatch.
+
+    commands is truncated to the step after which the death was seen, so the
+    row replays the crash without the generator.
+    """
+    step = crash.step or len(commands)
+    return {"seed": seed, "verdict": "crash", "crashed": crash.labels, "error": str(crash),
+            "step": step, "commands": commands[:step],
+            "exits": [f"{label}: {how}" for label, how in crash.exits.items()],
+            **(extra or {})}
+
+
+def differential_main(args):
+    if args.a_binary is None or args.b_binary is None:
+        raise RuntimeError("differential requires --a-binary and --b-binary")
+    require_clean_binary(args.a_binary, args.a)
+    require_clean_binary(args.b_binary, args.b)
+    rows = []
+    online = args.generator == "v3"
+    if online:
+        vocabulary, recipes = sway_ipc_v3.load_v3()
+    def recorded(commands):
+        return {"recorded": commands, "outputs": gen.outputs, "recipes": gen.started,
+                "triggered": gen.triggered}
+    for seed in range(args.seed, args.seed + args.seeds):
+        layout = None
+        if online:
+            gen = sway_ipc_v3.V3Generator(seed, vocabulary, recipes, args.outputs, args.steps)
+            layout = gen.scenario()
+            commands = []
+            try:
+                divergence, _, commands = differential_online(args, gen, args.steps, layout, commands)
+            except CompositorCrash as crash:
+                rows.append(crash_row(seed, crash, commands, recorded(commands)))
+                continue
+        else:
+            commands = GENERATORS[args.generator](seed, args.steps)
+            try:
+                divergence, _ = differential_once(args, commands)
+            except CompositorCrash as crash:
+                rows.append(crash_row(seed, crash, commands))
+                continue
+        if divergence is None:
+            rows.append({"seed": seed, "verdict": "match",
+                         **(recorded(commands) if online else {})})
+            continue
+        def reproduces(candidate):
+            try:
+                found, _ = differential_once(args, candidate, scenario=layout, settle=online)
+            except CompositorCrash:
+                return False  # the candidate crashed a compositor instead
+            except (OSError, RuntimeError):
+                if not online:
+                    raise
+                return False
+            return found is not None
+        minimal = minimize_commands(commands[:divergence["step"]], reproduces)
+        try:
+            final, _ = differential_once(args, minimal, keep_state=True, scenario=layout, settle=online)
+        except CompositorCrash as crash:
+            rows.append(crash_row(seed, crash, minimal, recorded(commands) if online else None))
+            continue
+        if final is None:
+            raise RuntimeError(f"seed {seed} stopped reproducing during shrink")
+        scenario = f"differential_seed_{seed}"
+        if args.save_scenarios:
+            scenario = append_regression_scenario(seed, minimal, final["sway_state"], layout)
+        rows.append({"seed": seed, "verdict": "mismatch", "commands": minimal,
+                     "scenario": scenario, **{k: final[k] for k in
+                     ("step", "request", "differences")},
+                     **(recorded(commands) if online else {})})
+    if not args.out:
+        raise RuntimeError("differential is a developer tool: pass --out outside the repository")
+    out = Path(args.out)
+    return write_differential_results(out, args, rows)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Run, capture, or compare data-driven sway IPC scenarios."
+    )
+    parser.add_argument("mode", nargs="?", choices=("scenarios", "differential", "i3-derived", "random", "command-fuzz", "wire-fuzz", "fuzz-self-test"), default="scenarios")
+    parser.add_argument("--compositor", choices=ADAPTERS)
+    parser.add_argument("--binary", type=Path)
+    parser.add_argument("--scenario", action="append")
+    parser.add_argument("--out", type=Path)
+    parser.add_argument("--capture", action="store_true", help="replace selected sway fixtures")
+    parser.add_argument("--corpus", choices=("state", "events"), default="state")
+    parser.add_argument("--capture-events", action="store_true", help="replace individual sway event fixtures")
+    parser.add_argument("--command-logs", type=Path, help="directory of i3-suite *.commands.jsonl files")
+    parser.add_argument("--fresh-per-scenario", action=argparse.BooleanOptionalAction,
+                        default=True, help="restart the compositor before each scenario (default: enabled)")
+    parser.add_argument("--timeout", type=int, default=60)
+    parser.add_argument("--a", choices=ADAPTERS, default="sway")
+    parser.add_argument("--b", choices=ADAPTERS, default="swayward")
+    parser.add_argument("--a-binary", type=Path)
+    parser.add_argument("--b-binary", type=Path)
+    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--seeds", help="seed count, or random replay seed numbers separated by commas")
+    parser.add_argument("--steps", type=int, help="steps per seed (default 10; 40 for v3)")
+    parser.add_argument("--generator", choices=GENERATOR_CHOICES, default="v1",
+                        help="random/differential command generator: v1 (sway-ipc/random), "
+                             "v2 (sway-ipc/random-v2, widened vocabulary) or v3 (state-aware, "
+                             "online; sway-ipc/random-v3)")
+    parser.add_argument("--outputs", choices=("auto", "1", "2"), default="auto",
+                        help="v3 output count (auto: the seed gives 2 outputs to 30%% of seeds)")
+    parser.add_argument("--budget", choices=FUZZ_BUDGETS, default="ci",
+                        help="fuzz case budget (ci uses two generated variants per command family)")
+    parser.add_argument("--save-scenarios", action="store_true",
+                        help="save minimized mismatches as sway-captured scenarios")
+    parser.add_argument("--triage", default="untriaged",
+                        choices=("untriaged", "swayward bug", "documented deviation", "harness issue"))
+    parser.add_argument("--finding", help="task ID or documented deviation name")
+    parser.add_argument("--source", help="source citation supporting the triage")
+    args = parser.parse_args()
+    if args.steps is None:
+        args.steps = 40 if args.generator == "v3" else 10
+    if args.mode == "fuzz-self-test":
+        return fuzz_self_test(args.binary)
+    if args.mode in ("command-fuzz", "wire-fuzz"):
+        return fuzz_main(args, parser)
+    if args.mode == "differential":
+        args.seeds = int(args.seeds or 5)
+        return differential_main(args)
+    if args.mode == "i3-derived":
+        return i3_derived_main(args, parser)
+    if args.mode == "random":
+        return random_main(args, parser)
+    if args.compositor is None or args.binary is None:
+        parser.error("scenarios requires --compositor and --binary")
+    return scenario_main(args, parser)
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except (OSError, RuntimeError, ValueError) as error:
+        print(f"sway-ipc-run: {error}", file=sys.stderr)
+        raise SystemExit(2)

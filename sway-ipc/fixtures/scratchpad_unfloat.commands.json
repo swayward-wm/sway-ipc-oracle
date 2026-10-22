@@ -1,0 +1,44 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-scratchpad-unfloat --title=fixture-scratchpad-unfloat sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move scratchpad",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "scratchpad show",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "floating disable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "scratchpad show",
+    "reply": [
+      {
+        "error": "Scratchpad is empty",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  }
+]

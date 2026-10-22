@@ -1,0 +1,42 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-fmbf-a --title=fixture-fmbf-a sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "fullscreen enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace 3",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-fmbf-b --title=fixture-fmbf-b sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move container to workspace 1",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

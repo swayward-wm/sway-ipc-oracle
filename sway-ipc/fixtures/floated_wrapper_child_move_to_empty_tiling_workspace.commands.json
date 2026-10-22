@@ -1,0 +1,37 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-fwcm-1 --title=fixture-fwcm-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent; floating toggle",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "[app_id=\"fixture-fwcm-1\"] focus",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move --no-auto-back-and-forth container to workspace 1",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

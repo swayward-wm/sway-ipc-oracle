@@ -1,0 +1,2019 @@
+# Not-applicable record for i3, written by hand: contrib/sway-ipc-run random cannot
+# drive i3 (see not_applicable_reason). Replace it with a runner result once the i3
+# adapter can set the random output mode.
+
+[run]
+compositor = "i3"
+version = "4.25-25-g9be3249a"
+commit = "9be3249ac5b377ed3270e36bca83df53d8023337"
+inputs = "919c94ff505553158f60205eda8ee18b9ddc138cb72465799bec95d4d6adacb9"
+date = "2026-10-22"
+normalization = "sway-ipc/normalize.toml"
+scenario_isolation = "fresh compositor per seed"
+not_applicable_reason = "contrib/sway-ipc-run random cannot drive i3: random_sequence_run calls set_differential_mode, which sends `output * mode --custom 1280x720@60Hz`; i3 has no output command and answers with a parse error, so the runner exits 2 before the first step of seed 0. Two runs in sway-ipc-oracle:rc-1fd3c25b (i3 4.25-25-g9be3249a) both exited 2 with that error."
+seeds = 500
+steps = 20
+match = 0
+differs = 0
+unstable = 0
+not_applicable = 500
+
+[[result]]
+seed = 0
+verdict = "not applicable"
+
+[[result]]
+seed = 1
+verdict = "not applicable"
+
+[[result]]
+seed = 2
+verdict = "not applicable"
+
+[[result]]
+seed = 3
+verdict = "not applicable"
+
+[[result]]
+seed = 4
+verdict = "not applicable"
+
+[[result]]
+seed = 5
+verdict = "not applicable"
+
+[[result]]
+seed = 6
+verdict = "not applicable"
+
+[[result]]
+seed = 7
+verdict = "not applicable"
+
+[[result]]
+seed = 8
+verdict = "not applicable"
+
+[[result]]
+seed = 9
+verdict = "not applicable"
+
+[[result]]
+seed = 10
+verdict = "not applicable"
+
+[[result]]
+seed = 11
+verdict = "not applicable"
+
+[[result]]
+seed = 12
+verdict = "not applicable"
+
+[[result]]
+seed = 13
+verdict = "not applicable"
+
+[[result]]
+seed = 14
+verdict = "not applicable"
+
+[[result]]
+seed = 15
+verdict = "not applicable"
+
+[[result]]
+seed = 16
+verdict = "not applicable"
+
+[[result]]
+seed = 17
+verdict = "not applicable"
+
+[[result]]
+seed = 18
+verdict = "not applicable"
+
+[[result]]
+seed = 19
+verdict = "not applicable"
+
+[[result]]
+seed = 20
+verdict = "not applicable"
+
+[[result]]
+seed = 21
+verdict = "not applicable"
+
+[[result]]
+seed = 22
+verdict = "not applicable"
+
+[[result]]
+seed = 23
+verdict = "not applicable"
+
+[[result]]
+seed = 24
+verdict = "not applicable"
+
+[[result]]
+seed = 25
+verdict = "not applicable"
+
+[[result]]
+seed = 26
+verdict = "not applicable"
+
+[[result]]
+seed = 27
+verdict = "not applicable"
+
+[[result]]
+seed = 28
+verdict = "not applicable"
+
+[[result]]
+seed = 29
+verdict = "not applicable"
+
+[[result]]
+seed = 30
+verdict = "not applicable"
+
+[[result]]
+seed = 31
+verdict = "not applicable"
+
+[[result]]
+seed = 32
+verdict = "not applicable"
+
+[[result]]
+seed = 33
+verdict = "not applicable"
+
+[[result]]
+seed = 34
+verdict = "not applicable"
+
+[[result]]
+seed = 35
+verdict = "not applicable"
+
+[[result]]
+seed = 36
+verdict = "not applicable"
+
+[[result]]
+seed = 37
+verdict = "not applicable"
+
+[[result]]
+seed = 38
+verdict = "not applicable"
+
+[[result]]
+seed = 39
+verdict = "not applicable"
+
+[[result]]
+seed = 40
+verdict = "not applicable"
+
+[[result]]
+seed = 41
+verdict = "not applicable"
+
+[[result]]
+seed = 42
+verdict = "not applicable"
+
+[[result]]
+seed = 43
+verdict = "not applicable"
+
+[[result]]
+seed = 44
+verdict = "not applicable"
+
+[[result]]
+seed = 45
+verdict = "not applicable"
+
+[[result]]
+seed = 46
+verdict = "not applicable"
+
+[[result]]
+seed = 47
+verdict = "not applicable"
+
+[[result]]
+seed = 48
+verdict = "not applicable"
+
+[[result]]
+seed = 49
+verdict = "not applicable"
+
+[[result]]
+seed = 50
+verdict = "not applicable"
+
+[[result]]
+seed = 51
+verdict = "not applicable"
+
+[[result]]
+seed = 52
+verdict = "not applicable"
+
+[[result]]
+seed = 53
+verdict = "not applicable"
+
+[[result]]
+seed = 54
+verdict = "not applicable"
+
+[[result]]
+seed = 55
+verdict = "not applicable"
+
+[[result]]
+seed = 56
+verdict = "not applicable"
+
+[[result]]
+seed = 57
+verdict = "not applicable"
+
+[[result]]
+seed = 58
+verdict = "not applicable"
+
+[[result]]
+seed = 59
+verdict = "not applicable"
+
+[[result]]
+seed = 60
+verdict = "not applicable"
+
+[[result]]
+seed = 61
+verdict = "not applicable"
+
+[[result]]
+seed = 62
+verdict = "not applicable"
+
+[[result]]
+seed = 63
+verdict = "not applicable"
+
+[[result]]
+seed = 64
+verdict = "not applicable"
+
+[[result]]
+seed = 65
+verdict = "not applicable"
+
+[[result]]
+seed = 66
+verdict = "not applicable"
+
+[[result]]
+seed = 67
+verdict = "not applicable"
+
+[[result]]
+seed = 68
+verdict = "not applicable"
+
+[[result]]
+seed = 69
+verdict = "not applicable"
+
+[[result]]
+seed = 70
+verdict = "not applicable"
+
+[[result]]
+seed = 71
+verdict = "not applicable"
+
+[[result]]
+seed = 72
+verdict = "not applicable"
+
+[[result]]
+seed = 73
+verdict = "not applicable"
+
+[[result]]
+seed = 74
+verdict = "not applicable"
+
+[[result]]
+seed = 75
+verdict = "not applicable"
+
+[[result]]
+seed = 76
+verdict = "not applicable"
+
+[[result]]
+seed = 77
+verdict = "not applicable"
+
+[[result]]
+seed = 78
+verdict = "not applicable"
+
+[[result]]
+seed = 79
+verdict = "not applicable"
+
+[[result]]
+seed = 80
+verdict = "not applicable"
+
+[[result]]
+seed = 81
+verdict = "not applicable"
+
+[[result]]
+seed = 82
+verdict = "not applicable"
+
+[[result]]
+seed = 83
+verdict = "not applicable"
+
+[[result]]
+seed = 84
+verdict = "not applicable"
+
+[[result]]
+seed = 85
+verdict = "not applicable"
+
+[[result]]
+seed = 86
+verdict = "not applicable"
+
+[[result]]
+seed = 87
+verdict = "not applicable"
+
+[[result]]
+seed = 88
+verdict = "not applicable"
+
+[[result]]
+seed = 89
+verdict = "not applicable"
+
+[[result]]
+seed = 90
+verdict = "not applicable"
+
+[[result]]
+seed = 91
+verdict = "not applicable"
+
+[[result]]
+seed = 92
+verdict = "not applicable"
+
+[[result]]
+seed = 93
+verdict = "not applicable"
+
+[[result]]
+seed = 94
+verdict = "not applicable"
+
+[[result]]
+seed = 95
+verdict = "not applicable"
+
+[[result]]
+seed = 96
+verdict = "not applicable"
+
+[[result]]
+seed = 97
+verdict = "not applicable"
+
+[[result]]
+seed = 98
+verdict = "not applicable"
+
+[[result]]
+seed = 99
+verdict = "not applicable"
+
+[[result]]
+seed = 100
+verdict = "not applicable"
+
+[[result]]
+seed = 101
+verdict = "not applicable"
+
+[[result]]
+seed = 102
+verdict = "not applicable"
+
+[[result]]
+seed = 103
+verdict = "not applicable"
+
+[[result]]
+seed = 104
+verdict = "not applicable"
+
+[[result]]
+seed = 105
+verdict = "not applicable"
+
+[[result]]
+seed = 106
+verdict = "not applicable"
+
+[[result]]
+seed = 107
+verdict = "not applicable"
+
+[[result]]
+seed = 108
+verdict = "not applicable"
+
+[[result]]
+seed = 109
+verdict = "not applicable"
+
+[[result]]
+seed = 110
+verdict = "not applicable"
+
+[[result]]
+seed = 111
+verdict = "not applicable"
+
+[[result]]
+seed = 112
+verdict = "not applicable"
+
+[[result]]
+seed = 113
+verdict = "not applicable"
+
+[[result]]
+seed = 114
+verdict = "not applicable"
+
+[[result]]
+seed = 115
+verdict = "not applicable"
+
+[[result]]
+seed = 116
+verdict = "not applicable"
+
+[[result]]
+seed = 117
+verdict = "not applicable"
+
+[[result]]
+seed = 118
+verdict = "not applicable"
+
+[[result]]
+seed = 119
+verdict = "not applicable"
+
+[[result]]
+seed = 120
+verdict = "not applicable"
+
+[[result]]
+seed = 121
+verdict = "not applicable"
+
+[[result]]
+seed = 122
+verdict = "not applicable"
+
+[[result]]
+seed = 123
+verdict = "not applicable"
+
+[[result]]
+seed = 124
+verdict = "not applicable"
+
+[[result]]
+seed = 125
+verdict = "not applicable"
+
+[[result]]
+seed = 126
+verdict = "not applicable"
+
+[[result]]
+seed = 127
+verdict = "not applicable"
+
+[[result]]
+seed = 128
+verdict = "not applicable"
+
+[[result]]
+seed = 129
+verdict = "not applicable"
+
+[[result]]
+seed = 130
+verdict = "not applicable"
+
+[[result]]
+seed = 131
+verdict = "not applicable"
+
+[[result]]
+seed = 132
+verdict = "not applicable"
+
+[[result]]
+seed = 133
+verdict = "not applicable"
+
+[[result]]
+seed = 134
+verdict = "not applicable"
+
+[[result]]
+seed = 135
+verdict = "not applicable"
+
+[[result]]
+seed = 136
+verdict = "not applicable"
+
+[[result]]
+seed = 137
+verdict = "not applicable"
+
+[[result]]
+seed = 138
+verdict = "not applicable"
+
+[[result]]
+seed = 139
+verdict = "not applicable"
+
+[[result]]
+seed = 140
+verdict = "not applicable"
+
+[[result]]
+seed = 141
+verdict = "not applicable"
+
+[[result]]
+seed = 142
+verdict = "not applicable"
+
+[[result]]
+seed = 143
+verdict = "not applicable"
+
+[[result]]
+seed = 144
+verdict = "not applicable"
+
+[[result]]
+seed = 145
+verdict = "not applicable"
+
+[[result]]
+seed = 146
+verdict = "not applicable"
+
+[[result]]
+seed = 147
+verdict = "not applicable"
+
+[[result]]
+seed = 148
+verdict = "not applicable"
+
+[[result]]
+seed = 149
+verdict = "not applicable"
+
+[[result]]
+seed = 150
+verdict = "not applicable"
+
+[[result]]
+seed = 151
+verdict = "not applicable"
+
+[[result]]
+seed = 152
+verdict = "not applicable"
+
+[[result]]
+seed = 153
+verdict = "not applicable"
+
+[[result]]
+seed = 154
+verdict = "not applicable"
+
+[[result]]
+seed = 155
+verdict = "not applicable"
+
+[[result]]
+seed = 156
+verdict = "not applicable"
+
+[[result]]
+seed = 157
+verdict = "not applicable"
+
+[[result]]
+seed = 158
+verdict = "not applicable"
+
+[[result]]
+seed = 159
+verdict = "not applicable"
+
+[[result]]
+seed = 160
+verdict = "not applicable"
+
+[[result]]
+seed = 161
+verdict = "not applicable"
+
+[[result]]
+seed = 162
+verdict = "not applicable"
+
+[[result]]
+seed = 163
+verdict = "not applicable"
+
+[[result]]
+seed = 164
+verdict = "not applicable"
+
+[[result]]
+seed = 165
+verdict = "not applicable"
+
+[[result]]
+seed = 166
+verdict = "not applicable"
+
+[[result]]
+seed = 167
+verdict = "not applicable"
+
+[[result]]
+seed = 168
+verdict = "not applicable"
+
+[[result]]
+seed = 169
+verdict = "not applicable"
+
+[[result]]
+seed = 170
+verdict = "not applicable"
+
+[[result]]
+seed = 171
+verdict = "not applicable"
+
+[[result]]
+seed = 172
+verdict = "not applicable"
+
+[[result]]
+seed = 173
+verdict = "not applicable"
+
+[[result]]
+seed = 174
+verdict = "not applicable"
+
+[[result]]
+seed = 175
+verdict = "not applicable"
+
+[[result]]
+seed = 176
+verdict = "not applicable"
+
+[[result]]
+seed = 177
+verdict = "not applicable"
+
+[[result]]
+seed = 178
+verdict = "not applicable"
+
+[[result]]
+seed = 179
+verdict = "not applicable"
+
+[[result]]
+seed = 180
+verdict = "not applicable"
+
+[[result]]
+seed = 181
+verdict = "not applicable"
+
+[[result]]
+seed = 182
+verdict = "not applicable"
+
+[[result]]
+seed = 183
+verdict = "not applicable"
+
+[[result]]
+seed = 184
+verdict = "not applicable"
+
+[[result]]
+seed = 185
+verdict = "not applicable"
+
+[[result]]
+seed = 186
+verdict = "not applicable"
+
+[[result]]
+seed = 187
+verdict = "not applicable"
+
+[[result]]
+seed = 188
+verdict = "not applicable"
+
+[[result]]
+seed = 189
+verdict = "not applicable"
+
+[[result]]
+seed = 190
+verdict = "not applicable"
+
+[[result]]
+seed = 191
+verdict = "not applicable"
+
+[[result]]
+seed = 192
+verdict = "not applicable"
+
+[[result]]
+seed = 193
+verdict = "not applicable"
+
+[[result]]
+seed = 194
+verdict = "not applicable"
+
+[[result]]
+seed = 195
+verdict = "not applicable"
+
+[[result]]
+seed = 196
+verdict = "not applicable"
+
+[[result]]
+seed = 197
+verdict = "not applicable"
+
+[[result]]
+seed = 198
+verdict = "not applicable"
+
+[[result]]
+seed = 199
+verdict = "not applicable"
+
+[[result]]
+seed = 200
+verdict = "not applicable"
+
+[[result]]
+seed = 201
+verdict = "not applicable"
+
+[[result]]
+seed = 202
+verdict = "not applicable"
+
+[[result]]
+seed = 203
+verdict = "not applicable"
+
+[[result]]
+seed = 204
+verdict = "not applicable"
+
+[[result]]
+seed = 205
+verdict = "not applicable"
+
+[[result]]
+seed = 206
+verdict = "not applicable"
+
+[[result]]
+seed = 207
+verdict = "not applicable"
+
+[[result]]
+seed = 208
+verdict = "not applicable"
+
+[[result]]
+seed = 209
+verdict = "not applicable"
+
+[[result]]
+seed = 210
+verdict = "not applicable"
+
+[[result]]
+seed = 211
+verdict = "not applicable"
+
+[[result]]
+seed = 212
+verdict = "not applicable"
+
+[[result]]
+seed = 213
+verdict = "not applicable"
+
+[[result]]
+seed = 214
+verdict = "not applicable"
+
+[[result]]
+seed = 215
+verdict = "not applicable"
+
+[[result]]
+seed = 216
+verdict = "not applicable"
+
+[[result]]
+seed = 217
+verdict = "not applicable"
+
+[[result]]
+seed = 218
+verdict = "not applicable"
+
+[[result]]
+seed = 219
+verdict = "not applicable"
+
+[[result]]
+seed = 220
+verdict = "not applicable"
+
+[[result]]
+seed = 221
+verdict = "not applicable"
+
+[[result]]
+seed = 222
+verdict = "not applicable"
+
+[[result]]
+seed = 223
+verdict = "not applicable"
+
+[[result]]
+seed = 224
+verdict = "not applicable"
+
+[[result]]
+seed = 225
+verdict = "not applicable"
+
+[[result]]
+seed = 226
+verdict = "not applicable"
+
+[[result]]
+seed = 227
+verdict = "not applicable"
+
+[[result]]
+seed = 228
+verdict = "not applicable"
+
+[[result]]
+seed = 229
+verdict = "not applicable"
+
+[[result]]
+seed = 230
+verdict = "not applicable"
+
+[[result]]
+seed = 231
+verdict = "not applicable"
+
+[[result]]
+seed = 232
+verdict = "not applicable"
+
+[[result]]
+seed = 233
+verdict = "not applicable"
+
+[[result]]
+seed = 234
+verdict = "not applicable"
+
+[[result]]
+seed = 235
+verdict = "not applicable"
+
+[[result]]
+seed = 236
+verdict = "not applicable"
+
+[[result]]
+seed = 237
+verdict = "not applicable"
+
+[[result]]
+seed = 238
+verdict = "not applicable"
+
+[[result]]
+seed = 239
+verdict = "not applicable"
+
+[[result]]
+seed = 240
+verdict = "not applicable"
+
+[[result]]
+seed = 241
+verdict = "not applicable"
+
+[[result]]
+seed = 242
+verdict = "not applicable"
+
+[[result]]
+seed = 243
+verdict = "not applicable"
+
+[[result]]
+seed = 244
+verdict = "not applicable"
+
+[[result]]
+seed = 245
+verdict = "not applicable"
+
+[[result]]
+seed = 246
+verdict = "not applicable"
+
+[[result]]
+seed = 247
+verdict = "not applicable"
+
+[[result]]
+seed = 248
+verdict = "not applicable"
+
+[[result]]
+seed = 249
+verdict = "not applicable"
+
+[[result]]
+seed = 250
+verdict = "not applicable"
+
+[[result]]
+seed = 251
+verdict = "not applicable"
+
+[[result]]
+seed = 252
+verdict = "not applicable"
+
+[[result]]
+seed = 253
+verdict = "not applicable"
+
+[[result]]
+seed = 254
+verdict = "not applicable"
+
+[[result]]
+seed = 255
+verdict = "not applicable"
+
+[[result]]
+seed = 256
+verdict = "not applicable"
+
+[[result]]
+seed = 257
+verdict = "not applicable"
+
+[[result]]
+seed = 258
+verdict = "not applicable"
+
+[[result]]
+seed = 259
+verdict = "not applicable"
+
+[[result]]
+seed = 260
+verdict = "not applicable"
+
+[[result]]
+seed = 261
+verdict = "not applicable"
+
+[[result]]
+seed = 262
+verdict = "not applicable"
+
+[[result]]
+seed = 263
+verdict = "not applicable"
+
+[[result]]
+seed = 264
+verdict = "not applicable"
+
+[[result]]
+seed = 265
+verdict = "not applicable"
+
+[[result]]
+seed = 266
+verdict = "not applicable"
+
+[[result]]
+seed = 267
+verdict = "not applicable"
+
+[[result]]
+seed = 268
+verdict = "not applicable"
+
+[[result]]
+seed = 269
+verdict = "not applicable"
+
+[[result]]
+seed = 270
+verdict = "not applicable"
+
+[[result]]
+seed = 271
+verdict = "not applicable"
+
+[[result]]
+seed = 272
+verdict = "not applicable"
+
+[[result]]
+seed = 273
+verdict = "not applicable"
+
+[[result]]
+seed = 274
+verdict = "not applicable"
+
+[[result]]
+seed = 275
+verdict = "not applicable"
+
+[[result]]
+seed = 276
+verdict = "not applicable"
+
+[[result]]
+seed = 277
+verdict = "not applicable"
+
+[[result]]
+seed = 278
+verdict = "not applicable"
+
+[[result]]
+seed = 279
+verdict = "not applicable"
+
+[[result]]
+seed = 280
+verdict = "not applicable"
+
+[[result]]
+seed = 281
+verdict = "not applicable"
+
+[[result]]
+seed = 282
+verdict = "not applicable"
+
+[[result]]
+seed = 283
+verdict = "not applicable"
+
+[[result]]
+seed = 284
+verdict = "not applicable"
+
+[[result]]
+seed = 285
+verdict = "not applicable"
+
+[[result]]
+seed = 286
+verdict = "not applicable"
+
+[[result]]
+seed = 287
+verdict = "not applicable"
+
+[[result]]
+seed = 288
+verdict = "not applicable"
+
+[[result]]
+seed = 289
+verdict = "not applicable"
+
+[[result]]
+seed = 290
+verdict = "not applicable"
+
+[[result]]
+seed = 291
+verdict = "not applicable"
+
+[[result]]
+seed = 292
+verdict = "not applicable"
+
+[[result]]
+seed = 293
+verdict = "not applicable"
+
+[[result]]
+seed = 294
+verdict = "not applicable"
+
+[[result]]
+seed = 295
+verdict = "not applicable"
+
+[[result]]
+seed = 296
+verdict = "not applicable"
+
+[[result]]
+seed = 297
+verdict = "not applicable"
+
+[[result]]
+seed = 298
+verdict = "not applicable"
+
+[[result]]
+seed = 299
+verdict = "not applicable"
+
+[[result]]
+seed = 300
+verdict = "not applicable"
+
+[[result]]
+seed = 301
+verdict = "not applicable"
+
+[[result]]
+seed = 302
+verdict = "not applicable"
+
+[[result]]
+seed = 303
+verdict = "not applicable"
+
+[[result]]
+seed = 304
+verdict = "not applicable"
+
+[[result]]
+seed = 305
+verdict = "not applicable"
+
+[[result]]
+seed = 306
+verdict = "not applicable"
+
+[[result]]
+seed = 307
+verdict = "not applicable"
+
+[[result]]
+seed = 308
+verdict = "not applicable"
+
+[[result]]
+seed = 309
+verdict = "not applicable"
+
+[[result]]
+seed = 310
+verdict = "not applicable"
+
+[[result]]
+seed = 311
+verdict = "not applicable"
+
+[[result]]
+seed = 312
+verdict = "not applicable"
+
+[[result]]
+seed = 313
+verdict = "not applicable"
+
+[[result]]
+seed = 314
+verdict = "not applicable"
+
+[[result]]
+seed = 315
+verdict = "not applicable"
+
+[[result]]
+seed = 316
+verdict = "not applicable"
+
+[[result]]
+seed = 317
+verdict = "not applicable"
+
+[[result]]
+seed = 318
+verdict = "not applicable"
+
+[[result]]
+seed = 319
+verdict = "not applicable"
+
+[[result]]
+seed = 320
+verdict = "not applicable"
+
+[[result]]
+seed = 321
+verdict = "not applicable"
+
+[[result]]
+seed = 322
+verdict = "not applicable"
+
+[[result]]
+seed = 323
+verdict = "not applicable"
+
+[[result]]
+seed = 324
+verdict = "not applicable"
+
+[[result]]
+seed = 325
+verdict = "not applicable"
+
+[[result]]
+seed = 326
+verdict = "not applicable"
+
+[[result]]
+seed = 327
+verdict = "not applicable"
+
+[[result]]
+seed = 328
+verdict = "not applicable"
+
+[[result]]
+seed = 329
+verdict = "not applicable"
+
+[[result]]
+seed = 330
+verdict = "not applicable"
+
+[[result]]
+seed = 331
+verdict = "not applicable"
+
+[[result]]
+seed = 332
+verdict = "not applicable"
+
+[[result]]
+seed = 333
+verdict = "not applicable"
+
+[[result]]
+seed = 334
+verdict = "not applicable"
+
+[[result]]
+seed = 335
+verdict = "not applicable"
+
+[[result]]
+seed = 336
+verdict = "not applicable"
+
+[[result]]
+seed = 337
+verdict = "not applicable"
+
+[[result]]
+seed = 338
+verdict = "not applicable"
+
+[[result]]
+seed = 339
+verdict = "not applicable"
+
+[[result]]
+seed = 340
+verdict = "not applicable"
+
+[[result]]
+seed = 341
+verdict = "not applicable"
+
+[[result]]
+seed = 342
+verdict = "not applicable"
+
+[[result]]
+seed = 343
+verdict = "not applicable"
+
+[[result]]
+seed = 344
+verdict = "not applicable"
+
+[[result]]
+seed = 345
+verdict = "not applicable"
+
+[[result]]
+seed = 346
+verdict = "not applicable"
+
+[[result]]
+seed = 347
+verdict = "not applicable"
+
+[[result]]
+seed = 348
+verdict = "not applicable"
+
+[[result]]
+seed = 349
+verdict = "not applicable"
+
+[[result]]
+seed = 350
+verdict = "not applicable"
+
+[[result]]
+seed = 351
+verdict = "not applicable"
+
+[[result]]
+seed = 352
+verdict = "not applicable"
+
+[[result]]
+seed = 353
+verdict = "not applicable"
+
+[[result]]
+seed = 354
+verdict = "not applicable"
+
+[[result]]
+seed = 355
+verdict = "not applicable"
+
+[[result]]
+seed = 356
+verdict = "not applicable"
+
+[[result]]
+seed = 357
+verdict = "not applicable"
+
+[[result]]
+seed = 358
+verdict = "not applicable"
+
+[[result]]
+seed = 359
+verdict = "not applicable"
+
+[[result]]
+seed = 360
+verdict = "not applicable"
+
+[[result]]
+seed = 361
+verdict = "not applicable"
+
+[[result]]
+seed = 362
+verdict = "not applicable"
+
+[[result]]
+seed = 363
+verdict = "not applicable"
+
+[[result]]
+seed = 364
+verdict = "not applicable"
+
+[[result]]
+seed = 365
+verdict = "not applicable"
+
+[[result]]
+seed = 366
+verdict = "not applicable"
+
+[[result]]
+seed = 367
+verdict = "not applicable"
+
+[[result]]
+seed = 368
+verdict = "not applicable"
+
+[[result]]
+seed = 369
+verdict = "not applicable"
+
+[[result]]
+seed = 370
+verdict = "not applicable"
+
+[[result]]
+seed = 371
+verdict = "not applicable"
+
+[[result]]
+seed = 372
+verdict = "not applicable"
+
+[[result]]
+seed = 373
+verdict = "not applicable"
+
+[[result]]
+seed = 374
+verdict = "not applicable"
+
+[[result]]
+seed = 375
+verdict = "not applicable"
+
+[[result]]
+seed = 376
+verdict = "not applicable"
+
+[[result]]
+seed = 377
+verdict = "not applicable"
+
+[[result]]
+seed = 378
+verdict = "not applicable"
+
+[[result]]
+seed = 379
+verdict = "not applicable"
+
+[[result]]
+seed = 380
+verdict = "not applicable"
+
+[[result]]
+seed = 381
+verdict = "not applicable"
+
+[[result]]
+seed = 382
+verdict = "not applicable"
+
+[[result]]
+seed = 383
+verdict = "not applicable"
+
+[[result]]
+seed = 384
+verdict = "not applicable"
+
+[[result]]
+seed = 385
+verdict = "not applicable"
+
+[[result]]
+seed = 386
+verdict = "not applicable"
+
+[[result]]
+seed = 387
+verdict = "not applicable"
+
+[[result]]
+seed = 388
+verdict = "not applicable"
+
+[[result]]
+seed = 389
+verdict = "not applicable"
+
+[[result]]
+seed = 390
+verdict = "not applicable"
+
+[[result]]
+seed = 391
+verdict = "not applicable"
+
+[[result]]
+seed = 392
+verdict = "not applicable"
+
+[[result]]
+seed = 393
+verdict = "not applicable"
+
+[[result]]
+seed = 394
+verdict = "not applicable"
+
+[[result]]
+seed = 395
+verdict = "not applicable"
+
+[[result]]
+seed = 396
+verdict = "not applicable"
+
+[[result]]
+seed = 397
+verdict = "not applicable"
+
+[[result]]
+seed = 398
+verdict = "not applicable"
+
+[[result]]
+seed = 399
+verdict = "not applicable"
+
+[[result]]
+seed = 400
+verdict = "not applicable"
+
+[[result]]
+seed = 401
+verdict = "not applicable"
+
+[[result]]
+seed = 402
+verdict = "not applicable"
+
+[[result]]
+seed = 403
+verdict = "not applicable"
+
+[[result]]
+seed = 404
+verdict = "not applicable"
+
+[[result]]
+seed = 405
+verdict = "not applicable"
+
+[[result]]
+seed = 406
+verdict = "not applicable"
+
+[[result]]
+seed = 407
+verdict = "not applicable"
+
+[[result]]
+seed = 408
+verdict = "not applicable"
+
+[[result]]
+seed = 409
+verdict = "not applicable"
+
+[[result]]
+seed = 410
+verdict = "not applicable"
+
+[[result]]
+seed = 411
+verdict = "not applicable"
+
+[[result]]
+seed = 412
+verdict = "not applicable"
+
+[[result]]
+seed = 413
+verdict = "not applicable"
+
+[[result]]
+seed = 414
+verdict = "not applicable"
+
+[[result]]
+seed = 415
+verdict = "not applicable"
+
+[[result]]
+seed = 416
+verdict = "not applicable"
+
+[[result]]
+seed = 417
+verdict = "not applicable"
+
+[[result]]
+seed = 418
+verdict = "not applicable"
+
+[[result]]
+seed = 419
+verdict = "not applicable"
+
+[[result]]
+seed = 420
+verdict = "not applicable"
+
+[[result]]
+seed = 421
+verdict = "not applicable"
+
+[[result]]
+seed = 422
+verdict = "not applicable"
+
+[[result]]
+seed = 423
+verdict = "not applicable"
+
+[[result]]
+seed = 424
+verdict = "not applicable"
+
+[[result]]
+seed = 425
+verdict = "not applicable"
+
+[[result]]
+seed = 426
+verdict = "not applicable"
+
+[[result]]
+seed = 427
+verdict = "not applicable"
+
+[[result]]
+seed = 428
+verdict = "not applicable"
+
+[[result]]
+seed = 429
+verdict = "not applicable"
+
+[[result]]
+seed = 430
+verdict = "not applicable"
+
+[[result]]
+seed = 431
+verdict = "not applicable"
+
+[[result]]
+seed = 432
+verdict = "not applicable"
+
+[[result]]
+seed = 433
+verdict = "not applicable"
+
+[[result]]
+seed = 434
+verdict = "not applicable"
+
+[[result]]
+seed = 435
+verdict = "not applicable"
+
+[[result]]
+seed = 436
+verdict = "not applicable"
+
+[[result]]
+seed = 437
+verdict = "not applicable"
+
+[[result]]
+seed = 438
+verdict = "not applicable"
+
+[[result]]
+seed = 439
+verdict = "not applicable"
+
+[[result]]
+seed = 440
+verdict = "not applicable"
+
+[[result]]
+seed = 441
+verdict = "not applicable"
+
+[[result]]
+seed = 442
+verdict = "not applicable"
+
+[[result]]
+seed = 443
+verdict = "not applicable"
+
+[[result]]
+seed = 444
+verdict = "not applicable"
+
+[[result]]
+seed = 445
+verdict = "not applicable"
+
+[[result]]
+seed = 446
+verdict = "not applicable"
+
+[[result]]
+seed = 447
+verdict = "not applicable"
+
+[[result]]
+seed = 448
+verdict = "not applicable"
+
+[[result]]
+seed = 449
+verdict = "not applicable"
+
+[[result]]
+seed = 450
+verdict = "not applicable"
+
+[[result]]
+seed = 451
+verdict = "not applicable"
+
+[[result]]
+seed = 452
+verdict = "not applicable"
+
+[[result]]
+seed = 453
+verdict = "not applicable"
+
+[[result]]
+seed = 454
+verdict = "not applicable"
+
+[[result]]
+seed = 455
+verdict = "not applicable"
+
+[[result]]
+seed = 456
+verdict = "not applicable"
+
+[[result]]
+seed = 457
+verdict = "not applicable"
+
+[[result]]
+seed = 458
+verdict = "not applicable"
+
+[[result]]
+seed = 459
+verdict = "not applicable"
+
+[[result]]
+seed = 460
+verdict = "not applicable"
+
+[[result]]
+seed = 461
+verdict = "not applicable"
+
+[[result]]
+seed = 462
+verdict = "not applicable"
+
+[[result]]
+seed = 463
+verdict = "not applicable"
+
+[[result]]
+seed = 464
+verdict = "not applicable"
+
+[[result]]
+seed = 465
+verdict = "not applicable"
+
+[[result]]
+seed = 466
+verdict = "not applicable"
+
+[[result]]
+seed = 467
+verdict = "not applicable"
+
+[[result]]
+seed = 468
+verdict = "not applicable"
+
+[[result]]
+seed = 469
+verdict = "not applicable"
+
+[[result]]
+seed = 470
+verdict = "not applicable"
+
+[[result]]
+seed = 471
+verdict = "not applicable"
+
+[[result]]
+seed = 472
+verdict = "not applicable"
+
+[[result]]
+seed = 473
+verdict = "not applicable"
+
+[[result]]
+seed = 474
+verdict = "not applicable"
+
+[[result]]
+seed = 475
+verdict = "not applicable"
+
+[[result]]
+seed = 476
+verdict = "not applicable"
+
+[[result]]
+seed = 477
+verdict = "not applicable"
+
+[[result]]
+seed = 478
+verdict = "not applicable"
+
+[[result]]
+seed = 479
+verdict = "not applicable"
+
+[[result]]
+seed = 480
+verdict = "not applicable"
+
+[[result]]
+seed = 481
+verdict = "not applicable"
+
+[[result]]
+seed = 482
+verdict = "not applicable"
+
+[[result]]
+seed = 483
+verdict = "not applicable"
+
+[[result]]
+seed = 484
+verdict = "not applicable"
+
+[[result]]
+seed = 485
+verdict = "not applicable"
+
+[[result]]
+seed = 486
+verdict = "not applicable"
+
+[[result]]
+seed = 487
+verdict = "not applicable"
+
+[[result]]
+seed = 488
+verdict = "not applicable"
+
+[[result]]
+seed = 489
+verdict = "not applicable"
+
+[[result]]
+seed = 490
+verdict = "not applicable"
+
+[[result]]
+seed = 491
+verdict = "not applicable"
+
+[[result]]
+seed = 492
+verdict = "not applicable"
+
+[[result]]
+seed = 493
+verdict = "not applicable"
+
+[[result]]
+seed = 494
+verdict = "not applicable"
+
+[[result]]
+seed = 495
+verdict = "not applicable"
+
+[[result]]
+seed = 496
+verdict = "not applicable"
+
+[[result]]
+seed = 497
+verdict = "not applicable"
+
+[[result]]
+seed = 498
+verdict = "not applicable"
+
+[[result]]
+seed = 499
+verdict = "not applicable"

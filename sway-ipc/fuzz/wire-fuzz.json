@@ -1,0 +1,230 @@
+{
+  "cases": [
+    {
+      "case": "bad-magic",
+      "input": "6261642d69700000000007000000",
+      "observation": {
+        "outcome": "disconnect"
+      }
+    },
+    {
+      "case": "truncated-header",
+      "input": "69332d6970630000",
+      "observation": {
+        "outcome": "timeout"
+      }
+    },
+    {
+      "case": "truncated-payload",
+      "input": "69332d6970630a000000000000006e6f70",
+      "observation": {
+        "outcome": "timeout"
+      }
+    },
+    {
+      "case": "oversized-length",
+      "input": "69332d697063ffffffff00000000",
+      "observation": {
+        "outcome": "timeout"
+      }
+    },
+    {
+      "case": "unknown-type",
+      "input": "69332d69706300000000ffffff7f",
+      "observation": {
+        "outcome": "timeout"
+      }
+    },
+    {
+      "case": "subscribe-invalid-json",
+      "input": "69332d69706301000000020000007b",
+      "observation": {
+        "outcome": "reply",
+        "replies": [
+          {
+            "magic": "i3-ipc",
+            "payload": {
+              "success": false
+            },
+            "type": 2
+          }
+        ]
+      }
+    },
+    {
+      "case": "subscribe-wrong-json",
+      "input": "69332d69706302000000020000007b7d",
+      "observation": {
+        "outcome": "reply",
+        "replies": [
+          {
+            "magic": "i3-ipc",
+            "payload": {
+              "success": false
+            },
+            "type": 2
+          }
+        ]
+      }
+    },
+    {
+      "case": "command-invalid-json",
+      "input": "69332d69706301000000000000007b",
+      "observation": {
+        "outcome": "reply",
+        "replies": [
+          {
+            "magic": "i3-ipc",
+            "payload": [
+              {
+                "error": "Unknown/invalid command '{'",
+                "parse_error": true,
+                "success": false
+              }
+            ],
+            "type": 0
+          }
+        ]
+      }
+    },
+    {
+      "case": "command-invalid-utf8",
+      "input": "69332d6970630100000000000000ff",
+      "observation": {
+        "outcome": "reply",
+        "replies": [
+          {
+            "magic": "i3-ipc",
+            "payload": {
+              "raw_hex": "5b207b202273756363657373223a2066616c73652c202270617273655f6572726f72223a20747275652c20226572726f72223a2022556e6b6e6f776e5c2f696e76616c696420636f6d6d616e642027ff2722207d205d"
+            },
+            "type": 0
+          }
+        ]
+      }
+    },
+    {
+      "case": "many-clients",
+      "input": "",
+      "observation": {
+        "clients": 32,
+        "outcome": "reply",
+        "replies": 32
+      }
+    },
+    {
+      "case": "zero-command",
+      "input": "69332d6970630000000000000000",
+      "observation": {
+        "outcome": "reply",
+        "replies": [
+          {
+            "magic": "i3-ipc",
+            "payload": [],
+            "type": 0
+          }
+        ]
+      }
+    },
+    {
+      "case": "two-frames",
+      "input": "69332d697063000000000700000069332d6970630000000007000000",
+      "observation": {
+        "outcome": "reply",
+        "replies": [
+          {
+            "magic": "i3-ipc",
+            "payload": {
+              "keys": [
+                "human_readable",
+                "loaded_config_file_name",
+                "major",
+                "minor",
+                "patch",
+                "variant"
+              ]
+            },
+            "type": 7
+          },
+          {
+            "magic": "i3-ipc",
+            "payload": {
+              "keys": [
+                "human_readable",
+                "loaded_config_file_name",
+                "major",
+                "minor",
+                "patch",
+                "variant"
+              ]
+            },
+            "type": 7
+          }
+        ]
+      }
+    },
+    {
+      "case": "event-type-as-request",
+      "input": "69332d6970630000000000000080",
+      "observation": {
+        "outcome": "timeout"
+      }
+    },
+    {
+      "case": "length-one-version",
+      "input": "69332d697063010000000700000078",
+      "observation": {
+        "outcome": "reply",
+        "replies": [
+          {
+            "magic": "i3-ipc",
+            "payload": {
+              "keys": [
+                "human_readable",
+                "loaded_config_file_name",
+                "major",
+                "minor",
+                "patch",
+                "variant"
+              ]
+            },
+            "type": 7
+          }
+        ]
+      }
+    },
+    {
+      "case": "subscribe-null",
+      "input": "69332d69706304000000020000006e756c6c",
+      "observation": {
+        "outcome": "reply",
+        "replies": [
+          {
+            "magic": "i3-ipc",
+            "payload": {
+              "success": false
+            },
+            "type": 2
+          }
+        ]
+      }
+    },
+    {
+      "case": "subscribe-empty",
+      "input": "69332d69706302000000020000005b5d",
+      "observation": {
+        "outcome": "reply",
+        "replies": [
+          {
+            "magic": "i3-ipc",
+            "payload": {
+              "success": true
+            },
+            "type": 2
+          }
+        ]
+      }
+    }
+  ],
+  "seed": 0
+}

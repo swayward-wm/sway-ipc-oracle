@@ -1,0 +1,60 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-sscs-1 --title=fixture-sscs-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move scratchpad",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "scratchpad show",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "kill",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "scratchpad show",
+    "reply": [
+      {
+        "error": "Scratchpad is empty",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-sscs-2 --title=fixture-sscs-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move scratchpad",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

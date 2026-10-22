@@ -1,0 +1,966 @@
+# Human-reviewed triage of miracle-wm-0.11.2 sway IPC state mismatches, keyed by scenario.request.
+# design difference: miracle-wm documents or deliberately builds the behaviour; deviation: an
+# undocumented difference from sway, with the miracle-wm source that produces it. Every source
+# cites miracle-wm at 2df22b0e (the pin) unless it names sway. contrib/validate prints the untriaged count.
+#
+# Crashes are compositor-health rows, not mismatches, and are not listed. The committed state result has
+# none; see sway-ipc/adapters/miracle-wm.md 'Crashes' for the full-corpus SIGSEGV at 'move container to mark'
+# (likely cause, not traced: src/command_controller.cpp:1827-1872 moves the marked window's own parent and
+# then looks up the marked window's parent at 1863-1865).
+
+
+[[classification]]
+rows = [
+    "empty.tree",
+    "one_window.tree",
+    "two_split_h.tree",
+    "two_split_v.tree",
+    "nested_h_in_v.tree",
+    "tabbed.tree",
+    "stacked.tree",
+    "default_floating_fixed_width.tree",
+    "default_tiling_fixed_height_zero_width.tree",
+    "default_floating_fixed_both.tree",
+    "default_floating_parent.tree",
+    "one_floating.tree",
+    "two_floating.tree",
+    "three_floating_before_raise.tree",
+    "three_floating_after_raise.tree",
+    "fullscreen.tree",
+    "layout_inside_floating_group_tabbed.tree",
+    "layout_inside_floating_group_stacked.tree",
+    "layout_inside_floating_group_toggled.tree",
+    "floating_group_child_move_direction_before.tree",
+    "floating_group_child_move_direction_after.tree",
+    "floating_group_child_move_position_before.tree",
+    "floating_group_child_move_position_after.tree",
+    "floating_group_child_resize_before.tree",
+    "floating_group_child_resize_after.tree",
+    "floating_group_child_workspace_move_before.tree",
+    "floating_group_child_workspace_move_after.tree",
+    "floating_group_child_output_move_before.tree",
+    "floating_group_child_output_move_after.tree",
+    "floating_group_child_floating_toggle_before.tree",
+    "floating_group_child_floating_toggle_after.tree",
+    "floating_group_child_fullscreen_before.tree",
+    "floating_group_child_fullscreen_after.tree",
+    "floating_group_child_sticky_before.tree",
+    "floating_group_child_sticky_after.tree",
+    "floating_group_child_swap_before.tree",
+    "floating_group_child_swap_after.tree",
+    "floating_group_child_border.tree",
+    "floating_group_child_kill.tree",
+    "marked.tree",
+    "named_workspace.tree",
+    "empty_named.tree",
+    "fullscreen_global_two_outputs.tree",
+    "two_outputs.tree",
+    "scratchpad_hidden.tree",
+    "scratchpad_shown.tree",
+    "borders_and_gaps.tree",
+    "urgent_via_command.tree",
+    "markup_title.tree",
+    "fullscreen_workspace.tree",
+    "fullscreen_global.tree",
+    "container_mark.tree",
+    "differential_seed_0.tree",
+    "command_coverage.tree",
+    "empty_workspace_command_errors.tree",
+    "fullscreen_map_behind.tree",
+    "workspace_focus_recency.tree",
+    "empty_workspace_layout_lifecycle.tree",
+    "singleton_directional_move.tree",
+    "fullscreen_split_wrapper.tree",
+    "empty_workspace_container_move.tree",
+    "command_parser_errors.tree",
+]
+triage = "design difference"
+finding = "miracle-ipc-reply-shape"
+reason = "GET_TREE is miracle's own node schema (documented in get_tree.md), not sway's. The root carries only id, name, rect, nodes and type, and there is no __i3 pseudo-output or __i3_scratch workspace, so sway's tree has one more output node and every pairing below the root is shifted: sway's __i3 is compared with miracle's first output and __i3_scratch with miracle's first workspace (with two outputs, sway's first real output is compared with miracle's second). That is why names, nums, focus, child counts, layouts, scale, transform, mode and scale_filter differ at those paths; the windows under sway's real outputs are not reached. Output and workspace nodes report orientation 'none', output nodes always report scale_filter 'linear', and the node key sets differ from sway's (no marks, floating, representation, percent on workspaces; policy added)."
+source = "miracle-wm 2df22b0e src/command_controller.cpp:2269-2315 (root is {id, name, rect, nodes, type} over the real outputs only), src/output.cpp:422-524 (output node, orientation 'none', scale_filter 'linear'), src/workspace.cpp:833-908 (workspace node, policy, orientation 'none'), src/leaf_container.cpp:1052-1124 (window node); wiki/docs/ipc/get_tree.md:16-231 (documented schema: type root|output|workspace|con|floating_con, policy, scale_filter 'Supplied but unused and always linear', orientation 'Deprecated so always none')"
+
+[[classification]]
+rows = [
+    "empty.workspaces",
+    "one_window.workspaces",
+    "two_split_h.workspaces",
+    "two_split_v.workspaces",
+    "nested_h_in_v.workspaces",
+    "tabbed.workspaces",
+    "stacked.workspaces",
+    "default_floating_fixed_width.workspaces",
+    "default_tiling_fixed_height_zero_width.workspaces",
+    "default_floating_fixed_both.workspaces",
+    "default_floating_parent.workspaces",
+    "one_floating.workspaces",
+    "two_floating.workspaces",
+    "three_floating_before_raise.workspaces",
+    "three_floating_after_raise.workspaces",
+    "fullscreen.workspaces",
+    "layout_inside_floating_group_tabbed.workspaces",
+    "layout_inside_floating_group_stacked.workspaces",
+    "layout_inside_floating_group_toggled.workspaces",
+    "floating_group_child_move_direction_before.workspaces",
+    "floating_group_child_move_direction_after.workspaces",
+    "floating_group_child_move_position_before.workspaces",
+    "floating_group_child_move_position_after.workspaces",
+    "floating_group_child_resize_before.workspaces",
+    "floating_group_child_resize_after.workspaces",
+    "floating_group_child_workspace_move_before.workspaces",
+    "floating_group_child_output_move_before.workspaces",
+    "floating_group_child_output_move_after.workspaces",
+    "floating_group_child_floating_toggle_before.workspaces",
+    "floating_group_child_floating_toggle_after.workspaces",
+    "floating_group_child_fullscreen_before.workspaces",
+    "floating_group_child_fullscreen_after.workspaces",
+    "floating_group_child_sticky_before.workspaces",
+    "floating_group_child_sticky_after.workspaces",
+    "floating_group_child_swap_before.workspaces",
+    "floating_group_child_swap_after.workspaces",
+    "floating_group_child_border.workspaces",
+    "floating_group_child_kill.workspaces",
+    "marked.workspaces",
+    "named_workspace.workspaces",
+    "empty_named.workspaces",
+    "fullscreen_global_two_outputs.workspaces",
+    "scratchpad_hidden.workspaces",
+    "scratchpad_shown.workspaces",
+    "nested_tabbed_in_stacked.workspaces",
+    "nested_stacked_in_tabbed.workspaces",
+    "borders_and_gaps.workspaces",
+    "markup_title.workspaces",
+    "fullscreen_workspace.workspaces",
+    "fullscreen_global.workspaces",
+    "container_mark.workspaces",
+    "differential_seed_0.workspaces",
+    "command_coverage.workspaces",
+    "empty_workspace_command_errors.workspaces",
+    "fullscreen_map_behind.workspaces",
+    "workspace_focus_recency.workspaces",
+    "empty_workspace_layout_lifecycle.workspaces",
+    "singleton_directional_move.workspaces",
+    "scratchpad_unfloat.workspaces",
+    "fullscreen_split_wrapper.workspaces",
+    "command_parser_errors.workspaces",
+]
+triage = "design difference"
+finding = "miracle-ipc-reply-shape"
+reason = "GET_WORKSPACES entries are miracle's documented shape: num, name, visible, focused, urgent, output, policy and rect, without sway's container keys (id, type, layout, orientation, border, nodes, representation and so on), so every entry reports 'keys differ'."
+source = "miracle-wm 2df22b0e src/workspace.cpp:801-831 (get_workspaces_json), src/command_controller.cpp:2446-2460; wiki/docs/ipc/get_workspaces.md:10-28 (documented keys, including policy)"
+
+[[classification]]
+rows = [
+    "empty.outputs",
+    "one_window.outputs",
+    "two_split_h.outputs",
+    "two_split_v.outputs",
+    "nested_h_in_v.outputs",
+    "tabbed.outputs",
+    "stacked.outputs",
+    "default_floating_fixed_width.outputs",
+    "default_tiling_fixed_height_zero_width.outputs",
+    "default_floating_fixed_both.outputs",
+    "default_floating_parent.outputs",
+    "one_floating.outputs",
+    "two_floating.outputs",
+    "three_floating_before_raise.outputs",
+    "three_floating_after_raise.outputs",
+    "fullscreen.outputs",
+    "layout_inside_floating_group_tabbed.outputs",
+    "layout_inside_floating_group_stacked.outputs",
+    "layout_inside_floating_group_toggled.outputs",
+    "floating_group_child_move_direction_before.outputs",
+    "floating_group_child_move_direction_after.outputs",
+    "floating_group_child_move_position_before.outputs",
+    "floating_group_child_move_position_after.outputs",
+    "floating_group_child_resize_before.outputs",
+    "floating_group_child_resize_after.outputs",
+    "floating_group_child_workspace_move_before.outputs",
+    "floating_group_child_output_move_before.outputs",
+    "floating_group_child_output_move_after.outputs",
+    "floating_group_child_floating_toggle_before.outputs",
+    "floating_group_child_floating_toggle_after.outputs",
+    "floating_group_child_fullscreen_before.outputs",
+    "floating_group_child_fullscreen_after.outputs",
+    "floating_group_child_sticky_before.outputs",
+    "floating_group_child_sticky_after.outputs",
+    "floating_group_child_swap_before.outputs",
+    "floating_group_child_swap_after.outputs",
+    "floating_group_child_border.outputs",
+    "floating_group_child_kill.outputs",
+    "marked.outputs",
+    "two_workspaces.outputs",
+    "numbered_sparse.outputs",
+    "named_workspace.outputs",
+    "empty_named.outputs",
+    "fullscreen_global_two_outputs.outputs",
+    "two_outputs.outputs",
+    "scratchpad_hidden.outputs",
+    "scratchpad_shown.outputs",
+    "sticky_workspace_switch.outputs",
+    "nested_tabbed_in_stacked.outputs",
+    "nested_stacked_in_tabbed.outputs",
+    "borders_and_gaps.outputs",
+    "urgent_via_command.outputs",
+    "markup_title.outputs",
+    "fullscreen_workspace.outputs",
+    "fullscreen_global.outputs",
+    "container_mark.outputs",
+    "differential_seed_0.outputs",
+    "command_coverage.outputs",
+    "empty_workspace_command_errors.outputs",
+    "fullscreen_map_behind.outputs",
+    "workspace_focus_recency.outputs",
+    "empty_workspace_layout_lifecycle.outputs",
+    "singleton_directional_move.outputs",
+    "scratchpad_unfloat.outputs",
+    "fullscreen_split_wrapper.outputs",
+    "command_parser_errors.outputs",
+]
+triage = "design difference"
+finding = "miracle-ipc-reply-shape"
+reason = "GET_OUTPUTS entries are miracle's documented shape (name, make, model, serial, active, dpms, power, primary, scale, subpixel_hinting, current_workspace, rect, modes, current_mode), without sway's type, transform, container keys, features, hdr, max_render_time and so on, so every entry reports 'keys differ'. subpixel_hinting is derived from the pixel format and is never 'unknown' (sway reports 'unknown' for the headless output). Having no type key, the entries are not touched by the oracle's backend-output-name rule (which applies to type 'output'), so miracle's Virtual-N is compared with sway's normalized name; the row would differ on its key set regardless."
+source = "miracle-wm 2df22b0e src/output.cpp:525-600 (get_outputs_json; subpixel_hinting from the pixel format at 558-573); wiki/docs/ipc/get_outputs.md:10-43 (documented keys and values rgb|bgr|vrgb|vbgr|none); sway-ipc/normalize.toml backend-output-name"
+
+[[classification]]
+rows = [
+    "empty.binding_modes",
+    "one_window.binding_modes",
+    "two_split_h.binding_modes",
+    "two_split_v.binding_modes",
+    "nested_h_in_v.binding_modes",
+    "tabbed.binding_modes",
+    "stacked.binding_modes",
+    "default_floating_fixed_width.binding_modes",
+    "default_tiling_fixed_height_zero_width.binding_modes",
+    "default_floating_fixed_both.binding_modes",
+    "default_floating_parent.binding_modes",
+    "one_floating.binding_modes",
+    "two_floating.binding_modes",
+    "three_floating_before_raise.binding_modes",
+    "three_floating_after_raise.binding_modes",
+    "fullscreen.binding_modes",
+    "layout_inside_floating_group_tabbed.binding_modes",
+    "layout_inside_floating_group_stacked.binding_modes",
+    "layout_inside_floating_group_toggled.binding_modes",
+    "floating_group_child_move_direction_before.binding_modes",
+    "floating_group_child_move_direction_after.binding_modes",
+    "floating_group_child_move_position_before.binding_modes",
+    "floating_group_child_move_position_after.binding_modes",
+    "floating_group_child_resize_before.binding_modes",
+    "floating_group_child_resize_after.binding_modes",
+    "floating_group_child_workspace_move_before.binding_modes",
+    "floating_group_child_workspace_move_after.binding_modes",
+    "floating_group_child_output_move_before.binding_modes",
+    "floating_group_child_output_move_after.binding_modes",
+    "floating_group_child_floating_toggle_before.binding_modes",
+    "floating_group_child_floating_toggle_after.binding_modes",
+    "floating_group_child_fullscreen_before.binding_modes",
+    "floating_group_child_fullscreen_after.binding_modes",
+    "floating_group_child_sticky_before.binding_modes",
+    "floating_group_child_sticky_after.binding_modes",
+    "floating_group_child_swap_before.binding_modes",
+    "floating_group_child_swap_after.binding_modes",
+    "floating_group_child_border.binding_modes",
+    "floating_group_child_kill.binding_modes",
+    "marked.binding_modes",
+    "two_workspaces.binding_modes",
+    "numbered_sparse.binding_modes",
+    "named_workspace.binding_modes",
+    "empty_named.binding_modes",
+    "fullscreen_global_two_outputs.binding_modes",
+    "two_outputs.binding_modes",
+    "scratchpad_hidden.binding_modes",
+    "scratchpad_shown.binding_modes",
+    "sticky_workspace_switch.binding_modes",
+    "nested_tabbed_in_stacked.binding_modes",
+    "nested_stacked_in_tabbed.binding_modes",
+    "borders_and_gaps.binding_modes",
+    "urgent_via_command.binding_modes",
+    "markup_title.binding_modes",
+    "fullscreen_workspace.binding_modes",
+    "fullscreen_global.binding_modes",
+    "container_mark.binding_modes",
+    "disabled_output_evacuation.binding_modes",
+    "output_scale.binding_modes",
+    "output_transform.binding_modes",
+    "output_position.binding_modes",
+    "output_mode.binding_modes",
+    "output_disable.binding_modes",
+    "output_combined.binding_modes",
+    "output_switch.binding_modes",
+    "output_reenable.binding_modes",
+    "output_power_off.binding_modes",
+    "output_power_on.binding_modes",
+    "differential_seed_0.binding_modes",
+    "command_coverage.binding_modes",
+    "empty_workspace_command_errors.binding_modes",
+    "fullscreen_map_behind.binding_modes",
+    "workspace_focus_recency.binding_modes",
+    "empty_workspace_layout_lifecycle.binding_modes",
+    "singleton_directional_move.binding_modes",
+    "scratchpad_unfloat.binding_modes",
+    "fullscreen_split_wrapper.binding_modes",
+    "empty_workspace_container_move.binding_modes",
+    "command_parser_errors.binding_modes",
+]
+triage = "design difference"
+finding = "miracle-ipc-reply-shape"
+reason = "GET_BINDING_MODES lists miracle's five fixed window-manager modes (default, resize, dragging, moving, overview) rather than the modes declared in the config (sway: default, resize)."
+source = "miracle-wm 2df22b0e src/ipc_message_handler.cpp:220-229, src/compositor_state.h:56-58 (BINDING_MODE_STRINGS); wiki/docs/ipc/get_binding_modes.md:14-22 (documented example lists the same five)"
+
+[[classification]]
+rows = [
+    "empty.version",
+    "one_window.version",
+    "two_split_h.version",
+    "two_split_v.version",
+    "nested_h_in_v.version",
+    "tabbed.version",
+    "stacked.version",
+    "default_floating_fixed_width.version",
+    "default_tiling_fixed_height_zero_width.version",
+    "default_floating_fixed_both.version",
+    "default_floating_parent.version",
+    "one_floating.version",
+    "two_floating.version",
+    "three_floating_before_raise.version",
+    "three_floating_after_raise.version",
+    "fullscreen.version",
+    "layout_inside_floating_group_tabbed.version",
+    "layout_inside_floating_group_stacked.version",
+    "layout_inside_floating_group_toggled.version",
+    "floating_group_child_move_direction_before.version",
+    "floating_group_child_move_direction_after.version",
+    "floating_group_child_move_position_before.version",
+    "floating_group_child_move_position_after.version",
+    "floating_group_child_resize_before.version",
+    "floating_group_child_resize_after.version",
+    "floating_group_child_workspace_move_before.version",
+    "floating_group_child_workspace_move_after.version",
+    "floating_group_child_output_move_before.version",
+    "floating_group_child_output_move_after.version",
+    "floating_group_child_floating_toggle_before.version",
+    "floating_group_child_floating_toggle_after.version",
+    "floating_group_child_fullscreen_before.version",
+    "floating_group_child_fullscreen_after.version",
+    "floating_group_child_sticky_before.version",
+    "floating_group_child_sticky_after.version",
+    "floating_group_child_swap_before.version",
+    "floating_group_child_swap_after.version",
+    "floating_group_child_border.version",
+    "floating_group_child_kill.version",
+    "marked.version",
+    "two_workspaces.version",
+    "numbered_sparse.version",
+    "named_workspace.version",
+    "empty_named.version",
+    "fullscreen_global_two_outputs.version",
+    "two_outputs.version",
+    "scratchpad_hidden.version",
+    "scratchpad_shown.version",
+    "sticky_workspace_switch.version",
+    "nested_tabbed_in_stacked.version",
+    "nested_stacked_in_tabbed.version",
+    "borders_and_gaps.version",
+    "urgent_via_command.version",
+    "markup_title.version",
+    "fullscreen_workspace.version",
+    "fullscreen_global.version",
+    "container_mark.version",
+    "disabled_output_evacuation.version",
+    "output_scale.version",
+    "output_transform.version",
+    "output_position.version",
+    "output_mode.version",
+    "output_disable.version",
+    "output_combined.version",
+    "output_switch.version",
+    "output_reenable.version",
+    "output_power_off.version",
+    "output_power_on.version",
+    "differential_seed_0.version",
+    "command_coverage.version",
+    "empty_workspace_command_errors.version",
+    "fullscreen_map_behind.version",
+    "workspace_focus_recency.version",
+    "empty_workspace_layout_lifecycle.version",
+    "singleton_directional_move.version",
+    "scratchpad_unfloat.version",
+    "fullscreen_split_wrapper.version",
+    "empty_workspace_container_move.version",
+    "command_parser_errors.version",
+]
+triage = "design difference"
+finding = "miracle-ipc-reply-shape"
+reason = "GET_VERSION is miracle's documented reply: major, minor, patch, human_readable and loaded_config_file_name, with no variant key (and it reports 0.9.1, see the adapter README)."
+source = "miracle-wm 2df22b0e src/ipc_message_handler.cpp:206-219; wiki/docs/ipc/get_version.md:8-16; sway-ipc/adapters/miracle-wm.md 'Version'"
+
+[[classification]]
+rows = [
+    "two_split_h.commands",
+    "nested_tabbed_in_stacked.commands",
+    "nested_stacked_in_tabbed.commands",
+    "empty_workspace_container_move.commands",
+]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = [
+    "two_split_v.commands",
+    "singleton_directional_move.commands",
+]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splitv') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = [
+    "nested_h_in_v.commands",
+    "container_mark.commands",
+]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splitv', 'splith') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["default_floating_fixed_width.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: '[app_id=\"^fixture-border-settle$\"] kill', '[app_id=\"^fixture-fixed-width$\"] border normal 2') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["default_floating_fixed_both.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: '[app_id=\"^fixture-border-settle$\"] kill', '[app_id=\"^fixture-fixed-both$\"] border normal 2') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["default_floating_parent.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: '[app_id=\"^fixture-border-settle$\"] kill', '[app_id=\"^fixture-dialog$\"] border normal 2') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = [
+    "one_floating.commands",
+    "two_floating.commands",
+    "three_floating_before_raise.commands",
+    "three_floating_after_raise.commands",
+]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'floating enable') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = [
+    "fullscreen.commands",
+    "fullscreen_workspace.commands",
+    "fullscreen_map_behind.commands",
+]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'fullscreen enable') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = [
+    "layout_inside_floating_group_tabbed.commands",
+    "layout_inside_floating_group_stacked.commands",
+    "layout_inside_floating_group_toggled.commands",
+    "floating_group_child_move_direction_before.commands",
+    "floating_group_child_move_direction_after.commands",
+    "floating_group_child_move_position_before.commands",
+    "floating_group_child_resize_before.commands",
+    "floating_group_child_resize_after.commands",
+    "floating_group_child_workspace_move_before.commands",
+    "floating_group_child_workspace_move_after.commands",
+    "floating_group_child_output_move_before.commands",
+    "floating_group_child_output_move_after.commands",
+    "floating_group_child_floating_toggle_before.commands",
+    "floating_group_child_floating_toggle_after.commands",
+    "floating_group_child_fullscreen_before.commands",
+    "floating_group_child_sticky_before.commands",
+    "floating_group_child_sticky_after.commands",
+    "floating_group_child_swap_before.commands",
+    "floating_group_child_swap_after.commands",
+]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["floating_group_child_move_position_after.commands"]
+triage = "deviation"
+finding = "miracle-command-success-unchecked"
+reason = "miracle's command handlers reply success without checking the controller's result. Where sway reports an error because the command cannot apply (an empty workspace, a tiled container for move position, no room to resize), miracle replies success. Here 'move position 100 px 100 px' succeeds. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp: process_resize 1157-1209 (try_resize/try_set_size results are dropped and success is returned at 1177, 1192, 1206), the move position branch 472-507, move scratchpad 646-650, process_sticky 751-767, process_scratchpad 1075-1086, process_layout 975-978 (layout default), process_mark 1221-1236 (CommandController::mark returns void, src/command_controller.cpp:1895-1908), criteria focus 316-318; the CommandController methods return false when nothing matches (e.g. src/command_controller.cpp:371-375, 529-537, 1415-1422, 1593-1601); miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = [
+    "floating_group_child_workspace_move_after.workspaces",
+    "floating_group_child_workspace_move_after.outputs",
+    "empty_workspace_container_move.workspaces",
+    "empty_workspace_container_move.outputs",
+]
+triage = "deviation"
+finding = "miracle-move-to-workspace-follows"
+reason = "'move container to workspace 2' also switches to workspace 2: miracle reports workspace 2 focused and visible (and as the output's current_workspace) where sway keeps workspace 1 focused. The scenario's splith and floating enable are unsupported (miracle-command-subset), so a tiled window rather than a floating split moves; the focus change does not depend on that."
+source = "miracle-wm 2df22b0e src/command_controller.cpp:989-1046 (try_move_to_workspace moves the container through request_workspace), src/workspace_manager.cpp:69-91 (request_workspace focuses the target: a new workspace through request_focus at 88, an existing one through focus_existing at 75-79); wiki/docs/ipc/commands/move.md (documents 'move [window|container] [to] workspace' without a focus change); pinned sway 88869399 sway/commands/move.c:560-608 (focus is restored on the source workspace); miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["floating_group_child_fullscreen_after.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["floating_group_child_border.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'border pixel 7') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["floating_group_child_kill.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'border pixel 7', 'kill') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = [
+    "fullscreen_global_two_outputs.commands",
+    "fullscreen_global.commands",
+]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'fullscreen enable global') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["two_outputs.workspaces"]
+triage = "deviation"
+finding = "miracle-workspaces-sorted-by-number"
+reason = "The two outputs hold the same workspaces with the same focus and visibility as sway (3 focused and visible on one output, 1 hidden and 2 visible on the other), but miracle lists all workspaces sorted by number (1, 2, 3) while sway lists them output by output (3, 1, 2), so each index compares different workspaces."
+source = "miracle-wm 2df22b0e src/workspace_manager.cpp:343-365 (workspaces() sorted by number across outputs), src/command_controller.cpp:2446-2460; wiki/docs/ipc/get_workspaces.md (no order documented); pinned sway 88869399 sway/ipc-server.c:719-722 (root_for_each_workspace, output order)"
+
+[[classification]]
+rows = ["sticky_workspace_switch.tree"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "'floating enable' and 'border normal 2' are unsupported, so the window stays tiled on workspace 1 and 'sticky enable' (which only applies to floating windows) does not carry it to workspace 2. Workspace 1 is therefore not emptied: miracle has workspaces 1 and 2 where sway has only 2. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'floating enable', 'border normal 2') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); wiki/docs/ipc/commands/sticky.md:7; miracle-wm 2df22b0e src/command_controller.cpp:2269-2315 (root is {id, name, rect, nodes, type} over the real outputs only), src/output.cpp:422-524 (output node, orientation 'none', scale_filter 'linear'), src/workspace.cpp:833-908 (workspace node, policy, orientation 'none'), src/leaf_container.cpp:1052-1124 (window node); wiki/docs/ipc/get_tree.md:16-231 (documented schema: type root|output|workspace|con|floating_con, policy, scale_filter 'Supplied but unused and always linear', orientation 'Deprecated so always none')"
+
+[[classification]]
+rows = ["sticky_workspace_switch.workspaces"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "'floating enable' and 'border normal 2' are unsupported, so the window stays tiled on workspace 1 and 'sticky enable' (which only applies to floating windows) does not carry it to workspace 2. Workspace 1 is therefore not emptied: miracle has workspaces 1 and 2 where sway has only 2. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'floating enable', 'border normal 2') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); wiki/docs/ipc/commands/sticky.md:7; miracle-wm 2df22b0e src/workspace.cpp:801-831 (get_workspaces_json), src/command_controller.cpp:2446-2460; wiki/docs/ipc/get_workspaces.md:10-28 (documented keys, including policy)"
+
+[[classification]]
+rows = ["sticky_workspace_switch.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'floating enable', 'border normal 2') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = [
+    "nested_tabbed_in_stacked.tree",
+    "nested_stacked_in_tabbed.tree",
+]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "splith is unsupported, so no split container is made: 'focus parent' selects the workspace root and 'layout stacking'/'layout tabbed' apply to the whole workspace, which miracle reports as the workspace layout where the shifted pairing compares it with sway's __i3_scratch (splith). miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/command_controller.cpp:2269-2315 (root is {id, name, rect, nodes, type} over the real outputs only), src/output.cpp:422-524 (output node, orientation 'none', scale_filter 'linear'), src/workspace.cpp:833-908 (workspace node, policy, orientation 'none'), src/leaf_container.cpp:1052-1124 (window node); wiki/docs/ipc/get_tree.md:16-231 (documented schema: type root|output|workspace|con|floating_con, policy, scale_filter 'Supplied but unused and always linear', orientation 'Deprecated so always none')"
+
+[[classification]]
+rows = ["borders_and_gaps.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'border normal 4', 'border pixel 6', 'border none') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["urgent_via_command.workspaces"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "'[app_id=\"^fixture-1$\"] urgent enable' is unsupported, so workspace 1 is not urgent (sway: urgent true). miracle-wm implements a subset of sway's command language. Commands outside it (here: '[app_id=\"^fixture-1$\"] urgent enable') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/workspace.cpp:801-831 (get_workspaces_json), src/command_controller.cpp:2446-2460; wiki/docs/ipc/get_workspaces.md:10-28 (documented keys, including policy)"
+
+[[classification]]
+rows = ["urgent_via_command.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: '[app_id=\"^fixture-1$\"] urgent enable') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["container_mark.marks"]
+triage = "deviation"
+finding = "miracle-container-marks-unlisted"
+reason = "GET_MARKS lists only the marks of windows. 'focus parent' selected a non-window container (the workspace's root here, because splitv and splith are unsupported, miracle-command-subset) and 'mark containermark' marked it with success, but GET_MARKS returns [] where sway returns ['containermark']. No mark event is sent either."
+source = "miracle-wm 2df22b0e src/command_controller.cpp:1934-1947 (get_all_marks iterates state->windows() only), src/compositor_state.h:100 (windows() holds window containers), src/command_controller.cpp:672-695 (focus parent selects the parent container), 1895-1908 (mark applies to the focused container); wiki/docs/ipc/get_marks.md (documents 'the list of unique marks'); miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["disabled_output_evacuation.tree"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-2 disable'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'output HEADLESS-2 disable') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/command_controller.cpp:2269-2315 (root is {id, name, rect, nodes, type} over the real outputs only), src/output.cpp:422-524 (output node, orientation 'none', scale_filter 'linear'), src/workspace.cpp:833-908 (workspace node, policy, orientation 'none'), src/leaf_container.cpp:1052-1124 (window node); wiki/docs/ipc/get_tree.md:16-231 (documented schema: type root|output|workspace|con|floating_con, policy, scale_filter 'Supplied but unused and always linear', orientation 'Deprecated so always none')"
+
+[[classification]]
+rows = ["disabled_output_evacuation.workspaces"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-2 disable'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'output HEADLESS-2 disable') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/workspace.cpp:801-831 (get_workspaces_json), src/command_controller.cpp:2446-2460; wiki/docs/ipc/get_workspaces.md:10-28 (documented keys, including policy)"
+
+[[classification]]
+rows = ["disabled_output_evacuation.outputs"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-2 disable'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'output HEADLESS-2 disable') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/output.cpp:525-600 (get_outputs_json; subpixel_hinting from the pixel format at 558-573); wiki/docs/ipc/get_outputs.md:10-43 (documented keys and values rgb|bgr|vrgb|vbgr|none); sway-ipc/normalize.toml backend-output-name"
+
+[[classification]]
+rows = ["disabled_output_evacuation.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'output HEADLESS-2 disable') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["output_scale.tree"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/command_controller.cpp:2269-2315 (root is {id, name, rect, nodes, type} over the real outputs only), src/output.cpp:422-524 (output node, orientation 'none', scale_filter 'linear'), src/workspace.cpp:833-908 (workspace node, policy, orientation 'none'), src/leaf_container.cpp:1052-1124 (window node); wiki/docs/ipc/get_tree.md:16-231 (documented schema: type root|output|workspace|con|floating_con, policy, scale_filter 'Supplied but unused and always linear', orientation 'Deprecated so always none')"
+
+[[classification]]
+rows = ["output_scale.workspaces"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/workspace.cpp:801-831 (get_workspaces_json), src/command_controller.cpp:2446-2460; wiki/docs/ipc/get_workspaces.md:10-28 (documented keys, including policy)"
+
+[[classification]]
+rows = ["output_scale.outputs"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/output.cpp:525-600 (get_outputs_json; subpixel_hinting from the pixel format at 558-573); wiki/docs/ipc/get_outputs.md:10-43 (documented keys and values rgb|bgr|vrgb|vbgr|none); sway-ipc/normalize.toml backend-output-name"
+
+[[classification]]
+rows = ["output_scale.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["output_transform.tree"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/command_controller.cpp:2269-2315 (root is {id, name, rect, nodes, type} over the real outputs only), src/output.cpp:422-524 (output node, orientation 'none', scale_filter 'linear'), src/workspace.cpp:833-908 (workspace node, policy, orientation 'none'), src/leaf_container.cpp:1052-1124 (window node); wiki/docs/ipc/get_tree.md:16-231 (documented schema: type root|output|workspace|con|floating_con, policy, scale_filter 'Supplied but unused and always linear', orientation 'Deprecated so always none')"
+
+[[classification]]
+rows = ["output_transform.workspaces"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/workspace.cpp:801-831 (get_workspaces_json), src/command_controller.cpp:2446-2460; wiki/docs/ipc/get_workspaces.md:10-28 (documented keys, including policy)"
+
+[[classification]]
+rows = ["output_transform.outputs"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/output.cpp:525-600 (get_outputs_json; subpixel_hinting from the pixel format at 558-573); wiki/docs/ipc/get_outputs.md:10-43 (documented keys and values rgb|bgr|vrgb|vbgr|none); sway-ipc/normalize.toml backend-output-name"
+
+[[classification]]
+rows = ["output_transform.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["output_position.tree"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/command_controller.cpp:2269-2315 (root is {id, name, rect, nodes, type} over the real outputs only), src/output.cpp:422-524 (output node, orientation 'none', scale_filter 'linear'), src/workspace.cpp:833-908 (workspace node, policy, orientation 'none'), src/leaf_container.cpp:1052-1124 (window node); wiki/docs/ipc/get_tree.md:16-231 (documented schema: type root|output|workspace|con|floating_con, policy, scale_filter 'Supplied but unused and always linear', orientation 'Deprecated so always none')"
+
+[[classification]]
+rows = ["output_position.workspaces"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/workspace.cpp:801-831 (get_workspaces_json), src/command_controller.cpp:2446-2460; wiki/docs/ipc/get_workspaces.md:10-28 (documented keys, including policy)"
+
+[[classification]]
+rows = ["output_position.outputs"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/output.cpp:525-600 (get_outputs_json; subpixel_hinting from the pixel format at 558-573); wiki/docs/ipc/get_outputs.md:10-43 (documented keys and values rgb|bgr|vrgb|vbgr|none); sway-ipc/normalize.toml backend-output-name"
+
+[[classification]]
+rows = ["output_position.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["output_mode.tree"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/command_controller.cpp:2269-2315 (root is {id, name, rect, nodes, type} over the real outputs only), src/output.cpp:422-524 (output node, orientation 'none', scale_filter 'linear'), src/workspace.cpp:833-908 (workspace node, policy, orientation 'none'), src/leaf_container.cpp:1052-1124 (window node); wiki/docs/ipc/get_tree.md:16-231 (documented schema: type root|output|workspace|con|floating_con, policy, scale_filter 'Supplied but unused and always linear', orientation 'Deprecated so always none')"
+
+[[classification]]
+rows = ["output_mode.workspaces"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/workspace.cpp:801-831 (get_workspaces_json), src/command_controller.cpp:2446-2460; wiki/docs/ipc/get_workspaces.md:10-28 (documented keys, including policy)"
+
+[[classification]]
+rows = ["output_mode.outputs"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/output.cpp:525-600 (get_outputs_json; subpixel_hinting from the pixel format at 558-573); wiki/docs/ipc/get_outputs.md:10-43 (documented keys and values rgb|bgr|vrgb|vbgr|none); sway-ipc/normalize.toml backend-output-name"
+
+[[classification]]
+rows = ["output_mode.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["output_disable.tree"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/command_controller.cpp:2269-2315 (root is {id, name, rect, nodes, type} over the real outputs only), src/output.cpp:422-524 (output node, orientation 'none', scale_filter 'linear'), src/workspace.cpp:833-908 (workspace node, policy, orientation 'none'), src/leaf_container.cpp:1052-1124 (window node); wiki/docs/ipc/get_tree.md:16-231 (documented schema: type root|output|workspace|con|floating_con, policy, scale_filter 'Supplied but unused and always linear', orientation 'Deprecated so always none')"
+
+[[classification]]
+rows = ["output_disable.workspaces"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/workspace.cpp:801-831 (get_workspaces_json), src/command_controller.cpp:2446-2460; wiki/docs/ipc/get_workspaces.md:10-28 (documented keys, including policy)"
+
+[[classification]]
+rows = ["output_disable.outputs"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/output.cpp:525-600 (get_outputs_json; subpixel_hinting from the pixel format at 558-573); wiki/docs/ipc/get_outputs.md:10-43 (documented keys and values rgb|bgr|vrgb|vbgr|none); sway-ipc/normalize.toml backend-output-name"
+
+[[classification]]
+rows = ["output_disable.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["output_combined.tree"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/command_controller.cpp:2269-2315 (root is {id, name, rect, nodes, type} over the real outputs only), src/output.cpp:422-524 (output node, orientation 'none', scale_filter 'linear'), src/workspace.cpp:833-908 (workspace node, policy, orientation 'none'), src/leaf_container.cpp:1052-1124 (window node); wiki/docs/ipc/get_tree.md:16-231 (documented schema: type root|output|workspace|con|floating_con, policy, scale_filter 'Supplied but unused and always linear', orientation 'Deprecated so always none')"
+
+[[classification]]
+rows = ["output_combined.workspaces"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/workspace.cpp:801-831 (get_workspaces_json), src/command_controller.cpp:2446-2460; wiki/docs/ipc/get_workspaces.md:10-28 (documented keys, including policy)"
+
+[[classification]]
+rows = ["output_combined.outputs"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/output.cpp:525-600 (get_outputs_json; subpixel_hinting from the pixel format at 558-573); wiki/docs/ipc/get_outputs.md:10-43 (documented keys and values rgb|bgr|vrgb|vbgr|none); sway-ipc/normalize.toml backend-output-name"
+
+[[classification]]
+rows = ["output_combined.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["output_switch.tree"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/command_controller.cpp:2269-2315 (root is {id, name, rect, nodes, type} over the real outputs only), src/output.cpp:422-524 (output node, orientation 'none', scale_filter 'linear'), src/workspace.cpp:833-908 (workspace node, policy, orientation 'none'), src/leaf_container.cpp:1052-1124 (window node); wiki/docs/ipc/get_tree.md:16-231 (documented schema: type root|output|workspace|con|floating_con, policy, scale_filter 'Supplied but unused and always linear', orientation 'Deprecated so always none')"
+
+[[classification]]
+rows = ["output_switch.workspaces"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/workspace.cpp:801-831 (get_workspaces_json), src/command_controller.cpp:2446-2460; wiki/docs/ipc/get_workspaces.md:10-28 (documented keys, including policy)"
+
+[[classification]]
+rows = ["output_switch.outputs"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/output.cpp:525-600 (get_outputs_json; subpixel_hinting from the pixel format at 558-573); wiki/docs/ipc/get_outputs.md:10-43 (documented keys and values rgb|bgr|vrgb|vbgr|none); sway-ipc/normalize.toml backend-output-name"
+
+[[classification]]
+rows = ["output_switch.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["output_reenable.tree"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/command_controller.cpp:2269-2315 (root is {id, name, rect, nodes, type} over the real outputs only), src/output.cpp:422-524 (output node, orientation 'none', scale_filter 'linear'), src/workspace.cpp:833-908 (workspace node, policy, orientation 'none'), src/leaf_container.cpp:1052-1124 (window node); wiki/docs/ipc/get_tree.md:16-231 (documented schema: type root|output|workspace|con|floating_con, policy, scale_filter 'Supplied but unused and always linear', orientation 'Deprecated so always none')"
+
+[[classification]]
+rows = ["output_reenable.workspaces"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/workspace.cpp:801-831 (get_workspaces_json), src/command_controller.cpp:2446-2460; wiki/docs/ipc/get_workspaces.md:10-28 (documented keys, including policy)"
+
+[[classification]]
+rows = ["output_reenable.outputs"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/output.cpp:525-600 (get_outputs_json; subpixel_hinting from the pixel format at 558-573); wiki/docs/ipc/get_outputs.md:10-43 (documented keys and values rgb|bgr|vrgb|vbgr|none); sway-ipc/normalize.toml backend-output-name"
+
+[[classification]]
+rows = ["output_reenable.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["output_power_off.tree"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable', 'output * power off'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable', 'output * power off') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/command_controller.cpp:2269-2315 (root is {id, name, rect, nodes, type} over the real outputs only), src/output.cpp:422-524 (output node, orientation 'none', scale_filter 'linear'), src/workspace.cpp:833-908 (workspace node, policy, orientation 'none'), src/leaf_container.cpp:1052-1124 (window node); wiki/docs/ipc/get_tree.md:16-231 (documented schema: type root|output|workspace|con|floating_con, policy, scale_filter 'Supplied but unused and always linear', orientation 'Deprecated so always none')"
+
+[[classification]]
+rows = ["output_power_off.workspaces"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable', 'output * power off'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable', 'output * power off') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/workspace.cpp:801-831 (get_workspaces_json), src/command_controller.cpp:2446-2460; wiki/docs/ipc/get_workspaces.md:10-28 (documented keys, including policy)"
+
+[[classification]]
+rows = ["output_power_off.outputs"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable', 'output * power off'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable', 'output * power off') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/output.cpp:525-600 (get_outputs_json; subpixel_hinting from the pixel format at 558-573); wiki/docs/ipc/get_outputs.md:10-43 (documented keys and values rgb|bgr|vrgb|vbgr|none); sway-ipc/normalize.toml backend-output-name"
+
+[[classification]]
+rows = ["output_power_off.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable', 'output * power off') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["output_power_on.tree"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable', 'output * power off', 'output * power on'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable', 'output * power off', 'output * power on') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/command_controller.cpp:2269-2315 (root is {id, name, rect, nodes, type} over the real outputs only), src/output.cpp:422-524 (output node, orientation 'none', scale_filter 'linear'), src/workspace.cpp:833-908 (workspace node, policy, orientation 'none'), src/leaf_container.cpp:1052-1124 (window node); wiki/docs/ipc/get_tree.md:16-231 (documented schema: type root|output|workspace|con|floating_con, policy, scale_filter 'Supplied but unused and always linear', orientation 'Deprecated so always none')"
+
+[[classification]]
+rows = ["output_power_on.workspaces"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable', 'output * power off', 'output * power on'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable', 'output * power off', 'output * power on') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/workspace.cpp:801-831 (get_workspaces_json), src/command_controller.cpp:2446-2460; wiki/docs/ipc/get_workspaces.md:10-28 (documented keys, including policy)"
+
+[[classification]]
+rows = ["output_power_on.outputs"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "The output commands sent before this capture are unsupported ('output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable', 'output * power off', 'output * power on'), so miracle's outputs keep their start-up mode, scale, transform, position and power and no output is disabled, while sway's reply reflects the commands. miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable', 'output * power off', 'output * power on') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing. The rest of the row is miracle-ipc-reply-shape (shifted tree pairing, key sets)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/output.cpp:525-600 (get_outputs_json; subpixel_hinting from the pixel format at 558-573); wiki/docs/ipc/get_outputs.md:10-43 (documented keys and values rgb|bgr|vrgb|vbgr|none); sway-ipc/normalize.toml backend-output-name"
+
+[[classification]]
+rows = ["output_power_on.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'splith', 'floating enable', 'fullscreen enable', 'output HEADLESS-1 scale 1.25', 'output HEADLESS-1 transform 90', 'output HEADLESS-1 position 200 300', 'output HEADLESS-1 mode --custom 640x480@60Hz', 'output HEADLESS-2 disable', 'output HEADLESS-1 transform 270 scale 1.5 mode --custom 1280x720@75Hz', 'output HEADLESS-1 disable', 'output HEADLESS-2 enable transform 90 scale 1.25 mode --custom 600x800@60Hz', 'output HEADLESS-1 enable', 'output HEADLESS-2 enable', 'output * power off', 'output * power on') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["command_coverage.marks"]
+triage = "design difference"
+finding = "miracle-unmark-focused-scope"
+reason = "'unmark commandmark' without criteria acts on the focused window only. The mark sits on the other window (fixture-command-1, after the swap), so it stays and GET_MARKS returns ['commandmark']; sway removes the named mark from whichever container has it and returns []."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:1238-1246, src/command_controller.cpp:1910-1921 and 1593-1601 (no criteria resolves to the focused container); wiki/docs/ipc/commands/mark.md:3-4, 23 (unmark acts on the specified containers, the focused one by default); pinned sway 88869399 sway/commands/unmark.c:20, 45-47"
+
+[[classification]]
+rows = ["command_coverage.commands"]
+triage = "deviation"
+finding = "miracle-command-success-unchecked"
+reason = "miracle's command handlers reply success without checking the controller's result. Where sway reports an error because the command cannot apply (an empty workspace, a tiled container for move position, no room to resize), miracle replies success. Here 'resize grow width 10 px' succeeds (on the second of two tiled windows; sway answers \"Cannot resize any further\"). miracle-wm implements a subset of sway's command language. Commands outside it (here: 'allow_tearing enable', 'inhibit_idle focus', 'max_render_time 1', 'opacity 0.9', 'shortcuts_inhibitor enable', 'title_format command-title', '[app_id=\"^fixture-command-2$\"] kill') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp: process_resize 1157-1209 (try_resize/try_set_size results are dropped and success is returned at 1177, 1192, 1206), the move position branch 472-507, move scratchpad 646-650, process_sticky 751-767, process_scratchpad 1075-1086, process_layout 975-978 (layout default), process_mark 1221-1236 (CommandController::mark returns void, src/command_controller.cpp:1895-1908), criteria focus 316-318; the CommandController methods return false when nothing matches (e.g. src/command_controller.cpp:371-375, 529-537, 1415-1422, 1593-1601); miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["empty_workspace_command_errors.commands"]
+triage = "deviation"
+finding = "miracle-command-success-unchecked"
+reason = "miracle's command handlers reply success without checking the controller's result. Where sway reports an error because the command cannot apply (an empty workspace, a tiled container for move position, no room to resize), miracle replies success. Here 'move scratchpad', 'resize grow width 10 px', 'sticky enable', 'mark empty' succeed. 'border nonsense' fails on both, as \"Unsupported command type: border\" (sway: \"Only views can have borders\")."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp: process_resize 1157-1209 (try_resize/try_set_size results are dropped and success is returned at 1177, 1192, 1206), the move position branch 472-507, move scratchpad 646-650, process_sticky 751-767, process_scratchpad 1075-1086, process_layout 975-978 (layout default), process_mark 1221-1236 (CommandController::mark returns void, src/command_controller.cpp:1895-1908), criteria focus 316-318; the CommandController methods return false when nothing matches (e.g. src/command_controller.cpp:371-375, 529-537, 1415-1422, 1593-1601)"
+
+[[classification]]
+rows = ["scratchpad_unfloat.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "'floating disable' is unsupported (miracle's floating takes only 'toggle'), so the window stays in the scratchpad and the second 'scratchpad show' hides it again with success, where sway has already taken it out of the scratchpad and answers \"Scratchpad is empty\". miracle-wm implements a subset of sway's command language. Commands outside it (here: 'floating disable') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command); miracle-wm 2df22b0e src/scratchpad.cpp:63-110 (scratchpad show toggles the scratchpad windows); wiki/docs/ipc/commands/scratchpad.md:7-8, 20-23 ('floating toggle' removes a window from the scratchpad; 'scratchpad show' on a shown window hides it)"
+
+[[classification]]
+rows = ["fullscreen_split_wrapper.commands"]
+triage = "design difference"
+finding = "miracle-command-subset"
+reason = "miracle-wm implements a subset of sway's command language. Commands outside it (here: 'fullscreen enable', 'splitv') answer \"Unsupported command type: <command>\" or, for floating and fullscreen, \"Expected 'toggle'\", with success false where sway succeeds, and change nothing."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp:157-228 (RUN_COMMAND handlers exist only for exec, split, focus, move, swap, sticky, exit, input, workspace, layout, fullscreen, floating, scratchpad, resize, reload, mark, unmark, rename, gaps, nop and debug; every other command answers \"Unsupported command type: <command>\" at 225-226), src/ipc_command.cpp:92-155 (command_from_string), 1047-1073 of src/ipc_command_executor.cpp (fullscreen and floating accept only 'toggle'); wiki/docs/ipc/index.md:72-86 (the documented command set: exec, split, layout, focus, move, mark, resize, swap, sticky, workspace, rename, gaps, scratchpad, nop); sway-ipc/adapters/miracle-wm.md 'Translations' (no output or kill command)"
+
+[[classification]]
+rows = ["command_parser_errors.commands"]
+triage = "deviation"
+finding = "miracle-command-success-unchecked"
+reason = "miracle's command handlers reply success without checking the controller's result. Where sway reports an error because the command cannot apply (an empty workspace, a tiled container for move position, no room to resize), miracle replies success. Here 'layout default' on an empty workspace succeeds (sway: usage error). The other three commands fail on both with different text: 'focus' without criteria answers \"'focus' command expected scope but none was provided\" with parse_error true (sway: \"No container to focus was specified.\", parse_error false), and 'layout stacked' and 'resize nonsense' get miracle's usage messages (miracle-command-error-text)."
+source = "miracle-wm 2df22b0e src/ipc_command_executor.cpp: process_resize 1157-1209 (try_resize/try_set_size results are dropped and success is returned at 1177, 1192, 1206), the move position branch 472-507, move scratchpad 646-650, process_sticky 751-767, process_scratchpad 1075-1086, process_layout 975-978 (layout default), process_mark 1221-1236 (CommandController::mark returns void, src/command_controller.cpp:1895-1908), criteria focus 316-318; the CommandController methods return false when nothing matches (e.g. src/command_controller.cpp:371-375, 529-537, 1415-1422, 1593-1601); miracle-wm 2df22b0e src/ipc_command.cpp:163-404 and src/ipc_command_executor.cpp:154-1408 (miracle's own command parser and executor, with their own usage messages); wiki/docs/ipc/run_command.md:10-42 (error is a human-readable message; an unknown command answers \"Unsupported command type: meow\")"

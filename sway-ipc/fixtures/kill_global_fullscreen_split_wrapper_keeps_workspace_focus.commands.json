@@ -1,0 +1,37 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-kog-5 --title=fixture-kog-5 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-kog-6 --title=fixture-kog-6 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "fullscreen toggle global; split toggle",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "kill",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

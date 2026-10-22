@@ -1,0 +1,66 @@
+[
+  {
+    "command": "gaps inner all set 17",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "gaps outer all set 23",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-normal --title=fixture-normal sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "border normal 4",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-pixel --title=fixture-pixel sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "border pixel 6",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-none --title=fixture-none sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "border none",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

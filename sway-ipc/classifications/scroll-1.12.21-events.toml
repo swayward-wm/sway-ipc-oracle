@@ -1,0 +1,82 @@
+# Human-reviewed triage of scroll-1.12.21 sway IPC events mismatches, keyed by scenario.request.
+# design difference: scroll documents or deliberately builds the behaviour; deviation: an
+# undocumented difference from sway, with the scroll source that produces it. Every source
+# cites scroll at f80c5820 (the pin) unless it names sway. contrib/validate prints the untriaged count.
+
+[[classification]]
+rows = [
+    "one_window.events",
+    "one_floating.events",
+    "two_floating.events",
+    "three_floating_before_raise.events",
+    "three_floating_after_raise.events",
+    "fullscreen.events",
+    "marked.events",
+    "scratchpad_hidden.events",
+    "scratchpad_shown.events",
+    "borders_and_gaps.events",
+    "markup_title.events",
+    "fullscreen_workspace.events",
+    "fullscreen_global.events",
+    "differential_seed_0.events",
+    "command_coverage.events",
+]
+triage = "design difference"
+finding = "scroll-column-layout"
+reason = "scroll lays every workspace out as scrolling columns. Each tiled view is wrapped in a column container (layout and orientation horizontal or vertical, border none, name null), so the tree gains a level ('V[fixture-1]' becomes 'V[H[fixture-1]]'), the view sits at 0.5 of the workspace width (layout_default_width) and percent changes. Layouts are reported as 'horizontal'/'vertical' rather than 'splith'/'splitv', tabbed and stacked do not exist, and view nodes carry five extra keys (fully_visible, surface_content_rect, trailmark, width_fraction, height_fraction), so every container comparison reports 'keys differ'. In window events the container carries the extra keys, and a newly mapped view reports percent null (sway 0.0): its column wrapper copies the view's still-empty box, and percent is omitted for a parent with no size (sway/ipc-json.c:743-748)."
+source = "scroll f80c5820 README.md:2111-2118 (scroll only supports a scrolling layout and removes all the sway/i3 layouts); include/sway/tree/container.h:13-17 (layouts L_NONE, L_HORIZ, L_VERT only); sway/tree/layout.c:914-941 (layout_wrap_into_container), 955-959 (each new tiled view is wrapped in a column of the opposite orientation); sway/config.c:246 (layout_default_width 0.5); sway/ipc-json.c:54-75 (layout and orientation named horizontal/vertical/none), 579-580, 594-595, 698, 734-735 (fully_visible, surface_content_rect, trailmark, width_fraction, height_fraction added to container replies; README.md:2207)"
+
+[[classification]]
+rows = [
+    "two_split_h.events",
+    "two_split_v.events",
+    "nested_h_in_v.events",
+    "tabbed.events",
+    "stacked.events",
+    "grouped_float_before.events",
+    "grouped_float_after.events",
+    "grouped_scratchpad_before.events",
+    "grouped_scratchpad_hidden.events",
+    "grouped_scratchpad_shown.events",
+    "grouped_sticky_before.events",
+    "grouped_fullscreen_before.events",
+    "grouped_fullscreen_after.events",
+    "grouped_raise_before.events",
+    "grouped_raise_after.events",
+    "grouped_workspace_move_before.events",
+    "nested_tabbed_in_stacked.events",
+    "nested_stacked_in_tabbed.events",
+    "container_mark.events",
+]
+triage = "design difference"
+finding = "scroll-removed-split-layout"
+reason = "The scenario runs split, splith, splitv or layout, which scroll removed: each answers \"Unknown/invalid command\" (success false where sway succeeds). The scenario's later commands then act on scroll's column layout instead of the nested or tabbed/stacked tree sway built; 'focus parent' does not select a parent, so 'floating enable' floats the view rather than a split group. The remaining differences are the column layout, layout names and extra container keys of the scroll-column-layout rows. In tabbed and stacked scenarios sway reports the hidden tab as visible false; scroll shows both columns."
+source = "scroll f80c5820 commit 7e5f5391 'commands: remove unsupported commands' (deletes sway/commands/layout.c and split.c); sway/commands.c:45-209 (no split, splith, splitv, splitt or layout handler); README.md:2117 ('removes all the original sway/i3 layouts'); sway/commands/focus.c:400-423 (focus parent and focus child only change the insertion mode); scroll f80c5820 README.md:2111-2118 (scroll only supports a scrolling layout and removes all the sway/i3 layouts); include/sway/tree/container.h:13-17 (layouts L_NONE, L_HORIZ, L_VERT only); sway/tree/layout.c:914-941 (layout_wrap_into_container), 955-959 (each new tiled view is wrapped in a column of the opposite orientation); sway/config.c:246 (layout_default_width 0.5); sway/ipc-json.c:54-75 (layout and orientation named horizontal/vertical/none), 579-580, 594-595, 698, 734-735 (fully_visible, surface_content_rect, trailmark, width_fraction, height_fraction added to container replies; README.md:2207)"
+
+[[classification]]
+rows = [
+    "two_workspaces.events",
+    "numbered_sparse.events",
+    "named_workspace.events",
+    "empty_named.events",
+    "sticky_workspace_switch.events",
+    "urgent_via_command.events",
+]
+triage = "deviation"
+finding = "scroll-workspace-init-event-layout"
+reason = "The workspace 'init' event reports the new workspace with layout and orientation 'none': scroll sends the event before layout_init assigns the workspace layout. sway assigns the layout first, so its init event reports 'splitv' or 'splith'. scroll's documentation does not describe this ordering. The row's other differences are scroll-column-layout."
+source = "scroll f80c5820 sway/tree/workspace.c:280-283 (workspace_create sends the 'init' event before layout_init sets the workspace layout), sway/tree/layout.c:82-96, 655-666 (layout_init/layout_modifiers_init set layout.type), sway/ipc-json.c:529-534; pinned sway 88869399 sets ws->layout before the init event (sway/tree/workspace.c:219, 268); scroll f80c5820 README.md:2111-2118 (scroll only supports a scrolling layout and removes all the sway/i3 layouts); include/sway/tree/container.h:13-17 (layouts L_NONE, L_HORIZ, L_VERT only); sway/tree/layout.c:914-941 (layout_wrap_into_container), 955-959 (each new tiled view is wrapped in a column of the opposite orientation); sway/config.c:246 (layout_default_width 0.5); sway/ipc-json.c:54-75 (layout and orientation named horizontal/vertical/none), 579-580, 594-595, 698, 734-735 (fully_visible, surface_content_rect, trailmark, width_fraction, height_fraction added to container replies; README.md:2207)"
+
+[[classification]]
+rows = ["grouped_sticky_after.events", "grouped_workspace_move_after.events"]
+triage = "deviation"
+finding = "scroll-workspace-init-event-layout"
+reason = "The workspace 'init' event reports the new workspace with layout and orientation 'none': scroll sends the event before layout_init assigns the workspace layout. sway assigns the layout first, so its init event reports 'splitv' or 'splith'. scroll's documentation does not describe this ordering. The scenario also runs splith, which scroll removed, so no floating split group exists and the event count differs from sway (scroll-removed-split-layout)."
+source = "scroll f80c5820 sway/tree/workspace.c:280-283 (workspace_create sends the 'init' event before layout_init sets the workspace layout), sway/tree/layout.c:82-96, 655-666 (layout_init/layout_modifiers_init set layout.type), sway/ipc-json.c:529-534; pinned sway 88869399 sets ws->layout before the init event (sway/tree/workspace.c:219, 268); scroll f80c5820 commit 7e5f5391 'commands: remove unsupported commands' (deletes sway/commands/layout.c and split.c); sway/commands.c:45-209 (no split, splith, splitv, splitt or layout handler); README.md:2117 ('removes all the original sway/i3 layouts'); sway/commands/focus.c:400-423 (focus parent and focus child only change the insertion mode)"
+
+[[classification]]
+rows = ["two_outputs.events", "disabled_output_evacuation.events"]
+triage = "deviation"
+finding = "scroll-workspace-move-event-order"
+reason = "'move workspace to output right' emits the window 'focus' event before the workspace 'move' event; sway emits 'move' then 'focus'. scroll's port of sway commit 7ba11d6d moved the focus call into workspace_move_to_output ahead of the event, which sway's version of that commit does not do. The row also has the scroll-workspace-init-event-layout and scroll-column-layout differences."
+source = "scroll f80c5820 sway/tree/workspace.c:1654-1686 (workspace_move_to_output calls seat_set_focus at 1682-1683 before the workspace 'move' event at 1685; added in 0132b0c1 'sway chase: Make workspace_move_to_output reusable (7ba11d6d)'); pinned sway 88869399 sway/tree/workspace.c:1131-1161 sends the 'move' event inside workspace_move_to_output and sway/commands/move.c:659-667 sets focus afterwards; scroll f80c5820 sway/tree/workspace.c:280-283 (workspace_create sends the 'init' event before layout_init sets the workspace layout), sway/tree/layout.c:82-96, 655-666 (layout_init/layout_modifiers_init set layout.type), sway/ipc-json.c:529-534; pinned sway 88869399 sets ws->layout before the init event (sway/tree/workspace.c:219, 268)"

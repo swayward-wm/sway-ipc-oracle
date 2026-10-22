@@ -1,0 +1,2 @@
+# Human-reviewed triage of swayward-1fd3c25b command-fuzz mismatches, keyed by
+# case. The committed CI-budget result (T4 measurement: oracle b70abe84, swayward 1fd3c25b, image rc-1fd3c25b, two agreeing runs) has no mismatches.

@@ -1,0 +1,5 @@
+# Results whose inputs changed and that await regeneration in the pinned
+# container. contrib/validate requires every stale result to be listed here,
+# and every listed result to be stale. README figures for these results are
+# the last measured values.
+

@@ -1,0 +1,42 @@
+[
+  {
+    "command": "workspace number 3",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace next_on_output",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace prev_on_output",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace next",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace prev",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

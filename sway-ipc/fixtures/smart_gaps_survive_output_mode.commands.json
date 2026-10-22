@@ -1,0 +1,26 @@
+[
+  {
+    "command": "smart_gaps on",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-gaps-resize --title=fixture-gaps-resize sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "gaps inner current set 10",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

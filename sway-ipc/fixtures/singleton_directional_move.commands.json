@@ -1,0 +1,26 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-singleton --title=fixture-singleton sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "splitv",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move right",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

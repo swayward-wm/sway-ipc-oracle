@@ -1,0 +1,42 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-fsfl-1 --title=fixture-fsfl-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "fullscreen enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "for_window [app_id=\"fixture-fsfl-float\"] floating enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-fsfl-float --title=fixture-fsfl-float sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-fsfl-tail --title=fixture-fsfl-tail sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

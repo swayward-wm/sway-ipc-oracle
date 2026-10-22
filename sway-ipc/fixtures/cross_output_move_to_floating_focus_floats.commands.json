@@ -1,0 +1,34 @@
+[
+  {
+    "command": "xdg-toplevel-fixture fixture-comf-1 300 200 300 200 0",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus output left",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-comf-2 --title=fixture-comf-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move container to output left",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

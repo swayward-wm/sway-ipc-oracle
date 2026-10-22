@@ -1,0 +1,15 @@
+# 285-sticky.t: pinned sway 1.12 focused rerun; runner exit 255
+# TAP tail (SIGCHLD noise dropped)
+ok 1 - tiling sticky container did not move
+ok 2 - tiling sticky container did not move
+Could not get reply for: xcb_intern_atom_reply at /usr/local/lib64/perl5/5.42/X11/XCB/Atom.pm line 23.
+# Tests were run but no plan was declared and done_testing() was not seen.
+# Looks like your test exited with 255 just after 2.
+# sway-log-0 from the last handled command (max 12 lines)
+00:00:02.919 [INFO] [sway/commands.c:261] Handling command 'kill'
+00:00:02.919 [DEBUG] [sway/tree/workspace.c:300] Destroying workspace '/tmp/aJXTnwpFO0'
+00:00:02.919 [DEBUG] [sway/desktop/transaction.c:821] Transaction 0x74c9f60 committing with 3 instructions
+00:00:02.919 [DEBUG] [sway/desktop/transaction.c:717] Applying transaction 0x74c9f60
+00:00:02.919 [ERROR] [wlr] [xwayland/xwm.c:1960] xcb error: op ConfigureWindow (no minor), code Window (no extension), sequence 217, value 4194304
+00:00:02.919 [ERROR] [wlr] [xwayland/xwm.c:1960] xcb error: op ChangeProperty (no minor), code Window (no extension), sequence 220, value 4194304
+00:00:02.919 [ERROR] [wlr] [xwayland/xwm.c:1960] xcb error: op DeleteProperty (no minor), code Window (no extension), sequence 221, value 4194304

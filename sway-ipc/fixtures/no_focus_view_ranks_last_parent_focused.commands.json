@@ -1,0 +1,34 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-nf-1 --title=fixture-nf-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "no_focus [app_id=\"^fixture-nf-(2|5)$\"]",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-nf-2 --title=fixture-nf-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

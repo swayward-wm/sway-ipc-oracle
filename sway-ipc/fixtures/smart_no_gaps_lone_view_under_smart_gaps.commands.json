@@ -1,0 +1,42 @@
+[
+  {
+    "command": "smart_gaps on",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "default_border pixel 1",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "hide_edge_borders smart_no_gaps",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-sng-1 --title=fixture-sng-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "gaps outer current set 20",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

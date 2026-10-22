@@ -1,0 +1,781 @@
+# Per-assertion evidence from complete serialized fixed-container runs.
+
+[[run]]
+compositor = "sway"
+file = "005-floating.t"
+first_pass = [1, 2, 6, 7, 8, 11, 12, 13]
+first_skip = []
+first_fail = [3, 4, 5, 9, 10]
+first_unreached = []
+second_pass = [1, 2, 6, 7, 8, 11, 12, 13]
+second_skip = []
+second_fail = [3, 4, 5, 9, 10]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "100-fullscreen.t"
+first_pass = [1, 2, 3, 4, 5, 6, 9, 11, 12, 13, 17, 18, 19, 20, 21, 22, 23]
+first_skip = []
+first_fail = [7, 8, 10, 14, 15, 16]
+first_unreached = [24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79]
+second_pass = [1, 2, 3, 4, 5, 6, 9, 11, 12, 13, 17, 18, 19, 20, 21, 22, 23]
+second_skip = []
+second_fail = [7, 8, 10, 14, 15, 16]
+second_unreached = [24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79]
+
+[[run]]
+compositor = "sway"
+file = "104-focus-stack.t"
+first_pass = [1, 2]
+first_skip = []
+first_fail = []
+first_unreached = []
+second_pass = [2]
+second_skip = []
+second_fail = [1]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "141-resize.t"
+first_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 24, 25, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 68, 69, 70, 72, 73, 74, 75, 77, 78, 79, 81, 82, 83]
+first_skip = []
+first_fail = [16, 17, 18, 19, 20, 21, 22, 23, 26, 29, 42, 43, 67, 71, 76, 80, 84]
+first_unreached = []
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 24, 25, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 68, 69, 70, 72, 73, 74, 75, 77, 78, 79, 81, 82, 83]
+second_skip = []
+second_fail = [16, 17, 18, 19, 20, 21, 22, 23, 26, 29, 42, 43, 67, 71, 76, 80, 84]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "145-flattening.t"
+first_pass = [1, 2, 3, 4, 5, 6, 7, 8]
+first_skip = []
+first_fail = []
+first_unreached = []
+second_pass = [1, 3, 4, 5, 6, 7, 8]
+second_skip = []
+second_fail = [2]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "156-fullscreen-focus.t"
+first_pass = [1]
+first_skip = []
+first_fail = [2]
+first_unreached = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]
+second_pass = [2]
+second_skip = []
+second_fail = [1]
+second_unreached = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]
+
+[[run]]
+compositor = "sway"
+file = "165-for_window.t"
+first_pass = [1, 2, 3, 4, 5, 6, 12, 13, 14, 15, 16, 17, 18, 19]
+first_skip = []
+first_fail = [7, 8, 9, 10, 11]
+first_unreached = [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79]
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+second_skip = []
+second_fail = []
+second_unreached = [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79]
+
+[[run]]
+compositor = "sway"
+file = "167-workspace_layout.t"
+first_pass = [1, 2, 3, 4, 5, 6, 7, 23, 25, 26]
+first_skip = []
+first_fail = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 27, 28]
+first_unreached = [29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87]
+second_pass = [1, 2, 3, 4, 5, 6, 7, 23, 26]
+second_skip = []
+second_fail = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 27, 28]
+second_unreached = [29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87]
+
+[[run]]
+compositor = "sway"
+file = "186-regress-assign-focus-parent.t"
+first_pass = [1, 2, 3, 4, 5, 6, 7, 8]
+first_skip = []
+first_fail = []
+first_unreached = []
+second_pass = [1, 2, 3, 4, 5, 6, 7]
+second_skip = []
+second_fail = [8]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "188-regress-focus-restart.t"
+first_pass = [4, 5, 6, 10, 11]
+first_skip = []
+first_fail = [1, 2, 3, 7, 8, 9]
+first_unreached = []
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+second_skip = []
+second_fail = []
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "189-floating-constraints.t"
+first_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 25, 26]
+first_skip = []
+first_fail = [23, 24, 27, 28]
+first_unreached = []
+second_pass = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 25, 26]
+second_skip = []
+second_fail = [1, 2, 23, 24, 27, 28]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "192-layout.t"
+first_pass = [1, 3, 4, 5, 6, 7, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34]
+first_skip = []
+first_fail = [2, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+first_unreached = []
+second_pass = [1, 3, 4, 5, 6, 7, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34]
+second_skip = []
+second_fail = [2, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "202-scratchpad-criteria.t"
+first_pass = [1, 8, 9, 10, 11]
+first_skip = []
+first_fail = [2, 3, 4, 5, 6, 7]
+first_unreached = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]
+second_pass = [1, 2, 5, 7, 8, 9, 10, 11]
+second_skip = []
+second_fail = [3, 4, 6]
+second_unreached = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]
+
+[[run]]
+compositor = "sway"
+file = "206-fullscreen-scratchpad.t"
+first_pass = [1, 2, 4]
+first_skip = []
+first_fail = [3]
+first_unreached = [5, 6, 7, 8]
+second_pass = [1, 2, 3, 4]
+second_skip = []
+second_fail = []
+second_unreached = [5, 6, 7, 8]
+
+[[run]]
+compositor = "sway"
+file = "211-regress-urgency-assign.t"
+first_pass = [1, 2]
+first_skip = []
+first_fail = [3]
+first_unreached = []
+second_pass = [1]
+second_skip = []
+second_fail = [2]
+second_unreached = [3]
+
+[[run]]
+compositor = "sway"
+file = "213-layout-restore-simple.t"
+first_pass = [1, 2, 3, 7, 8, 13, 14, 15, 17]
+first_skip = []
+first_fail = [4, 5, 6, 9, 10, 11, 12, 16, 18]
+first_unreached = []
+second_pass = [1, 2, 3, 7, 8, 13, 14, 15]
+second_skip = []
+second_fail = [4, 5, 6, 9, 10, 11, 12, 16, 17, 18]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "232-cmd-move-criteria.t"
+first_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+first_skip = []
+first_fail = []
+first_unreached = []
+second_pass = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22]
+second_skip = []
+second_fail = [1, 17]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "240-focus-on-window-activation.t"
+first_pass = [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+first_skip = []
+first_fail = [2]
+first_unreached = [15]
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+second_skip = []
+second_fail = []
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "243-move-to-mark.t"
+first_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 37, 39, 41, 42, 45, 47, 48, 49]
+first_skip = []
+first_fail = [13, 35, 36, 38, 40, 43, 44, 46, 50]
+first_unreached = []
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 37, 39, 41, 42, 45, 47, 48, 49]
+second_skip = []
+second_fail = [13, 14, 15, 16, 17, 18, 19, 35, 36, 38, 40, 43, 44, 46, 50]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "246-window-decoration-focus.t"
+first_pass = [2, 3]
+first_skip = []
+first_fail = [1]
+first_unreached = []
+second_pass = [1, 2, 3]
+second_skip = []
+second_fail = []
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "248-regress-urgency-clear.t"
+first_pass = [1, 3, 4]
+first_skip = []
+first_fail = [2]
+first_unreached = []
+second_pass = [1, 2, 3, 4]
+second_skip = []
+second_fail = []
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "251-command-criteria-focused.t"
+first_pass = [1, 2, 4, 5, 6, 8, 9, 10, 11]
+first_skip = []
+first_fail = [3, 7]
+first_unreached = []
+second_pass = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+second_skip = []
+second_fail = [1]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "255-multiple-marks.t"
+first_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+first_skip = []
+first_fail = []
+first_unreached = []
+second_pass = [1, 2, 5, 6, 7, 8, 9]
+second_skip = []
+second_fail = [3, 4]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "255-multiple-marks.t"
+first_pass = [3, 4, 5, 6, 7, 8, 9]
+first_skip = []
+first_fail = [1, 2]
+first_unreached = []
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+second_skip = []
+second_fail = []
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "255-multiple-marks.t"
+first_pass = [1, 2, 3, 4, 5, 6]
+first_skip = []
+first_fail = [7, 8, 9]
+first_unreached = []
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+second_skip = []
+second_fail = []
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "261-match-con_id-con_mark-combinations.t"
+first_pass = [2, 3]
+first_skip = []
+first_fail = [1]
+first_unreached = [4]
+second_pass = [1]
+second_skip = []
+second_fail = []
+second_unreached = [2, 3, 4]
+
+[[run]]
+compositor = "sway"
+file = "271-for_window_tilingfloating.t"
+first_pass = [3, 5, 11, 13, 14, 15, 17, 19]
+first_skip = []
+first_fail = [1, 2, 4, 6, 7, 8, 9, 10, 12, 16, 18, 20]
+first_unreached = []
+second_pass = [1, 3, 5, 7, 9, 11, 13, 14, 15, 17, 19]
+second_skip = []
+second_fail = [2, 4, 6, 8, 10, 12, 16, 18, 20]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "274-move-branch-position.t"
+first_pass = [1, 2, 5, 6, 9, 10, 11, 12, 13, 14, 15, 16]
+first_skip = []
+first_fail = [3, 4, 7, 8]
+first_unreached = []
+second_pass = [5, 6, 9, 10, 11, 12, 13, 14, 15, 16]
+second_skip = []
+second_fail = [1, 2, 3, 4, 7, 8]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "280-wm-class-change-handler.t"
+first_pass = []
+first_skip = []
+first_fail = [1, 2, 3, 4]
+first_unreached = []
+second_pass = [1, 2, 3]
+second_skip = []
+second_fail = [4]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "287-edge-borders.t"
+first_pass = [1, 2, 4, 5, 7, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+first_skip = []
+first_fail = [3, 6, 8, 9, 10, 20]
+first_unreached = []
+second_pass = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+second_skip = []
+second_fail = [3, 20]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "293-focus-follows-mouse.t"
+first_pass = [1, 3, 4, 5]
+first_skip = []
+first_fail = [2, 6, 7, 8, 9, 10]
+first_unreached = []
+second_pass = [1, 5]
+second_skip = []
+second_fail = [2, 3, 4, 6, 7, 8, 9, 10]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "293-sticky-output-crash.t"
+first_pass = [1, 3]
+first_skip = []
+first_fail = [2]
+first_unreached = []
+second_pass = [1, 2]
+second_skip = []
+second_fail = [3]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "295-net-wm-state-focused.t"
+first_pass = [1, 2, 3]
+first_skip = []
+first_fail = []
+first_unreached = [4, 5]
+second_pass = [1]
+second_skip = []
+second_fail = [2, 3]
+second_unreached = [4, 5]
+
+[[run]]
+compositor = "sway"
+file = "299-regress-scratchpad-focus.t"
+first_pass = [1]
+first_skip = []
+first_fail = []
+first_unreached = []
+second_pass = []
+second_skip = []
+second_fail = [1]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "313-include.t"
+first_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 24]
+first_skip = [19]
+first_fail = [23, 25, 26, 27, 28, 29, 30]
+first_unreached = []
+second_pass = [1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 24]
+second_skip = [19]
+second_fail = [3, 4, 23, 25, 26, 27, 28, 29, 30]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "319-gaps.t"
+first_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 21, 22, 23, 24, 25, 26, 27, 28]
+first_skip = []
+first_fail = [19, 20]
+first_unreached = []
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14, 15, 16, 17, 18, 23, 24, 25, 26, 27, 28]
+second_skip = []
+second_fail = [11, 12, 19, 20, 21, 22]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "320-mouse-bindings.t"
+first_pass = [1, 2, 3]
+first_skip = []
+first_fail = []
+first_unreached = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+second_pass = [1, 2]
+second_skip = []
+second_fail = [3]
+second_unreached = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+
+[[run]]
+compositor = "sway"
+file = "510-focus-across-outputs.t"
+first_pass = [5, 6]
+first_skip = []
+first_fail = [1, 2, 3, 4, 7, 8, 9, 10]
+first_unreached = [11, 12, 13, 14, 15, 16, 17, 18, 19]
+second_pass = [6]
+second_skip = []
+second_fail = [1, 2, 3, 4, 5, 7, 8, 9, 10]
+second_unreached = [11, 12, 13, 14, 15, 16, 17, 18, 19]
+
+[[run]]
+compositor = "sway"
+file = "528-workspace-next-prev-reversed.t"
+first_pass = [4, 5, 35]
+first_skip = []
+first_fail = [1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 36, 37, 38]
+first_unreached = []
+second_pass = [4, 5, 35]
+second_skip = []
+second_fail = [1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 36, 37, 38]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "539-disable_focus_wrapping.t"
+first_pass = [1, 4, 5, 6, 7, 8, 9, 10]
+first_skip = []
+first_fail = [2, 3]
+first_unreached = []
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+second_skip = []
+second_fail = []
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "541-resize-set-tiling.t"
+first_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 22, 23, 25, 26, 27, 28, 29]
+first_skip = []
+first_fail = [12, 19, 20, 21, 24, 30, 31, 32]
+first_unreached = []
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 25, 26, 27, 28, 29]
+second_skip = []
+second_fail = [12, 16, 17, 18, 19, 20, 21, 22, 23, 24, 30, 31, 32]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "551-net-wm-state-maximized.t"
+first_pass = [1]
+first_skip = []
+first_fail = [2]
+first_unreached = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+second_pass = []
+second_skip = []
+second_fail = [1, 2]
+second_unreached = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+
+[[run]]
+compositor = "swayward"
+file = "232-cmd-move-criteria.t"
+first_pass = [2]
+first_skip = []
+first_fail = [1]
+first_unreached = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+second_pass = [2, 4, 6, 8, 10, 12, 14]
+second_skip = []
+second_fail = [1, 3, 5, 7, 9, 11, 13]
+second_unreached = [15, 16, 17, 18, 19, 20, 21, 22]
+
+[[run]]
+compositor = "swayward"
+file = "298-ipc-misbehaving-connection.t"
+first_pass = [1]
+first_skip = []
+first_fail = []
+first_unreached = [2]
+second_pass = [1]
+second_skip = []
+second_fail = [2]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "111-goto.t"
+first_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+first_skip = []
+first_fail = []
+first_unreached = []
+second_pass = [12, 13]
+second_skip = []
+second_fail = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "113-urgent.t"
+first_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+first_skip = []
+first_fail = []
+first_unreached = [24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]
+second_pass = [1, 3, 5, 6, 7, 9, 10, 13, 14, 16, 18, 19, 20, 21, 22, 23]
+second_skip = []
+second_fail = [2, 4, 8, 11, 12, 15, 17]
+second_unreached = [24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]
+
+[[run]]
+compositor = "sway"
+file = "124-move.t"
+first_pass = [4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 17, 19, 22, 23, 24, 26, 27, 28, 29, 31, 32, 33, 35, 36, 38, 39, 40, 42, 43, 44, 45, 47]
+first_skip = []
+first_fail = [1, 2, 3, 9, 10, 16, 18, 20, 21, 25, 30, 34, 37, 41, 46, 48, 49, 50, 51, 52, 53, 54]
+first_unreached = []
+second_pass = [4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 17, 19, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 42, 43, 44, 45, 47]
+second_skip = []
+second_fail = [1, 2, 3, 9, 10, 16, 18, 20, 41, 46, 48, 49, 50, 51, 52, 53, 54]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "135-floating-focus.t"
+first_pass = [1, 2, 4]
+first_skip = []
+first_fail = [3]
+first_unreached = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82]
+second_pass = [1, 2, 3, 4]
+second_skip = []
+second_fail = []
+second_unreached = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82]
+
+[[run]]
+compositor = "sway"
+file = "136-floating-ws-empty.t"
+first_pass = [1, 2, 3, 5, 6, 7, 8, 9, 10]
+first_skip = []
+first_fail = [4, 11]
+first_unreached = []
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+second_skip = []
+second_fail = []
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "138-floating-attach.t"
+first_pass = [1, 2, 3, 5, 6, 7, 8, 9, 10, 11]
+first_skip = []
+first_fail = [4]
+first_unreached = []
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+second_skip = []
+second_fail = []
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "141-resize.t"
+first_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 24, 25, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 68, 69, 70, 72, 73, 74, 75, 77, 78, 79, 81, 82, 83]
+first_skip = []
+first_fail = [16, 17, 18, 19, 20, 21, 22, 23, 26, 29, 42, 43, 67, 71, 76, 80, 84]
+first_unreached = []
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 68, 69, 70, 72, 73, 74, 75, 77, 78, 79, 81, 82, 83]
+second_skip = []
+second_fail = [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 42, 43, 67, 71, 76, 80, 84]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "145-flattening.t"
+first_pass = [1, 2, 4, 5, 6, 7]
+first_skip = []
+first_fail = [3, 8]
+first_unreached = []
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8]
+second_skip = []
+second_fail = []
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "146-floating-reinsert.t"
+first_pass = [1]
+first_skip = []
+first_fail = [2, 3]
+first_unreached = []
+second_pass = [1, 2, 3]
+second_skip = []
+second_fail = []
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "156-fullscreen-focus.t"
+first_pass = [1, 2]
+first_skip = []
+first_fail = []
+first_unreached = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]
+second_pass = [1]
+second_skip = []
+second_fail = [2]
+second_unreached = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]
+
+[[run]]
+compositor = "sway"
+file = "166-assign.t"
+first_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16]
+first_skip = []
+first_fail = [13, 15]
+first_unreached = [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106]
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 19, 21, 23]
+second_skip = []
+second_fail = [13, 15, 17, 20, 22]
+second_unreached = [24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106]
+
+[[run]]
+compositor = "sway"
+file = "205-ipc-windows.t"
+first_pass = [1, 3]
+first_skip = []
+first_fail = [2, 4]
+first_unreached = []
+second_pass = [1]
+second_skip = []
+second_fail = [2, 3, 4]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "210-mark-unmark.t"
+first_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16]
+first_skip = []
+first_fail = [14, 15, 17]
+first_unreached = []
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+second_skip = []
+second_fail = [14, 15, 16, 17]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "247-config-line-continuation.t"
+first_pass = [1, 3, 7]
+first_skip = []
+first_fail = [2, 4, 5, 6, 8]
+first_unreached = []
+second_pass = [1, 3, 5, 7]
+second_skip = []
+second_fail = [2, 4, 6, 8]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "251-command-criteria-focused.t"
+first_pass = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11]
+first_skip = []
+first_fail = [3]
+first_unreached = []
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+second_skip = []
+second_fail = []
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "269-focus-stack-above.t"
+first_pass = [1]
+first_skip = []
+first_fail = [2, 3, 4, 5]
+first_unreached = []
+second_pass = [1, 4, 5]
+second_skip = []
+second_fail = [2, 3]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "293-focus-follows-mouse.t"
+first_pass = [1, 3, 4]
+first_skip = []
+first_fail = [2, 5, 6, 7, 8, 9, 10]
+first_unreached = []
+second_pass = [1, 3, 4, 5]
+second_skip = []
+second_fail = [2, 6, 7, 8, 9, 10]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "313-include.t"
+first_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 24]
+first_skip = [19]
+first_fail = [21, 22, 23, 25, 26, 27, 28, 29, 30]
+first_unreached = []
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 24]
+second_skip = [19]
+second_fail = [23, 25, 26, 27, 28, 29, 30]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "501-scratchpad.t"
+first_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44]
+first_skip = []
+first_fail = [13]
+first_unreached = []
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44]
+second_skip = []
+second_fail = []
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "541-resize-set-tiling.t"
+first_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 22, 23, 25, 26, 27, 28, 29, 30, 31, 32]
+first_skip = []
+first_fail = [12, 19, 20, 21, 24]
+first_unreached = []
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 22, 23, 25, 26, 27, 28, 29, 30, 31, 32]
+second_skip = []
+second_fail = [12, 13, 16, 17, 18, 19, 20, 21, 24]
+second_unreached = []
+
+[[run]]
+compositor = "sway"
+file = "553-popup_during_fullscreen.t"
+first_pass = [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 15, 17, 18, 20]
+first_skip = []
+first_fail = [9, 14, 16, 19]
+first_unreached = []
+second_pass = [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 14, 17, 18, 20]
+second_skip = []
+second_fail = [9, 12, 13, 15, 16, 19]
+second_unreached = []

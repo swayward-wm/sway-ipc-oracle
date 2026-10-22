@@ -1,0 +1,32 @@
+[
+  {
+    "command": "move container to output right",
+    "reply": [
+      {
+        "error": "Can't move an empty workspace",
+        "parse_error": false,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "move container to output HEADLESS-9",
+    "reply": [
+      {
+        "error": "Can't move an empty workspace",
+        "parse_error": false,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "move container to mark oracle",
+    "reply": [
+      {
+        "error": "Can't move an empty workspace",
+        "parse_error": false,
+        "success": false
+      }
+    ]
+  }
+]

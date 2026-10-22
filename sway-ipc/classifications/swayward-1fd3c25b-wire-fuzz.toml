@@ -1,0 +1,29 @@
+# Human-reviewed classifications joined to raw wire-fuzz measurements by case.
+
+[[classification]]
+case = "truncated-header"
+triage = "documented deviation"
+finding = "Malformed IPC frames"
+reason = "Swayward closes an incomplete frame instead of retaining a half-closed client indefinitely."
+source = "sway/sway/ipc-server.c:201-252; swayward docs/KNOWN_DEVIATIONS.md#malformed-ipc-frames"
+
+[[classification]]
+case = "truncated-payload"
+triage = "documented deviation"
+finding = "Malformed IPC frames"
+reason = "Swayward closes an incomplete frame instead of retaining a half-closed client indefinitely."
+source = "sway/sway/ipc-server.c:201-252; swayward docs/KNOWN_DEVIATIONS.md#malformed-ipc-frames"
+
+[[classification]]
+case = "oversized-length"
+triage = "documented deviation"
+finding = "Malformed IPC frames"
+reason = "Swayward rejects an oversized declared payload instead of waiting for that payload indefinitely."
+source = "sway/sway/ipc-server.c:201-252; swayward docs/KNOWN_DEVIATIONS.md#malformed-ipc-frames"
+
+[[classification]]
+case = "unknown-type"
+triage = "documented deviation"
+finding = "Malformed IPC frames"
+reason = "Swayward returns a structured failure instead of leaving an unknown request unanswered."
+source = "sway/sway/ipc-server.c:927-929; swayward docs/KNOWN_DEVIATIONS.md#malformed-ipc-frames"

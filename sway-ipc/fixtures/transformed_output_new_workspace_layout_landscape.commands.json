@@ -1,0 +1,26 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-1 --title=fixture-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "output * mode --custom 1280x720@60Hz",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace 4",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

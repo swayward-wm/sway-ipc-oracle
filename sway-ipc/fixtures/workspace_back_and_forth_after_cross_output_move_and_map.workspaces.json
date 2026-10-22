@@ -1,0 +1,104 @@
+[
+  {
+    "border": "none",
+    "current_border_width": 0,
+    "deco_rect": {
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "floating": null,
+    "floating_nodes": [],
+    "focus": [],
+    "focused": true,
+    "fullscreen_mode": 1,
+    "geometry": {
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "id": 9,
+    "layout": "splith",
+    "marks": [],
+    "name": "7",
+    "nodes": [],
+    "num": 7,
+    "orientation": "horizontal",
+    "output": "HEADLESS-2",
+    "percent": null,
+    "rect": {
+      "height": 720,
+      "width": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "representation": "H[]",
+    "scratchpad_state": null,
+    "sticky": false,
+    "type": "workspace",
+    "urgent": false,
+    "visible": true,
+    "window": null,
+    "window_rect": {
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    }
+  },
+  {
+    "border": "none",
+    "current_border_width": 0,
+    "deco_rect": {
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "floating": null,
+    "floating_nodes": [],
+    "focus": [
+      13,
+      10,
+      12
+    ],
+    "focused": false,
+    "fullscreen_mode": 1,
+    "geometry": {
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "id": 11,
+    "layout": "splith",
+    "marks": [],
+    "name": "8",
+    "nodes": [],
+    "num": 8,
+    "orientation": "horizontal",
+    "output": "HEADLESS-1",
+    "percent": null,
+    "rect": {
+      "height": 720,
+      "width": 1280,
+      "x": 1280,
+      "y": 0
+    },
+    "representation": "H[fixture-wbmm-a fixture-wbmm-c fixture-wbmm-b]",
+    "scratchpad_state": null,
+    "sticky": false,
+    "type": "workspace",
+    "urgent": false,
+    "visible": true,
+    "window": null,
+    "window_rect": {
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    }
+  }
+]

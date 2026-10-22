@@ -1,0 +1,11 @@
+# Human-reviewed triage of swayfx-0.6 sway IPC state mismatches, keyed by scenario.request.
+# design difference: SwayFX documents or deliberately builds the behaviour; deviation: an
+# undocumented difference from sway, with the SwayFX source that produces it; harness issue:
+# the oracle, not SwayFX. contrib/validate prints the untriaged count.
+
+[[classification]]
+rows = ["floating_split_on_fresh_workspace_representation.tree"]
+triage = "harness issue"
+finding = "host-captured-fixture-floating-split"
+reason = "The committed sway capture was taken on the host (foot client 696x491) rather than in the pinned image (696x496), and here the difference exceeds the 10 px tolerance. Pinned sway 1.12 fails it the same way (sway-1.12.toml), and an in-image capture is 634x1085 / 634x1058 where the committed one is 630x1071 / 630x1044. SwayFX matches sway here. The recapture waits for the next state regeneration."
+source = "sway-ipc/fixtures/floating_split_on_fresh_workspace_representation.tree.json; sway-ipc/results/sway-1.12.toml"

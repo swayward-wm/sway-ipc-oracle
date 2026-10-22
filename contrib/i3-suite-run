@@ -1,0 +1,447 @@
+#!/usr/bin/env python3
+"""Run the unchanged vendored i3 suite against a pinned compositor.
+
+The i3 adapter delegates to i3's own complete-run.pl on Xvfb.  The sway and
+swayward adapters use the Perl launch and synchronization modules under
+``i3/adapters``.  Every compositor process runs in a systemd user scope with a
+2 GiB memory limit, no swap, a timeout, and private IPC and display sockets.
+"""
+from __future__ import annotations
+
+import argparse
+import concurrent.futures
+import datetime
+import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import tomllib
+import shlex
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "contrib"))
+import provenance  # noqa: E402
+NO_TAP_PLAN = "The pinned run emitted no TAP plan; retain this as an environment or harness finding."
+INCOMPLETE_RUN = "The pinned run reported environment skips, failures, or assertions it did not reach."
+with (ROOT / "pins.toml").open("rb") as file:
+    PINS = tomllib.load(file)
+I3_PIN = PINS["i3"]
+SWAY_PIN = PINS["sway"]
+PLAN = re.compile(r"^1\.\.(\d+)(?:\s+#\s*SKIP\b.*)?$", re.I)
+RESULT = re.compile(r"^(not ok|ok) (\d+)(.*)$")
+
+
+def run(cmd: list[str], **kw) -> subprocess.CompletedProcess:
+    print("+", " ".join(cmd), flush=True)
+    return subprocess.run(cmd, text=True, **kw)
+
+
+def require_clean_checkout(path: Path, expected: str, name: str) -> str:
+    actual = run(["git", "-C", str(path), "rev-parse", "HEAD"],
+                 capture_output=True, check=True).stdout.strip()
+    description = run(["git", "-C", str(path), "describe", "--always", "--dirty"],
+                      capture_output=True, check=True).stdout.strip()
+    if actual != expected:
+        raise SystemExit(f"{name} source is {actual}, expected pinned commit {expected}")
+    if description.endswith("-dirty") or run(
+        ["git", "-C", str(path), "status", "--porcelain"], capture_output=True, check=True
+    ).stdout:
+        raise SystemExit(f"refusing to measure dirty {name} build ({description})")
+    return actual
+
+
+def binary_checkout(binary: Path) -> Path:
+    probe = binary.resolve().parent
+    while probe != probe.parent:
+        if (probe / ".git").exists():
+            return probe
+        probe = probe.parent
+    raise SystemExit(f"cannot find source checkout for compositor binary {binary}")
+
+
+def isolated(command: list[str], timeout: int, *, kill_after=False) -> list[str]:
+    limit = ["timeout"]
+    if kill_after:
+        limit += ["--kill-after=5"]
+    limit += [str(timeout), *command]
+    if os.environ.get("ORACLE_CONTAINER") == "1":
+        return limit
+    return ["systemd-run", "--user", "--scope", "-q", "-p", "MemoryMax=2G",
+            "-p", "MemorySwapMax=0", *limit]
+
+
+def execution(command: list[str]) -> list[str]:
+    if os.environ.get("ORACLE_CONTAINER") == "1":
+        return command
+    return ["distrobox", "enter", ARGS.container, "--", *command]
+
+
+def parse_tap(text: str):
+    verdicts, plan, previous = {}, None, 0
+    for line in text.splitlines():
+        if plan is None and (m := PLAN.match(line)):
+            plan = int(m.group(1))
+        if not (m := RESULT.match(line)):
+            continue
+        n = int(m.group(2))
+        if verdicts and n <= previous:
+            break
+        previous = n
+        verdicts[n] = ("skip" if m.group(1) == "ok" and re.search(r"#\s*skip", m.group(3), re.I)
+                       else "pass" if m.group(1) == "ok" else "fail")
+    return verdicts, plan
+
+
+def extract_complete_log(text: str) -> dict[str, str]:
+    found = {}
+    matches = list(re.finditer(r"^output for .*/([^/]+\.t):\n", text, re.M))
+    for i, match in enumerate(matches):
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
+        found[match.group(1)] = text[match.end():end]
+    return found
+
+
+def wayland_adaptations(test: Path, compositor: str) -> list[str]:
+    source = test.read_text(errors="replace")
+    adaptations = []
+    if compositor == "swayward":
+        adaptations.append("remove-adapter-ipc-socket")
+    if re.search(r"^\s*fake[-_]outputs\s", source, re.M):
+        adaptations.append("fake-outputs->headless-outputs")
+    if re.search(r"^\s*workspace_layout\s+stacked\s*$", source, re.M):
+        adaptations.append("workspace-layout-stacked->stacking")
+    if re.search(r"^\s*cmd\s+['\"]layout stacked['\"]", source, re.M):
+        adaptations.append("layout-stacked->stacking")
+    if compositor == "swayward" and re.search(r"get_version\(\).*loaded_config_file_name", source, re.S):
+        adaptations.append("reload-source-config")
+    if compositor == "swayward" and test.name == "316-drag-container.t":
+        adaptations.append("remove-bar-primary-output")
+    return adaptations
+
+
+def emit(path: Path, compositor: str, version: str, commit: str,
+         taps: dict[str, str], environment: str = "", tests: list[Path] | None = None) -> None:
+    lines = [
+        "# Generated raw result of an unchanged upstream i3 test-suite run.",
+        "# Counts use the first unindented TAP plan and first TAP stream.",
+        "# pass, skip, fail, and unreached together cover each emitted plan.",
+        "", "[run]", f'compositor = "{compositor}"', f'version = "{version}"',
+        f'commit = "{commit}"', f'i3_suite_commit = "{I3_PIN}"',
+        provenance.run_line(path, compositor),
+        f'date = "{datetime.date.today().isoformat()}"',
+    ]
+    if environment:
+        lines.append(f'environment = "{environment}"')
+    flaky = tomllib.load((ROOT / "i3/flaky.toml").open("rb")).get(compositor, {}).get("files", [])
+    unstable = {
+        item["file"]: item["assertions"]
+        for item in tomllib.load((ROOT / "i3/unstable.toml").open("rb")).get("unstable", [])
+        if item["compositor"] == compositor and item["file"] not in flaky
+    }
+    for test in tests if tests is not None else sorted((ROOT / "i3/t").glob("*.t")):
+        verdicts, plan = parse_tap(taps.get(test.name, ""))
+        static = static_plan(test)
+        lines += ["", f'[files."{test.name}"]']
+        if test.name in flaky:
+            lines += ["flaky = true", f"assertions = {static}"]
+            continue
+        if test.name in unstable:
+            lines.append(f"unstable_assertions = {unstable[test.name]}")
+        if compositor in {"sway", "swayward"}:
+            adaptations = wayland_adaptations(test, compositor)
+            if adaptations:
+                adapted = ", ".join(f'"{rule}"' for rule in adaptations)
+                lines.append(f"adapted = [{adapted}]")
+        total = plan if plan is not None else max(static, max(verdicts, default=0))
+        pass_numbers = [n for n, verdict in verdicts.items() if verdict == "pass"]
+        skip_numbers = [n for n, verdict in verdicts.items() if verdict == "skip"]
+        fail_numbers = [n for n, verdict in verdicts.items() if verdict == "fail"]
+        unreached_numbers = [n for n in range(1, total + 1) if n not in verdicts]
+        if plan is None:
+            lines += ["plan_unknown = true", f"assertions = {total}", 'tap_plan = "none"',
+                      f"source_assertions = {static}"]
+        else:
+            lines += [f"assertions = {total}", f"tap_plan = {plan}"]
+        lines += [
+            f"pass = {len(pass_numbers)}",
+            f"skip = {len(skip_numbers)}",
+            f"fail = {len(fail_numbers)}",
+            f"unreached = {len(unreached_numbers)}",
+            "pass_assertions = [" + ", ".join(map(str, pass_numbers)) + "]",
+            "skip_assertions = [" + ", ".join(map(str, skip_numbers)) + "]",
+            "fail_assertions = [" + ", ".join(map(str, fail_numbers)) + "]",
+            "unreached_assertions = [" + ", ".join(map(str, unreached_numbers)) + "]",
+        ]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines) + "\n")
+
+
+def snapshot_name(compositor: str) -> str:
+    """Versioned result name for a compositor, from pins.toml [snapshot]."""
+    with (ROOT / "pins.toml").open("rb") as fh:
+        return tomllib.load(fh)["snapshot"][compositor]
+
+
+def static_plan(path: Path) -> int:
+    # Use the first unindented plan, or the checked-in census where
+    # done_testing makes the plan dynamic.
+    for line in path.read_text(errors="replace").splitlines():
+        if m := re.match(r"^plan tests => (\d+);", line):
+            return int(m.group(1))
+    with (ROOT / "i3/results" / f"{snapshot_name('i3')}.toml").open("rb") as fh:
+        return tomllib.load(fh)["files"][path.name].get("assertions", 0)
+
+
+def i3_adapter(args) -> None:
+    global ARGS
+    ARGS = args
+    src, build = Path(args.i3src), Path(args.i3build)
+    require_clean_checkout(src, I3_PIN, "i3")
+    selected = selected_tests(args)
+    tests = [str(src / "testcases/t" / p.name) for p in selected]
+    before = {p.name for p in build.glob("testsuite-*")}
+    inner = ["bash", "-lc", "unset SWAYSOCK I3SOCK DISPLAY WAYLAND_DISPLAY; "
+             "export PERL5LIB=$HOME/perl5/lib/perl5${PERL5LIB:+:$PERL5LIB}; "
+             f"cd {build} && perl complete-run.pl --parallel={args.parallel} " + " ".join(tests)]
+    cp = run(execution(isolated(inner, args.timeout)), capture_output=True)
+    after = [p for p in build.glob("testsuite-*") if p.name not in before]
+    if not after:
+        print(cp.stdout, cp.stderr, file=sys.stderr); raise SystemExit("i3 runner produced no log")
+    log = max(after, key=lambda p: p.stat().st_mtime) / "complete-run.log"
+    out = args.work_dir or ROOT / "target/i3-suite/i3"
+    out.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(log, out / "complete-run.log")
+    taps = extract_complete_log(log.read_text(errors="replace"))
+    if args.require_complete:
+        require_complete(taps, selected, log.read_text(errors="replace"))
+        return
+    emit(args.out or ROOT / "i3/results" / f"{snapshot_name('i3')}.toml", "i3", "4.25-25-g9be3249a", I3_PIN, taps,
+         "Xvfb with i3's complete-run.pl", selected)
+    if cp.returncode:
+        print(cp.stdout, cp.stderr, file=sys.stderr)
+
+
+def selected_tests(args):
+    tests = sorted((ROOT / "i3/t").glob("*.t"))
+    names = set(args.tests + args.files)
+    if names:
+        unknown = names - {path.name for path in tests}
+        if unknown:
+            raise SystemExit("unknown test files: " + ", ".join(sorted(unknown)))
+        tests = [path for path in tests if path.name in names]
+    if args.shard:
+        index, count = parse_shard(args.shard)
+        tests = [path for offset, path in enumerate(tests) if offset % count == index - 1]
+    return tests
+
+
+def parse_shard(value: str) -> tuple[int, int]:
+    try:
+        index, count = map(int, value.split("/", 1))
+    except ValueError:
+        raise argparse.ArgumentTypeError("shard must be K/N") from None
+    if count < 1 or index < 1 or index > count:
+        raise argparse.ArgumentTypeError("shard must satisfy 1 <= K <= N")
+    return index, count
+
+
+def merge_results(paths: list[Path], out: Path) -> None:
+    documents = [(path, tomllib.load(path.open("rb"))) for path in paths]
+    if not documents:
+        raise SystemExit("--merge needs at least one partial result")
+    run = documents[0][1]["run"]
+    files = {}
+    for path, document in documents:
+        if document["run"] != run:
+            raise SystemExit(f"partial result metadata differs: {path}")
+        overlap = files.keys() & document["files"].keys()
+        if overlap:
+            raise SystemExit("duplicate files in partial results: " + ", ".join(sorted(overlap)))
+        files.update(document["files"])
+    expected = {path.name for path in (ROOT / "i3/t").glob("*.t")}
+    if files.keys() != expected:
+        missing = expected - files.keys()
+        extra = files.keys() - expected
+        raise SystemExit(f"partial results are incomplete: missing={sorted(missing)} extra={sorted(extra)}")
+
+    # Re-emitting from TAP would rerun the measurement. Join the generator's
+    # own TOML sections instead, after validating their metadata and coverage.
+    first = paths[0].read_text()
+    header = first.split("\n[files.", 1)[0]
+    sections = {}
+    for path in paths:
+        text = path.read_text()
+        for section in text.split("\n[files.")[1:]:
+            name = section.split('"', 2)[1]
+            sections[name] = "\n[files." + section
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(header + "".join(sections[name] for name in sorted(sections)))
+
+
+def require_complete(taps: dict[str, str], tests: list[Path], diagnostics: str = "") -> None:
+    failures = []
+    for test in tests:
+        verdicts, plan = parse_tap(taps.get(test.name, ""))
+        if plan is None or len(verdicts) != plan or any(v != "pass" for v in verdicts.values()):
+            failures.append(test.name)
+    forbidden = [message for message in ("No such atom (I3_SOCKET_PATH)", "no free X11 display")
+                 if message in diagnostics]
+    if failures or forbidden:
+        details = ", ".join(failures) or "none"
+        messages = ", ".join(forbidden) or "none"
+        raise SystemExit(f"canary gate failed: incomplete={details}; adapter-errors={messages}")
+    print(f"canary gate passed: {len(tests)} files")
+
+
+def wayland_adapter(args) -> None:
+    global ARGS
+    ARGS = args
+    src = Path(args.i3src)
+    require_clean_checkout(src, I3_PIN, "i3")
+    if not args.binary:
+        raise SystemExit(f"--binary is required for {args.compositor}")
+    binary = Path(args.binary)
+    compositor_commit = require_clean_checkout(
+        binary_checkout(binary), PINS[args.compositor], args.compositor
+    )
+    adapter = ROOT / "i3/adapters" / args.compositor
+    if not adapter.is_dir():
+        raise SystemExit(f"missing adapter: {adapter}")
+    out = args.work_dir or ROOT / "target/i3-suite" / args.compositor
+    if not args.tests and not args.files and not args.shard:
+        shutil.rmtree(out, ignore_errors=True)
+    out.mkdir(parents=True, exist_ok=True)
+    runtime = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"))
+    runtime.mkdir(mode=0o700, parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="i3-suite-", dir=runtime) as td:
+        stage = Path(td) / "lib"; shutil.copytree(src / "testcases/lib", stage)
+        text = (src / "testcases/lib/i3test.pm.in").read_text().replace("@abs_top_builddir@", str(src)).replace("@abs_top_srcdir@", str(src))
+        (stage / "i3test.pm").write_text(text)
+        (stage / "i3test.pm.in").unlink(missing_ok=True)
+        shutil.copy2(adapter / "SocketActivation.pm", stage)
+        shutil.copytree(adapter / "swaycal", stage / "swaycal")
+        test_displays = {test.name: 100 + index for index, test in enumerate(selected_tests(args))}
+        def run_one(test: Path):
+            rundir = Path(td) / test.name; rundir.mkdir(); (rundir / "x11u").mkdir()
+            display = test_displays[test.name] if os.environ.get("ORACLE_CONTAINER") == "1" else 99
+            os.chmod(rundir, 0o700); os.chmod(rundir / "x11u", 0o1777)
+            env = os.environ | {"I3SRC": str(src), "STAGE": str(stage), "TESTNAME": test.name,
+                  "OUTDIR": str(rundir), "I3_SUITE_RUNDIR": str(rundir), "I3_SUITE_BINARY": str(binary),
+                  "I3_SUITE_COMPOSITOR": args.compositor, "SWAY_CAL_CONTENT_SHIM": "1"}
+            if args.record_commands:
+                env["SWAY_CAL_RECORD"] = str(out / f"{test.name}.commands.jsonl")
+                Path(env["SWAY_CAL_RECORD"]).write_text("")
+            if args.compositor == "swayward":
+                env["I3_SUITE_TRANSLATOR"] = str(binary.parents[2] / "contrib/sway-to-kdl")
+            inner = f'''set -uo pipefail
+trap 'test -f "$I3_SUITE_RUNDIR/pids" && while read -r p; do kill -9 -- -"$p" 2>/dev/null || true; done < "$I3_SUITE_RUNDIR/pids"; test -n "${{xp:-}}" && kill -9 "$xp" 2>/dev/null || true' EXIT
+mount -t tmpfs -o mode=1777,size=16m tmpfs /tmp
+mkdir -m 1777 /tmp/.X11-unix
+export XDG_RUNTIME_DIR="$I3_SUITE_RUNDIR"; unset SWAYSOCK I3SOCK WAYLAND_DISPLAY
+Xvfb :{display} -screen 0 1280x800x24 >/dev/null 2>&1 & xp=$!; export DISPLAY=:{display}
+for i in $(seq 1 100); do test -S /tmp/.X11-unix/X{display} && break; sleep .05; done
+cd {shlex.quote(str(src / 'testcases'))}
+export PERL5LIB="$STAGE:$HOME/perl5/lib/perl5${{PERL5LIB:+:$PERL5LIB}}"
+perl -I"$STAGE" -Mswaycal::Shim t/{shlex.quote(test.name)}
+'''
+            shell = ["unshare", "-rmn", "bash", "-lc", inner]
+            cp = subprocess.run(execution(isolated(shell, args.file_timeout, kill_after=True)),
+                                env=env, text=True, capture_output=True)
+            (out / f"{test.name}.tap").write_text(cp.stdout + cp.stderr)
+            diagnostics = out / test.name
+            shutil.rmtree(diagnostics, ignore_errors=True)
+            diagnostics.mkdir()
+            for artifact in rundir.glob("sway-*"):
+                if artifact.is_file():
+                    shutil.copy2(artifact, diagnostics)
+            return cp.returncode, test.name
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=args.parallel) as pool:
+            for code, name in pool.map(run_one, selected_tests(args)):
+                print(f"EXIT={code} {name}")
+    taps = {p.name.removesuffix('.tap'): p.read_text(errors='replace') for p in out.glob('*.tap')}
+    if args.require_complete:
+        selected_names = {test.name for test in selected_tests(args)}
+        diagnostics = "\n".join(
+            path.read_text(errors="replace")
+            for path in out.rglob("*")
+            if path.is_file() and any(name in path.parts or path.name == f"{name}.tap"
+                                      for name in selected_names)
+        )
+        require_complete(taps, selected_tests(args), diagnostics)
+        return
+    version = run([str(binary), "--version"], capture_output=True).stdout.strip()
+    if re.search(r"(?:-dirty|-modified)\b", version):
+        raise SystemExit(f"refusing to record dirty {args.compositor} version: {version}")
+    emit(args.out or ROOT / "i3/results" / f"{snapshot_name(args.compositor)}.toml", args.compositor, version, compositor_commit, taps,
+         "headless compositor with private IPC/X11 sockets and real X11 clients", selected_tests(args))
+
+
+def self_test() -> None:
+    text = "ok 1 - pass\nok 2 # SKIP premise\nnot ok 3 - fail\n1..3\n"
+    assert parse_tap(text) == ({1: "pass", 2: "skip", 3: "fail"}, 3)
+    echoed = text + text
+    assert parse_tap(echoed) == ({1: "pass", 2: "skip", 3: "fail"}, 3)
+    assert parse_tap("1..0 # SKIP unavailable\n") == ({}, 0)
+    assert parse_shard("1/1") == (1, 1)
+    for invalid in ("0/1", "2/1", "1/0", "bad"):
+        try:
+            parse_shard(invalid)
+        except argparse.ArgumentTypeError:
+            pass
+        else:
+            raise AssertionError(f"accepted invalid shard {invalid}")
+    print("i3-suite TAP parser and shard self-test passed")
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(
+        description="Run the unchanged vendored i3 suite against a pinned compositor."
+    )
+    ap.add_argument("--compositor", choices=("i3", "sway", "swayward"))
+    ap.add_argument("--self-test", action="store_true", help="test the embedded TAP parser and exit")
+    ap.add_argument("--files", action="append", default=[], metavar="FILE",
+                    help="run only FILE (repeatable; positional file names remain supported)")
+    ap.add_argument("--shard", metavar="K/N", help="run the Kth deterministic file shard")
+    ap.add_argument("--out", type=Path, help="write this result instead of the committed result")
+    ap.add_argument("--work-dir", type=Path,
+                    help="write diagnostics here (use a private path for concurrent shards)")
+    ap.add_argument("--merge", nargs="+", type=Path, metavar="PARTIAL",
+                    help="merge complete, disjoint partial results into --out")
+    ap.add_argument("--i3src", default=os.environ.get("I3SRC", "i3"))
+    ap.add_argument("--i3build", default=os.environ.get("I3BUILD", "i3/build"))
+    ap.add_argument("--container", default="swayward-dev")
+    ap.add_argument("--parallel", type=int, default=4)
+    ap.add_argument("--timeout", type=int, default=900)
+    ap.add_argument("--file-timeout", type=int, default=180)
+    ap.add_argument("--binary")
+    ap.add_argument("--record-commands", action="store_true",
+                    help="record replayable sway commands with test provenance")
+    ap.add_argument("--require-complete", action="store_true",
+                    help="fail unless every selected test reaches an all-pass TAP plan")
+    ap.add_argument("tests", nargs="*")
+    args = ap.parse_args()
+    if args.self_test:
+        self_test()
+        return 0
+    if args.merge:
+        if not args.out:
+            ap.error("--merge requires --out")
+        merge_results(args.merge, args.out)
+        return 0
+    if args.shard:
+        parse_shard(args.shard)
+    if args.compositor is None:
+        ap.error("--compositor is required unless --self-test or --merge is used")
+    if args.compositor == "i3":
+        i3_adapter(args)
+    else:
+        wayland_adapter(args)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

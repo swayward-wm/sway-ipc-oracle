@@ -1,0 +1,75 @@
+# Human-reviewed triage of swayward-1fd3c25b random mismatches, keyed by seed,
+# against the committed result (T4 measurement: oracle b70abe84, swayward 1fd3c25b, image rc-1fd3c25b, two agreeing runs).
+# The runner records only the first divergent request of a seed, so a family
+# names that first divergence. Families and open tasks: swayward scratch
+# beta1-plan sections/gap.md. contrib/validate prints the untriaged count.
+
+[[classification]]
+seeds = [323]
+triage = "swayward bug"
+finding = "parity-f1b-floating-natural-size"
+reason = "F1b (first divergence): Floating group child rect: sway floats a view at its natural size clamped to the output layout box and a split keeps that box; swayward floats at its own default size."
+source = "sway/sway/tree/container.c:793-830, 847-906; beta1-plan sections/gap.md F1b"
+
+[[classification]]
+seeds = [249, 363]
+triage = "swayward bug"
+finding = "floating-split-after-scratchpad-show-height"
+reason = "First divergence: rect.height of the view inside a floating split made right after scratchpad show (splith or splitv). Sway matches its own captures of these seeds. Cause not traced."
+source = "sway/sway/tree/container.c:793-830,847-906; sway/sway/commands/split.c"
+
+[[classification]]
+seeds = [32, 303]
+triage = "swayward bug"
+finding = "parity-f2-focused-flag"
+reason = "F2 (first divergence): The focused flag (and with it visible or current_workspace) lands on a different node after move scratchpad or move container to workspace."
+source = "sway/sway/tree/view.c, sway/sway/commands/move.c (focus after move); beta1-plan sections/gap.md F2"
+
+[[classification]]
+seeds = [74, 83, 112, 150, 213, 322, 463, 467, 492]
+triage = "swayward bug"
+finding = "parity-f3-focus-order"
+reason = "F3 (first divergence): Only the focus child-position list differs, mostly after focus parent, floating toggle, move or layout changes."
+source = "sway/sway/tree/container.c (focus stack); beta1-plan sections/gap.md F3"
+
+[[classification]]
+seeds = [180]
+triage = "swayward bug"
+finding = "parity-f6-floating-toggle-fullscreen"
+reason = "F6 (first divergence): floating toggle on a fullscreen container: sway keeps fullscreen_mode 1 on the floating container and leaves the tiled sibling with its stale share; swayward drops fullscreen (percent 0.5 vs sway 0.166)."
+source = "sway/sway/commands/floating.c; sway/sway/tree/container.c:941 (container_set_floating); beta1-plan sections/gap.md F6"
+
+[[classification]]
+seeds = [203]
+triage = "swayward bug"
+finding = "parity-f7-fullscreen-target"
+reason = "F7 (first divergence): fullscreen toggle after a split: sway fullscreens the focused view; swayward fullscreens the new wrapper, so the split shares differ (0.5/0.5 vs sway 1.0/0.0)."
+source = "sway/sway/commands/fullscreen.c; beta1-plan sections/gap.md F7"
+
+[[classification]]
+seeds = [22, 60, 88, 137, 289, 361, 368]
+triage = "swayward bug"
+finding = "parity-f8l-stale-split-share"
+reason = "F8l (first divergence): Percent only (>= 0.02): sway reports stale split shares under fullscreen, or the stacked/tabbed titlebar share (0.9625); swayward reports the share the current layout gives. 88 and 289 have the shape KNOWN_DEVIATIONS#split-shares-changed-under-a-fullscreen-container describes (a layout command under fullscreen, percent only), but they were not minimised and that entry lists its own seeds, so they stay bugs until checked; the others do not have that shape."
+source = "sway/sway/tree/arrange.c:15-52; beta1-plan sections/gap.md F8"
+
+[[classification]]
+seeds = [12]
+triage = "swayward bug"
+finding = "parity-f8s-percent-rounding"
+reason = "F8s (first divergence): Percent only (< 0.02): split-share rounding after a map."
+source = "sway/sway/tree/arrange.c:15-52; beta1-plan sections/gap.md F8"
+
+[[classification]]
+seeds = [28, 41, 121, 225, 245, 254, 358]
+triage = "swayward bug"
+finding = "parity-f9-arranged-tiled-rect"
+reason = "F9 (first divergence): Tiled rect only (y, height or width), under a tabbed, stacked or fullscreen arrangement; 28 also differs in focus order in the same request."
+source = "sway/sway/tree/arrange.c:185-247 (tabbed/stacked, arrange_children); beta1-plan sections/gap.md F9"
+
+[[classification]]
+seeds = [159, 169, 350]
+triage = "swayward bug"
+finding = "parity-f11-f12-tree-structure"
+reason = "F11/F12 (first divergence): Tree structure residuals: child order after move down in a stack (159), which node is the tabbed split inside a floating container (169), and the border of a view mapped after kill (350)."
+source = "sway/sway/tree/container.c, sway/sway/commands/move.c; beta1-plan sections/gap.md F11"

@@ -1,0 +1,26 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-wsfp-1 --title=fixture-wsfp-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "workspace prev_on_output",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

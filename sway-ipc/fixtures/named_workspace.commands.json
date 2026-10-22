@@ -1,0 +1,18 @@
+[
+  {
+    "command": "workspace mail",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-mail --title=fixture-mail sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

@@ -1,0 +1,651 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$(readlink -f "$0")")/.."
+
+usage='usage: validate [reproduce {i3|sway|swayward|swayfx|scroll|swirl|miracle-wm|all} [--snapshot {i3-suite|sway-ipc}] [--shard K/N] [--out PATH]]'
+if [[ ${1:-} == --help ]]; then
+    echo "$usage"
+    echo 'Validate the repository, or reproduce one independent snapshot in the oracle container.'
+    exit 0
+fi
+
+if [[ ${1:-} == reproduce ]]; then
+    mode=${2:-all}
+    shift $(( $# >= 2 ? 2 : $# ))
+    snapshot=all shard= out=
+    while (($#)); do
+        case $1 in
+            --snapshot) snapshot=${2:-}; shift 2 ;;
+            --shard) shard=${2:-}; shift 2 ;;
+            --out) out=${2:-}; shift 2 ;;
+            *) echo "$usage" >&2; exit 2 ;;
+        esac
+    done
+    case $mode in
+        i3|sway|swayward|swayfx|scroll|swirl|miracle-wm|all) ;;
+        *) echo "$usage" >&2; exit 2 ;;
+    esac
+    case $snapshot in
+        i3-suite|sway-ipc|all) ;;
+        *) echo "$usage" >&2; exit 2 ;;
+    esac
+    [[ -z $shard || $snapshot != all ]] || snapshot=i3-suite
+    [[ -z $shard || $snapshot == i3-suite ]] || { echo '--shard requires --snapshot i3-suite' >&2; exit 2; }
+    [[ -z $shard || -n $out ]] || { echo '--shard requires --out' >&2; exit 2; }
+    [[ $mode != all || ( -z $shard && -z $out && $snapshot == all ) ]] || {
+        echo 'all does not accept snapshot output options' >&2; exit 2
+    }
+    [[ ${ORACLE_CONTAINER:-} == 1 ]] || {
+        echo 'reproduce must run in the oracle container; see docs/reproducing.md' >&2
+        exit 2
+    }
+    # Fast canaries stop a broken harness before it spends an hour producing
+    # measurements. The post-run checks below also protect direct full runs.
+    canaries=(003-ipc.t 115-ipc-workspaces.t 126-regress-close.t 134-invalid-command.t 139-ws-numbers.t)
+    sanity_check() {
+        compositor=$1
+        python3 - "$compositor" <<'PY'
+import sys, tomllib
+from pathlib import Path
+
+compositor = sys.argv[1]
+name = tomllib.load(open("pins.toml", "rb"))["snapshot"][compositor]
+result = tomllib.load(open(f"i3/results/{name}.toml", "rb"))
+files = result["files"]
+canaries = {
+    "003-ipc.t": 1,
+    "115-ipc-workspaces.t": 9,
+    "126-regress-close.t": 1,
+    "134-invalid-command.t": 1,
+    "139-ws-numbers.t": 8,
+}
+for name, assertions in canaries.items():
+    entry = files[name]
+    expected = (assertions, 0, 0)
+    actual = (entry.get("pass", 0), entry.get("skip", 0),
+              entry.get("fail", 0) + entry.get("unreached", 0))
+    if actual != expected:
+        raise SystemExit(
+            f"{compositor} harness sanity failed: {name} is {actual}, expected {expected}"
+        )
+zero_pass = sum(
+    entry.get("pass", 0) == 0 and not entry.get("flaky")
+    for entry in files.values()
+)
+if zero_pass > 60:
+    raise SystemExit(
+        f"{compositor} harness sanity failed: {zero_pass} files have zero passes (limit 60)"
+    )
+diagnostics = Path(f"target/i3-suite/{compositor}")
+needles = ("No such atom (I3_SOCKET_PATH)", "no free X11 display")
+for path in diagnostics.rglob("*"):
+    if path.is_file() and "159-socketpaths.t" not in path.parts and path.name != "159-socketpaths.t.tap":
+        text = path.read_text(errors="replace")
+        for needle in needles:
+            if needle in text:
+                raise SystemExit(f"{compositor} harness sanity failed: {needle} in {path}")
+print(f"{compositor} harness sanity passed ({zero_pass} zero-pass files)")
+PY
+    }
+    binary_for() {
+        case $1 in
+            i3) echo "$I3_BINARY" ;;
+            sway) echo "$SWAY_BINARY" ;;
+            swayward) echo "$SWAYWARD_BINARY" ;;
+            swayfx) echo "$SWAYFX_BINARY" ;;
+            scroll) echo "$SCROLL_BINARY" ;;
+            miracle-wm) echo "$MIRACLE_WM_BINARY" ;;
+            swirl) echo "$SWIRL_BINARY" ;;
+        esac
+    }
+    run_i3_suite() {
+        compositor=$1 binary=$(binary_for "$1")
+        parallel=1
+        [[ $compositor == i3 ]] && parallel=4
+        preflight=(--compositor "$compositor" --binary "$binary" --i3src "$I3SRC"
+                   --i3build "$I3BUILD" --parallel "$parallel" --require-complete)
+        [[ -z $out ]] || preflight+=(--work-dir "${out}.canary-work")
+        ./contrib/i3-suite-run "${preflight[@]}" "${canaries[@]}"
+        # i3's complete-run.pl names output directories at one-second resolution.
+        sleep 1
+        args=(--compositor "$compositor" --binary "$binary" --i3src "$I3SRC"
+              --i3build "$I3BUILD" --parallel "$parallel")
+        [[ -z $shard ]] || args+=(--shard "$shard" --work-dir "${out}.work")
+        [[ -z $out ]] || args+=(--out "$out")
+        ./contrib/i3-suite-run "${args[@]}"
+        [[ -n $shard || -n $out ]] || sanity_check "$compositor"
+    }
+    snapshot_name() {
+        python3 -c 'import sys, tomllib; print(tomllib.load(open("pins.toml", "rb"))["snapshot"][sys.argv[1]])' "$1"
+    }
+    run_sway_ipc() {
+        compositor=$1 binary=$(binary_for "$1")
+        result=${out:-sway-ipc/results/$(snapshot_name "$compositor").toml}
+        ./contrib/sway-ipc-run --compositor "$compositor" --binary "$binary" \
+            --out "$result" || [[ $? == 1 ]]
+    }
+    run_one() {
+        # SwayFX, scroll, swirl and miracle-wm have no i3-suite adapter; they have sway-IPC snapshots only.
+        [[ $snapshot == sway-ipc || $1 == swayfx || $1 == scroll || $1 == swirl || $1 == miracle-wm ]] || run_i3_suite "$1"
+        [[ $snapshot == i3-suite ]] || run_sway_ipc "$1"
+    }
+    if [[ $mode == all ]]; then
+        run_one i3
+        run_one sway
+        run_one swayward
+        run_one swayfx
+        run_one scroll
+        run_one miracle-wm
+        run_one swirl
+    else
+        run_one "$mode"
+    fi
+    exit
+fi
+
+(($# == 0)) || { echo 'usage: validate [reproduce {i3|sway|swayward|swayfx|scroll|swirl|miracle-wm|all}]' >&2; exit 2; }
+
+python3 - <<'PY'
+import re
+import subprocess
+from pathlib import Path
+
+needles = ("/var/" + "home/", "/" + "home/", "swayward-" + "scratch", "hack" + "ing/")
+for name in subprocess.check_output(["git", "ls-files", "contrib", "docs", "tests"], text=True).splitlines():
+    for number, line in enumerate(Path(name).read_text(errors="replace").splitlines(), 1):
+        prose = re.sub(r"https?://\S+", "", line)
+        if any(needle in prose for needle in needles):
+            raise SystemExit(f"{name}:{number}: machine-specific home or scratch path")
+PY
+
+python3 - <<'PY'
+import re
+from pathlib import Path
+
+root = Path("contrib")
+readme = (root / "README.md").read_text()
+listed = set(re.findall(r"^\| `([^`/]+)` \|", readme, re.M))
+actual = {
+    path.name
+    for path in root.iterdir()
+    if path.is_file() and path.name != "README.md"
+}
+missing = sorted(listed - actual)
+unlisted = sorted(actual - listed)
+if missing or unlisted:
+    for name in missing:
+        print(f"contrib inventory lists missing file: {name}")
+    for name in unlisted:
+        print(f"contrib file is not inventoried: {name}")
+    raise SystemExit(1)
+PY
+
+shopt -s nullglob
+i3_results=(i3/results/*.toml)
+sway_ipc_results=(sway-ipc/results/*.toml)
+((${#i3_results[@]} + ${#sway_ipc_results[@]})) || { echo "no result files" >&2; exit 1; }
+status=0
+for result in "${i3_results[@]}"; do
+    ./contrib/coverage-report "$result" --check || status=1
+done
+for result in "${sway_ipc_results[@]}"; do
+    python3 -c 'import sys, tomllib; tomllib.load(open(sys.argv[1], "rb"))' "$result" || status=1
+done
+((status == 0)) || exit "$status"
+python3 - <<'PY'
+import re, subprocess, tomllib
+from pathlib import Path
+
+pins = tomllib.load(open("pins.toml", "rb"))
+names = pins["snapshot"]
+# Every result is one compositor at one version, named from pins.toml.
+for oracle in ("i3", "sway-ipc"):
+    for path in sorted(Path(oracle, "results").glob("*.toml")):
+        stem = path.stem
+        for suffix in ("-i3-derived", "-events", "-command-fuzz", "-wire-fuzz", "-random-v2", "-random"):
+            stem = stem.removesuffix(suffix)
+        compositor = next((c for c, n in names.items() if n == stem), None)
+        if compositor is None:
+            raise SystemExit(f"{path}: name is not a snapshot in pins.toml [snapshot]")
+        run = tomllib.load(path.open("rb")).get("run", {})
+        commit = str(run.get("commit", ""))
+        if run.get("compositor") != compositor or not pins[compositor].startswith(commit[:8] or "?"):
+            raise SystemExit(f"{path}: [run] does not match snapshot {stem} (compositor/commit)")
+
+# A swayward i3_* classification says the assertion is inapplicable because it
+# tests i3 rather than sway semantics. It cannot hide an assertion that pinned
+# sway actually passes.
+sway_i3 = tomllib.load(open(f"i3/results/{names['sway']}.toml", "rb"))["files"]
+for path in sorted(Path("i3/classifications").glob("swayward-*.toml")):
+    rows = tomllib.load(path.open("rb")).get("classification", [])
+    for row in rows:
+        if not row.get("reason", "").startswith("i3_"):
+            continue
+        reference = sway_i3.get(row["file"])
+        if reference is None:
+            raise SystemExit(f"{path}: {row['file']} is absent from the pinned sway result")
+        if row["assertion"] in reference.get("pass_assertions", []):
+            raise SystemExit(
+                f"{path}: {row['file']}:{row['assertion']} is classified "
+                f"{row['reason']} but pinned sway passes it"
+            )
+
+# Every result records a hash of the tracked inputs that can affect it
+# (contrib/provenance.py). A result is stale when that hash no longer matches.
+import sys
+sys.path.insert(0, "contrib")
+import provenance
+
+# A harness change may land before its results are regenerated: list each
+# stale result in pending.toml with the reason. Validate fails only for a stale
+# result that is not listed, or a listed result that is no longer stale.
+pending = {
+    Path(row["path"]): row["reason"]
+    for row in tomllib.load(open("pending.toml", "rb")).get("pending", [])
+}
+sway_ipc_results = set(Path("sway-ipc/results").glob("*.toml"))
+i3_results = set(Path("i3/results").glob("*.toml"))
+unknown = set(pending) - sway_ipc_results - i3_results
+if unknown:
+    raise SystemExit(f"pending.toml names missing results: {sorted(map(str, unknown))}")
+for path in sorted(sway_ipc_results | i3_results):
+    run = tomllib.load(path.open("rb")).get("run", {})
+    recorded = run.get("inputs")
+    if not recorded:
+        raise SystemExit(f"{path}: [run] has no inputs hash")
+    stale = recorded != provenance.inputs_hash(path.resolve(), run.get("compositor", ""))
+    if stale and path not in pending:
+        raise SystemExit(
+            f"{path}: inputs changed since this result was generated; regenerate it, list it in "
+            "pending.toml, or restamp it with contrib/provenance.py --restamp if the change "
+            "cannot affect it"
+        )
+    if not stale and path in pending:
+        raise SystemExit(f"{path}: listed in pending.toml but up to date; remove the entry")
+    if stale:
+        print(f"pending regeneration: {path} ({pending[path]})")
+
+# Every hand-picked state snapshot must cover sway's scenario and request
+# families, using not-applicable rows where a request does not apply.
+reference_path = Path(f"sway-ipc/results/{names['sway']}.toml")
+reference = tomllib.load(reference_path.open("rb"))
+reference_rows = reference.get("result", [])
+reference_scenarios = {row["scenario"] for row in reference_rows}
+reference_requests = {row["request"] for row in reference_rows}
+# The runner skips a scenario whose `requires` the adapter lacks; only the
+# captures of a scenario marked not_applicable get rows then. Those captures
+# and probes may be absent.
+import importlib.machinery
+adapters = importlib.machinery.SourceFileLoader("sway_ipc_run", "contrib/sway-ipc-run").load_module().ADAPTERS
+scenario_doc = tomllib.load(open("sway-ipc/scenarios.toml", "rb"))["scenario"]
+for compositor, name in names.items():
+    path = Path(f"sway-ipc/results/{name}.toml")
+    rows = tomllib.load(path.open("rb")).get("result", [])
+    scenarios = {row["scenario"] for row in rows}
+    requests = {row["request"] for row in rows}
+    unrunnable = {
+        action.split(":")[1]
+        for scenario in scenario_doc
+        if not set(scenario.get("requires", [])) <= adapters[compositor].capabilities
+        for action in scenario["actions"]
+        if action.startswith("probe:") or (action.startswith("capture:") and not scenario.get("not_applicable"))
+    }
+    if not (reference_scenarios - scenarios) <= unrunnable or scenarios - reference_scenarios \
+            or requests != reference_requests:
+        raise SystemExit(
+            f"{path}: hand-picked coverage differs from {reference_path}: "
+            f"scenarios missing {sorted(reference_scenarios - scenarios)}, "
+            f"extra {sorted(scenarios - reference_scenarios)}; "
+            f"requests missing {sorted(reference_requests - requests)}, "
+            f"extra {sorted(requests - reference_requests)}"
+        )
+for path in Path("i3/results").iterdir():
+    if path.suffix != ".toml":
+        raise SystemExit(f"{path}: only snapshot TOML files belong in results/")
+
+unstable_doc = tomllib.load(open("i3/unstable.toml", "rb"))
+flaky_runs = tomllib.load(open("i3/flaky-runs.toml", "rb")).get("run", [])
+for compositor, name in names.items():
+    unstable = {
+        (item["file"], number)
+        for item in unstable_doc.get("unstable", [])
+        if item["compositor"] == compositor
+        for number in item["assertions"]
+    }
+    derived = set()
+    for run in flaky_runs:
+        if run["compositor"] != compositor:
+            continue
+        first = {number: outcome for outcome in ("pass", "skip", "fail", "unreached")
+                 for number in run[f"first_{outcome}"]}
+        second = {number: outcome for outcome in ("pass", "skip", "fail", "unreached")
+                  for number in run[f"second_{outcome}"]}
+        derived.update((run["file"], number) for number in first.keys() | second.keys()
+                       if first.get(number) != second.get(number))
+    if unstable != derived:
+        raise SystemExit(f"i3/unstable.toml does not match i3/flaky-runs.toml for {compositor}")
+
+# Fuzz corpora: results replay the sway-captured fixture.
+import json
+verdicts = ("match", "mismatch", "not_applicable", "crash", "hang")
+families = json.loads(Path("sway-ipc/fuzz/command-families.json").read_text())
+family_rows = families.get("families", [])
+family_names = [row.get("name") for row in family_rows]
+if len(family_names) != 69 or len(family_names) != len(set(family_names)):
+    raise SystemExit("sway-ipc/fuzz/command-families.json: expected 69 unique families")
+if families.get("source", {}).get("sway_commit") != pins["sway"]:
+    raise SystemExit("sway-ipc/fuzz/command-families.json: sway commit does not match pins.toml")
+if any(not isinstance(row.get("probe"), str) or not row["probe"] for row in family_rows):
+    raise SystemExit("sway-ipc/fuzz/command-families.json: every family needs a probe")
+
+for corpus in ("command-fuzz", "wire-fuzz"):
+    fixture = json.loads(Path(f"sway-ipc/fuzz/{corpus}.json").read_text())
+    known = {row["case"] for row in fixture["cases"]}
+    for compositor, name in names.items():
+        path = Path(f"sway-ipc/results/{name}-{corpus}.toml")
+        if not path.exists():
+            continue
+        doc = tomllib.load(path.open("rb"))
+        run, rows = doc["run"], doc.get("result", [])
+        if run.get("corpus") != corpus:
+            raise SystemExit(f"{path}: [run] corpus is not {corpus}")
+        unknown = {row["case"] for row in rows} - known
+        if unknown:
+            raise SystemExit(f"{path}: cases not in sway-ipc/fuzz/{corpus}.json: {sorted(unknown)}")
+        key = "differs" if compositor == "i3" else "mismatch"
+        figures = [run.get(v if v != "mismatch" else key, 0) for v in verdicts]
+        if sum(figures) != len(rows) or run.get("cases") != len(rows):
+            raise SystemExit(f"{path}: verdict counts do not sum to its rows")
+
+# Triage classifications for every swayward sway-IPC corpus
+# (contrib/sway_ipc_triage.py); tested by contrib/tests/sway-ipc-triage.
+import sway_ipc_triage
+for line in sway_ipc_triage.check(Path("."), names):
+    print(line)
+
+# State and events rows: every verdict, unstable included, is counted in [run].
+for compositor, name in names.items():
+    for path in (Path(f"sway-ipc/results/{name}.toml"), Path(f"sway-ipc/results/{name}-events.toml")):
+        if not path.exists():
+            continue
+        doc = tomllib.load(path.open("rb"))
+        key = "differs" if compositor == "i3" else "mismatch"
+        figures = [doc["run"].get(v, 0) for v in ("match", key, "unstable", "not_applicable", "crash")]
+        if sum(figures) != len(doc.get("result", [])):
+            raise SystemExit(f"{path}: verdict counts do not sum to its rows")
+
+for compositor, name in names.items():
+    path = Path(f"sway-ipc/results/{name}-random.toml")
+    if not path.exists():
+        continue
+    run = tomllib.load(path.open("rb"))["run"]
+    figures = [run.get(key, 0) for key in ("match", "mismatch", "unstable", "not_applicable", "crash")]
+    if sum(figures) != run["seeds"]:
+        raise SystemExit(f"{path}: verdict counts do not sum to its seeds")
+    # Each count must match the rows, with grouped reproducers expanded.
+    rows = tomllib.load(path.open("rb")).get("result", [])
+    for key in ("match", "mismatch", "unstable", "not applicable", "crash"):
+        listed = sum(len(row.get("seeds", [row["seed"]])) for row in rows if row["verdict"] == key)
+        if listed != run.get(key.replace(" ", "_"), 0):
+            raise SystemExit(f"{path}: [run] {key} = {run.get(key.replace(' ', '_'), 0)}, rows list {listed}")
+PY
+python3 - <<'PY'
+# Abort-cause evidence: focused reruns that verify why unreached rows stopped.
+import hashlib, re, tomllib
+from pathlib import Path
+
+pins = tomllib.load(open("pins.toml", "rb"))
+for path in sorted(Path("i3/abort-causes").glob("*.toml")):
+    doc = tomllib.load(path.open("rb"))
+    run = doc.get("run", {})
+    compositor = run.get("compositor")
+    if compositor not in pins["snapshot"] or path.stem != pins["snapshot"][compositor] \
+            or run.get("snapshot") != path.stem:
+        raise SystemExit(f"{path}: name and [run] snapshot must be the pinned {compositor} snapshot")
+    if run.get("commit") != pins[compositor]:
+        raise SystemExit(f"{path}: [run] commit is not the pinned {compositor} commit")
+    for key in ("oracle", "image", "date", "command"):
+        if not run.get(key):
+            raise SystemExit(f"{path}: [run] has no {key}")
+    result = tomllib.load(open(f"i3/results/{path.stem}.toml", "rb"))["files"]
+    unverified = {
+        (row["file"], row["assertion"])
+        for row in tomllib.load(open(f"i3/classifications/{path.stem}.toml", "rb"))["classification"]
+        if not row["reason_verified"]
+    }
+    allowed = {"file", "rows", "first_unreached", "rerun_first_unreached", "last_tap_assertion",
+               "runner_exit", "last_sway_command", "blocked_in", "cause", "excerpt", "excerpt_sha256"}
+    seen = set()
+    for row in doc.get("file", []):
+        name = row.get("file")
+        where = f"{path}: {name}"
+        if name in seen or name not in result:
+            raise SystemExit(f"{where}: duplicate entry or not a result file")
+        seen.add(name)
+        if set(row) - allowed:
+            raise SystemExit(f"{where}: unknown keys {sorted(set(row) - allowed)}")
+        unreached = result[name].get("unreached_assertions", [])
+        if not unreached or row.get("first_unreached") != unreached[0]:
+            raise SystemExit(f"{where}: first_unreached does not match the committed result")
+        rows = sum((name, a) in unverified for a in unreached)
+        if row.get("rows") != rows or rows == 0:
+            raise SystemExit(f"{where}: rows must count the {rows} unverified unreached rows")
+        cause = row.get("cause")
+        if cause not in ("kill", "xtest", "other"):
+            raise SystemExit(f"{where}: cause must be kill, xtest or other")
+        if cause != "other":
+            if row.get("rerun_first_unreached") != row["first_unreached"] \
+                    or row.get("last_tap_assertion") != row["first_unreached"] - 1:
+                raise SystemExit(f"{where}: a verified cause needs the rerun to stop at first_unreached")
+            if cause == "kill" and (row.get("runner_exit") != 255 or row.get("last_sway_command") != "kill"):
+                raise SystemExit(f"{where}: kill needs runner_exit 255 and last_sway_command kill")
+            if cause == "xtest" and (row.get("runner_exit") != 124 or not re.fullmatch(
+                    rf"xtest_sync_with_i3 at i3/t/{re.escape(name)}:\d+", row.get("blocked_in", ""))):
+                raise SystemExit(f"{where}: xtest needs runner_exit 124 and blocked_in xtest_sync_with_i3")
+        excerpt = Path(row.get("excerpt", ""))
+        if excerpt.parent != path.with_suffix("") or not excerpt.is_file() \
+                or hashlib.sha256(excerpt.read_bytes()).hexdigest() != row.get("excerpt_sha256"):
+            raise SystemExit(f"{where}: excerpt is missing or does not match excerpt_sha256")
+        # The excerpt must show the cause's signature from the file header.
+        text = excerpt.read_text()
+        if cause == "kill":
+            after = text.partition("Handling command 'kill'")[2]
+            if "Could not get reply for: xcb_intern_atom_reply" not in text \
+                    or not re.search(r"\[ERROR\] \[wlr\] \[xwayland/xwm\.c:\d+\] xcb error", after):
+                raise SystemExit(f"{where}: kill excerpt needs the X11::XCB reply error, "
+                                 "the kill command and wlroots xcb errors after it")
+        if cause == "xtest":
+            line = row["blocked_in"].rsplit(":", 1)[1]
+            if not re.search(rf"enter xtest_sync_with_i3 from line {line}\n*\Z", text):
+                raise SystemExit(f"{where}: xtest excerpt must end in the traced xtest_sync_with_i3 call")
+    extra = {p.name for p in path.with_suffix("").iterdir()} - {f"{n}.txt" for n in seen}
+    if extra:
+        raise SystemExit(f"{path}: excerpts without an entry: {sorted(extra)}")
+    if path.stem != pins["snapshot"]["sway"]:
+        continue
+    # Every row the kill/XTEST correlation applies to must have evidence: a
+    # non-flaky sway file with unverified unreached rows whose first unreached
+    # assertion matches swayward's, where swayward's row there has a verified
+    # kill or XTEST family.
+    families = {"xwm_kill_client_fallback", "headless_xtest_boundary"}
+    sw = pins["snapshot"]["swayward"]
+    sw_result = tomllib.load(open(f"i3/results/{sw}.toml", "rb"))["files"]
+    sw_class = {(r["file"], r["assertion"]): r
+                for r in tomllib.load(open(f"i3/classifications/{sw}.toml", "rb"))["classification"]}
+    expected = {}
+    for name, entry in result.items():
+        unreached = entry.get("unreached_assertions", [])
+        theirs = sw_result[name].get("unreached_assertions", [])
+        row = sw_class.get((name, theirs[0]), {}) if theirs else {}
+        if entry.get("flaky") or not unreached or unreached[:1] != theirs[:1] \
+                or row.get("reason") not in families or not row.get("reason_verified"):
+            continue
+        rows = sum((name, a) in unverified for a in unreached)
+        if rows:
+            expected[name] = rows
+    if seen != set(expected):
+        raise SystemExit(f"{path}: evidence must cover exactly the kill/XTEST-correlated files; "
+                         f"missing {sorted(set(expected) - seen)}, extra {sorted(seen - set(expected))}")
+PY
+PYTHONPYCACHEPREFIX="${TMPDIR:-/tmp}/sway-ipc-oracle-pycache" python3 -m py_compile contrib/sway-ipc-run
+if grep -En 'endswith\("\.(percent|rect)"\)|get\("floating"\) *==' contrib/sway-ipc-run; then
+    echo "comparator field exemptions must be declared in sway-ipc/normalize.toml" >&2
+    exit 1
+fi
+python3 -c 'import tomllib; tomllib.load(open("sway-ipc/scenarios.toml", "rb")); tomllib.load(open("sway-ipc/normalize.toml", "rb")); tomllib.load(open("sway-ipc/applicability.toml", "rb"))'
+python3 - <<'PY'
+import tomllib
+from pathlib import Path
+
+fixtures = Path("sway-ipc/fixtures")
+for scenario in tomllib.load(open("sway-ipc/scenarios.toml", "rb"))["scenario"]:
+    corpora = scenario.get("corpora", ["state", "events"])
+    captures = [action.split(":", 1)[1] for action in scenario["actions"]
+                if action.startswith("capture:")]
+    requests = []
+    if "state" in corpora:
+        requests += ["tree", "workspaces", "outputs", "marks", "binding_modes",
+                     "binding_state", "seats", "inputs", "version", "commands"]
+    if "events" in corpora:
+        requests.append("events")
+    for capture in captures:
+        for request in requests:
+            if not (fixtures / f"{capture}.{request}.json").exists():
+                raise SystemExit(
+                    f"scenario {scenario['name']} corpus {request}: missing fixture "
+                    f"sway-ipc/fixtures/{capture}.{request}.json"
+                )
+PY
+python3 - <<'PY'
+import re, tomllib
+from pathlib import Path
+
+source = Path("sway-ipc/fixtures/schema-version.json")
+expected_commit = __import__("json").loads(source.read_text())["commit"]
+census = tomllib.load(open("sway-ipc/command-coverage.toml", "rb"))
+if census["commit"] != expected_commit or census["source"] != "sway/sway/commands.c":
+    raise SystemExit("command census source does not match the pinned sway fixture source")
+entries = census["command"]
+keys = [(row["table"], row["name"]) for row in entries]
+if len(keys) != len(set(keys)):
+    raise SystemExit("duplicate command census entry")
+import json
+generated = {family["name"] for family in json.load(open("sway-ipc/random-v2/vocabulary.json"))["families"]}
+for row in entries:
+    exercised = bool(row.get("scenarios") or row.get("generators"))
+    if exercised == bool(row.get("reason")):
+        raise SystemExit(f"command census {row['name']}: set scenarios or generators, or a reason")
+    if row.get("generators", ["random-v2"]) != ["random-v2"]:
+        raise SystemExit(f"command census {row['name']}: unknown generators {row['generators']}")
+    if ("random-v2" in row.get("generators", [])) != (row["name"] in generated):
+        raise SystemExit(f"command census {row['name']}: generators disagrees with sway-ipc/random-v2/vocabulary.json")
+scenarios = {row["name"] for row in tomllib.load(open("sway-ipc/scenarios.toml", "rb"))["scenario"]}
+for row in entries:
+    unknown = set(row.get("scenarios", [])) - scenarios
+    if unknown:
+        raise SystemExit(f"command census {row['name']}: unknown scenarios {sorted(unknown)}")
+PY
+python3 - <<'PY'
+import hashlib
+import json
+import tomllib
+from pathlib import Path
+root = Path("sway-ipc/i3-derived")
+manifest = json.loads((root / "scenarios.json").read_text())
+names = [row["name"] for row in manifest["scenarios"]]
+assert len(names) == len(set(names))
+assert set(names) == {path.stem for path in root.glob("*.json") if path.name != "scenarios.json"}
+requests = {
+    "tree", "workspaces", "outputs", "marks", "binding_modes",
+    "binding_state", "seats", "inputs", "version", "commands",
+}
+for row in manifest["scenarios"]:
+    assert row["provenance"]["test"].endswith(".t") and row["provenance"]["line"] > 0
+    capture = json.loads((root / f"{row['name']}.json").read_text())
+    assert set(capture) == requests
+
+for random_root in (Path("sway-ipc/random"), Path("sway-ipc/random-v2")):
+    random_manifest = json.loads((random_root / "sequences.json").read_text())
+    assert random_manifest["sway_commit"] == tomllib.load(open("pins.toml", "rb"))["sway"]
+    assert len(random_manifest["sequences"]) == random_manifest["seeds"]
+    used = set()
+    for sequence in random_manifest["sequences"]:
+        assert len(sequence["commands"]) == random_manifest["steps"]
+        assert len(sequence["observations"]) == random_manifest["steps"]
+        used.update(sequence["observations"])
+    objects = {path.stem for path in (random_root / "objects").glob("*.json")}
+    assert used == objects
+    for digest in objects:
+        value = json.loads((random_root / "objects" / f"{digest}.json").read_text())
+        encoded = json.dumps(value, sort_keys=True, separators=(",", ":"))
+        assert hashlib.sha256(encoded.encode()).hexdigest()[:16] == digest
+
+# random-v2 sequences are exactly what the committed generator produces, so a
+# vocabulary edit without a recapture fails here.
+import importlib.machinery
+runner = importlib.machinery.SourceFileLoader("sway_ipc_run", "contrib/sway-ipc-run").load_module()
+v2 = json.loads(Path("sway-ipc/random-v2/sequences.json").read_text())
+assert v2["generator"] == "v2"
+for sequence in v2["sequences"]:
+    if sequence["commands"] != runner.generate_commands_v2(sequence["seed"], v2["steps"]):
+        raise SystemExit(f"sway-ipc/random-v2 seed {sequence['seed']}: commands differ from the v2 generator")
+seeds = {sequence["seed"] for sequence in v2["sequences"]}
+for row in v2["unstable"]:
+    if row.get("seed") not in seeds or not row.get("reason"):
+        raise SystemExit(f"sway-ipc/random-v2 unstable entry needs a captured seed and a reason: {row}")
+vocabulary = json.loads(Path("sway-ipc/random-v2/vocabulary.json").read_text())
+assert vocabulary["sway_commit"] == tomllib.load(open("pins.toml", "rb"))["sway"]
+names = [family["name"] for family in vocabulary["families"]]
+assert len(names) == len(set(names)) and vocabulary["window_family"] in names
+for family in vocabulary["families"]:
+    assert family["commands"] and family["source"].startswith("sway/commands.c:"), family["name"]
+PY
+PYTHONPYCACHEPREFIX="${TMPDIR:-/tmp}/sway-ipc-oracle-pycache" ./contrib/tests/sway-ipc-applicability
+./contrib/tests/sway-ipc-i3-derived
+./contrib/tests/provenance
+./contrib/tests/sway-ipc-fuzz
+./contrib/tests/sway-ipc-triage
+./contrib/i3-suite-run --self-test
+./contrib/tests/sway-ipc-reap-clients
+./contrib/tests/sway-ipc-short-path
+./contrib/tests/sway-ipc-regression-scenario
+./contrib/tests/sway-ipc-crash
+./contrib/tests/sway-ipc-scenario-retry
+./contrib/tests/readme-snapshots
+./contrib/tests/readme-snapshots --self-test
+./contrib/tests/regenerate-rc-plan
+./contrib/tests/regenerate-rc-agreement
+./contrib/tests/regenerate-rc-capture
+
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+# The container clones swayward main and checks out the pin, so the pin must be
+# reachable from main, not only present in some local clone.
+swayward_url=https://github.com/swayward-wm/swayward.git
+swayward_pin=$(python3 -c 'import tomllib; print(tomllib.load(open("pins.toml", "rb"))["swayward"])')
+if git ls-remote --exit-code --heads "$swayward_url" main >/dev/null 2>&1; then
+    git clone --quiet --filter=blob:none --no-checkout --single-branch --branch main \
+        "$swayward_url" "$work/swayward"
+    git -C "$work/swayward" merge-base --is-ancestor "$swayward_pin" origin/main 2>/dev/null || {
+        echo "pins.toml swayward $swayward_pin is not reachable from $swayward_url main" >&2
+        exit 1
+    }
+else
+    echo "skipping swayward pin reachability check: cannot reach $swayward_url (offline?)" >&2
+fi
+git clone --quiet --filter=blob:none --no-checkout https://github.com/swaywm/sway.git "$work/sway"
+git -C "$work/sway" checkout --quiet "$(python3 -c 'import json; print(json.load(open("sway-ipc/fixtures/schema-version.json"))["commit"])')"
+./contrib/check-sway-fixture-schema "$work/sway"
+# Every random-v2 family cites the handler-table line that dispatches it.
+python3 - "$work/sway" <<'PY'
+import json, re, sys
+from pathlib import Path
+lines = (Path(sys.argv[1]) / "sway/commands.c").read_text().splitlines()
+for family in json.loads(Path("sway-ipc/random-v2/vocabulary.json").read_text())["families"]:
+    number = int(family["source"].rsplit(":", 1)[1])
+    line = lines[number - 1] if 0 < number <= len(lines) else ""
+    expected = (r"criteria_parse\(head" if family["table"] == "execute_command"
+                else r'\{ "' + re.escape(family["name"]) + r'", ')
+    if not re.search(expected, line):
+        raise SystemExit(f"random-v2 family {family['name']}: {family['source']} is {line.strip()!r}")
+PY

@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+"""Verify that sway IPC runs reap marked clients outside their process group."""
+
+import importlib.machinery
+import os
+from pathlib import Path
+import signal
+import subprocess
+import sys
+import tempfile
+import time
+import uuid
+
+ROOT = Path(__file__).resolve().parents[2]
+runner = importlib.machinery.SourceFileLoader(
+    "sway_ipc_run", str(ROOT / "contrib/sway-ipc-run")
+).load_module()
+marker = f"self-test-{uuid.uuid4()}"
+env = os.environ | {runner.RUN_MARKER: marker}
+with tempfile.TemporaryDirectory() as directory:
+    ready = Path(directory) / "ready"
+    client = subprocess.Popen([
+        sys.executable, "-c",
+        "import pathlib,signal,time; signal.signal(signal.SIGTERM, signal.SIG_IGN); "
+        "pathlib.Path(__import__('sys').argv[1]).touch(); time.sleep(300)", str(ready),
+    ], env=env, start_new_session=True)
+    try:
+        runner.wait_for(ready.exists, "stubborn client to start")
+        assert client.pid in runner.marked_processes(marker)
+        runner.reap_marked_processes(marker, grace=0.01)
+        assert client.wait(timeout=1) == -signal.SIGKILL
+        assert not runner.marked_processes(marker)
+    finally:
+        if client.poll() is None:
+            client.kill()
+            client.wait()
+
+print("sway-ipc client reaping self-test passed")

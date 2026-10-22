@@ -1,0 +1,9 @@
+# Human-reviewed classifications joined to raw measurements by file and assertion.
+
+[[classification]]
+file = "313-include.t"
+assertion = 19
+outcome = "skip"
+reason = "The unchanged upstream test marked this assertion skipped in this environment."
+reason_verified = true
+citation = "i3/t/313-include.t:1"

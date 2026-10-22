@@ -1,0 +1,34 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-rzfs-1 --title=fixture-rzfs-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-rzfs-2 --title=fixture-rzfs-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "fullscreen enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "resize grow up 20 px",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

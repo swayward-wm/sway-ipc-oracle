@@ -1,0 +1,26 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-1 --title=fixture-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move workspace to output right",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "output HEADLESS-2 disable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

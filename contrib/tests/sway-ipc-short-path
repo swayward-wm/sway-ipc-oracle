@@ -1,0 +1,21 @@
+#!/usr/bin/env python3
+import argparse
+import importlib.machinery
+import pathlib
+import tempfile
+
+root = pathlib.Path(__file__).resolve().parents[2]
+runner = importlib.machinery.SourceFileLoader(
+    "sway_ipc_run", str(root / "contrib/sway-ipc-run")
+).load_module()
+args = argparse.Namespace(timeout=1)
+
+with tempfile.TemporaryDirectory(prefix="x" * 110) as directory:
+    try:
+        runner.Adapter(args, pathlib.Path(directory))
+    except RuntimeError as error:
+        assert "too long for a Wayland socket" in str(error)
+    else:
+        raise AssertionError("long Wayland socket path was accepted")
+
+print("sway-ipc short-path self-test passed")

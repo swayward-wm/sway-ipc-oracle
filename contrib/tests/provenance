@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+"""Self-test: the inputs hash covers a result's inputs and nothing else."""
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "contrib"))
+import provenance  # noqa: E402
+
+i3 = ROOT / "i3/results/sway-1.12.toml"
+random = ROOT / "sway-ipc/results/sway-1.12-random.toml"
+assert "i3/adapters/sway" in provenance.dependencies(i3, "sway")
+assert "i3/adapters/sway" not in provenance.dependencies(random, "sway")
+assert "sway-ipc/random" in provenance.dependencies(random, "sway")
+random_v2 = ROOT / "sway-ipc/results/sway-1.12-random-v2.toml"
+assert provenance.dependencies(random_v2, "sway") == ["sway-ipc/normalize.toml", "contrib/sway-ipc-run", "sway-ipc/random-v2"]
+assert "sway-ipc/random-v2" not in provenance.dependencies(random, "sway")
+
+# Stable, content-derived, and specific to the compositor's adapter.
+assert provenance.inputs_hash(i3, "sway") == provenance.inputs_hash(i3, "sway")
+assert provenance.inputs_hash(i3, "sway") != provenance.inputs_hash(i3, "swayward")
+
+# Editing an input changes the hash; restoring it restores the hash.
+probe = ROOT / "sway-ipc/random/sequences.json"
+before = provenance.inputs_hash(random, "sway")
+original = probe.read_bytes()
+try:
+    probe.write_bytes(original + b" ")
+    assert provenance.inputs_hash(random, "sway") != before
+finally:
+    probe.write_bytes(original)
+assert provenance.inputs_hash(random, "sway") == before
+assert not subprocess.check_output(["git", "-C", ROOT, "status", "--porcelain", "--", probe], text=True)
+print("provenance self-test passed")

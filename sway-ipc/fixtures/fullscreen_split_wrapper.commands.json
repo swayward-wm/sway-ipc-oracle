@@ -1,0 +1,26 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-fullscreen-split --title=fixture-fullscreen-split sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "fullscreen enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "splitv",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

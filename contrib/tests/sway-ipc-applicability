@@ -1,0 +1,328 @@
+#!/usr/bin/env python3
+"""Check that i3 runs compare only the shared i3 IPC schema."""
+
+import copy
+import importlib.machinery
+import sys
+from pathlib import Path
+
+root = Path(__file__).resolve().parents[2]
+runner = importlib.machinery.SourceFileLoader(
+    "sway_ipc_run", str(root / "contrib/sway-ipc-run")
+).load_module()
+rules = runner.load_applicability()
+scenarios = {item["name"]: item for item in runner.selected_scenarios(None)}
+assert scenarios["disabled_output_evacuation"]["requires"] == ["sway-command-language"]
+assert scenarios["disabled_output_evacuation"]["not_applicable"] is True
+assert scenarios["urgent_via_command"]["not_applicable"] is True
+assert scenarios["command_coverage"]["requires"] == ["sway-command-language"]
+assert scenarios["command_coverage"]["not_applicable"] is True
+# Wayland-only actions need their capability declared, or adapters without it
+# (i3) would reach the action and fail instead of reporting not applicable.
+needs = {"hint_window": "xdg-toplevel-size-hints",
+         "foreign_toplevel": "wlr-foreign-toplevel-management"}
+for name, item in scenarios.items():
+    for action in item.get("actions", []):
+        capability = needs.get(action.split(":", 1)[0])
+        assert capability is None or capability in item.get("requires", []), (name, action)
+assert runner.SwayAdapter.capabilities == {
+    "sway-command-language", "xdg-toplevel-size-hints", "wlr-foreign-toplevel-management",
+}
+assert runner.SwayFXAdapter.capabilities == runner.SwayAdapter.capabilities
+assert runner.SwayFXAdapter.version_details(
+    {"human_readable": "0.6-fd71a6bd (Oct 10 2026, branch 'HEAD')"}
+) == ("0.6-fd71a6bd (Oct 10 2026, branch 'HEAD')", "fd71a6bd")
+assert runner.SwayFXAdapter.version_details({"human_readable": "0.6"})[1] == "unknown"
+assert runner.ScrollAdapter.capabilities == runner.SwayAdapter.capabilities
+assert runner.ScrollAdapter.version_details(
+    {"human_readable": "1.13-dev-f80c5820 (Oct 10 2026, branch 'HEAD')"}
+)[1] == "f80c5820"
+assert runner.ScrollAdapter.adapted == ("scroll-animations-off",)
+assert runner.ScrollAdapter(runner.argparse.Namespace(), Path("/tmp/x")).rendered_config().endswith(
+    "animations enabled no\n")
+assert runner.SwirlAdapter.capabilities == runner.SwayAdapter.capabilities
+assert runner.SwirlAdapter.adapted == ("scroll-animations-off",)
+assert runner.SwirlAdapter.version_details({"human_readable": "1.13-dev"}) == ("1.13-dev", "unknown")
+swirl = runner.SwirlAdapter(runner.argparse.Namespace(binary=Path(sys.executable)), Path("/tmp/x"))
+assert swirl.check_started_build({"human_readable": "1.13-dev", "variant": "swirl"})
+for reply in ({"human_readable": "1.13-dev", "variant": "scroll"},
+              {"human_readable": "1.13-dev-f80c5820", "variant": "swirl"}):
+    try:
+        swirl.check_started_build(reply)
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError(f"swirl accepted {reply}")
+assert runner.SwayAdapter.adapted == ()
+miracle = runner.MiracleAdapter
+assert miracle.adapted == ("miracle-config-yaml", "miracle-outputs-virtual",
+                           "miracle-reset-client-close")
+assert set(miracle.unsupported_requests) == {"inputs", "seats"}
+assert runner.applicable_requests("miracle-wm", rules) == (
+    "tree", "workspaces", "outputs", "marks", "binding_modes", "binding_state", "version")
+assert runner.applicable_requests("sway", rules) == runner.QUERY_REQUESTS
+assert miracle.version_details({"human_readable": "0.9.1"}) == ("0.9.1", "unknown")
+assert "enable_animations: false" in miracle.config_text and "radius: 0" in miracle.config_text
+two = miracle(runner.argparse.Namespace(), Path("/tmp/x"),
+              {"output_layout": [[1270, 1408, 0, 0, False], [800, 600, 1270, 0, True]]})
+assert two.output_layout() == [(1270, 1408, 0, 0), (800, 600, 1270, 0)]
+assert "name: Virtual-2\n    enabled: true\n    position:\n      x: 1270" in two.display_config()
+assert two.translate_command("move workspace to output fake-1") == "move workspace to output Virtual-2"
+one = runner.differential_adapter("miracle-wm", runner.argparse.Namespace(), Path("/tmp/x"))
+assert one.output_layout() == [(1280, 720, 0, 0)]
+assert miracle(runner.argparse.Namespace(), Path("/tmp/x"), {"outputs": 2}).output_layout() == [
+    (1270, 1408, 0, 0), (1270, 1408, 1270, 0)]
+assert runner.adapted_line("miracle-wm") == [
+    'adapted = ["miracle-config-yaml", "miracle-outputs-virtual", "miracle-reset-client-close"]']
+assert runner.adapted_line("scroll") == ['adapted = ["scroll-animations-off"]']
+assert runner.adapted_line("sway") == []
+assert runner.SwaywardAdapter.capabilities == {
+    "sway-command-language", "xdg-toplevel-size-hints", "wlr-foreign-toplevel-management",
+}
+assert not runner.I3Adapter.capabilities
+assert "sway/sway/commands/output/disable.c" in scenarios["disabled_output_evacuation"]["reason"]
+assert runner.QUERY_REQUESTS == (
+    "tree", "workspaces", "outputs", "marks", "binding_modes",
+    "binding_state", "seats", "inputs", "version",
+)
+assert rules["i3"]["seats"]["applicable"] is False
+assert rules["i3"]["inputs"]["applicable"] is False
+assert runner.applicable_requests("i3", rules) == (
+    "tree", "workspaces", "outputs", "marks", "binding_modes",
+    "binding_state", "version",
+)
+assert runner.applicable_requests("sway", rules) == runner.QUERY_REQUESTS
+assert rules["i3"]["marks"]["fields"] == []
+assert runner.shape_view({"major": 1, "loaded_config_file_name": None}) == {
+    "major": "number", "loaded_config_file_name": "null",
+}
+
+sway_version = {
+    "major": 1,
+    "minor": 12,
+    "patch": 0,
+    "human_readable": "1.12-88869399 (Sep 25 2026, branch 'HEAD')",
+    "loaded_config_file_name": "/example/sway/config",
+    "variant": "sway",
+}
+swayward_version = {
+    "major": 26,
+    "minor": 4,
+    "patch": 0,
+    "human_readable": "swayward beta0-dev (v26.04-5f4ad1d8)",
+    "loaded_config_file_name": "/example/swayward/config.kdl",
+    "variant": "swayward",
+}
+assert runner.compare(sway_version, swayward_version, "version", runner.load_rules()) == []
+wrong_identity_type = {**sway_version, "major": "1"}
+assert runner.compare(sway_version, wrong_identity_type, "version", runner.load_rules()) == [
+    "$version.major: 'number' != 'string'"
+]
+missing_identity = sway_version.copy()
+del missing_identity["loaded_config_file_name"]
+assert runner.compare(sway_version, missing_identity, "version", runner.load_rules()) == [
+    "$version: keys differ"
+]
+
+expected = [{
+    "name": "WL-1",
+    "active": True,
+    "primary": False,
+    "current_workspace": "1",
+    "rect": {"x": 0, "y": 0, "width": 100, "height": 100},
+    "scale": 1.0,
+}]
+actual = [{
+    "name": "xroot-0",
+    "active": False,
+    "primary": False,
+    "current_workspace": None,
+    "rect": {"x": 0, "y": 0, "width": 100, "height": 100},
+}]
+left, right, excluded = runner.i3_protocol_view(expected, actual, "outputs", rules)
+assert "scale" not in left[0]
+assert left[0]["rect"] == {"x": 0, "y": 0, "width": 100, "height": 100}
+assert excluded == ["scale"]
+assert set(runner.compare(left, right, "outputs", runner.load_rules())) == {
+    "$outputs[0].name: 'WL-1' != 'xroot-0'",
+    "$outputs[0].current_workspace: type str != NoneType",
+    "$outputs[0].active: True != False",
+}
+
+expected_outputs = [
+    {"type": "output", "name": "HEADLESS-2", "scale": 1.0},
+    {"type": "output", "name": "HEADLESS-1", "scale": 1.25},
+]
+reordered_outputs = [
+    {"type": "output", "name": "headless-1", "scale": 1.25},
+    {"type": "output", "name": "headless-2", "scale": 1.0},
+]
+assert runner.compare(
+    expected_outputs, reordered_outputs, "outputs", runner.load_rules()
+) == []
+wrong_output = copy.deepcopy(reordered_outputs)
+wrong_output[0]["scale"] = 2.0
+assert runner.compare(
+    expected_outputs, wrong_output, "outputs", runner.load_rules()
+) == ["$outputs[1].scale: 1.25 != 2.0"]
+
+expected_tree = {
+    "id": 1,
+    "type": "con",
+    "name": "fixture",
+    "nodes": [{"id": 3, "nodes": [], "floating_nodes": [], "app_id": "nested"}],
+    "floating_nodes": [],
+    "app_id": "fixture-1",
+    "scratchpad_state": "none",
+}
+actual_tree = {
+    "id": 2,
+    "type": "con",
+    "name": "fixture",
+    "nodes": [],
+    "floating_nodes": [],
+    "scratchpad_state": "fresh",
+}
+left, right, excluded = runner.i3_protocol_view(expected_tree, actual_tree, "tree", rules)
+assert "app_id" not in left
+assert excluded == ["app_id"]
+assert "app_id" not in left["nodes"][0]
+assert set(runner.compare(left, right, "tree", runner.load_rules())) == {
+    "$tree.scratchpad_state: 'none' != 'fresh'",
+    "$tree.nodes: length 1 != 0",
+}
+
+expected_command = [{"success": False, "parse_error": True, "error": "sway text"}]
+actual_command = [{"success": False, "error": "i3 text"}]
+left, right, excluded = runner.i3_protocol_view(
+    expected_command, actual_command, "command", rules
+)
+assert left == [{"success": False, "error": "sway text"}]
+assert excluded == ["parse_error"]
+assert runner.command_observation("focus left", expected_command) == {
+    "command": "focus left", "reply": expected_command,
+}
+
+calls = []
+original_ipc = runner.ipc
+runner.ipc = lambda socket, kind, payload: calls.append((socket, kind, payload)) or []
+try:
+    adapter = object.__new__(runner.I3Adapter)
+    adapter.socket = "test.sock"
+    adapter.command_reply('[app_id="fixture"] focus')
+finally:
+    runner.ipc = original_ipc
+assert calls == [("test.sock", "command", '[instance="fixture"] focus')]
+assert runner.SwaywardAdapter.open_window_command is runner.WaylandAdapter.open_window_command
+adapter = object.__new__(runner.WaylandAdapter)
+adapter.run_dir = root
+original_which = runner.shutil.which
+runner.shutil.which = lambda tool: None if tool == "wayland-scanner" else f"/usr/bin/{tool}"
+try:
+    try:
+        adapter.fixture_client()
+    except runner.FixtureUnavailable as error:
+        assert str(error) == "fixture client unavailable (missing wayland-scanner)"
+    else:
+        raise AssertionError("missing fixture build tool was accepted")
+finally:
+    runner.shutil.which = original_which
+assert 'mode "resize"' in runner.SwaywardAdapter.config_text
+assert runner.SwaywardAdapter.version_details(
+    {"human_readable": "swayward beta0-dev (3ff27e06)"}
+) == ("swayward beta0-dev (3ff27e06)", "3ff27e06")
+
+sequence = runner.generate_commands(17, 20)
+assert sequence == runner.generate_commands(17, 20)
+assert sequence != runner.generate_commands(18, 20)
+assert len(sequence) == 20
+assert all(isinstance(item, str) and item for item in sequence)
+
+original = ["a", "noise-1", "b", "noise-2", "c"]
+minimal = runner.minimize_commands(original, lambda items: "a" in items and "c" in items)
+assert minimal == ["a", "c"]
+
+objects = {}
+digest = runner.store_random_object(objects, {"tree": [], "command": [{"success": True}]})
+assert digest == runner.store_random_object(
+    objects, {"command": [{"success": True}], "tree": []}
+)
+assert len(objects) == 1
+empty_tree = {
+    "type": "root", "rect": {"x": 0, "y": 0, "width": 1, "height": 1},
+    "deco_rect": {"x": 0, "y": 0, "width": 0, "height": 0},
+    "window_rect": {"x": 0, "y": 0, "width": 0, "height": 0},
+    "geometry": {"x": 0, "y": 0, "width": 0, "height": 0},
+    "nodes": [], "floating_nodes": [], "focus": [],
+}
+assert runner.random_result_rows(
+    7,
+    ["splith", "focus left"],
+    [
+        {"command": [{"success": True}], "tree": empty_tree, "workspaces": []},
+        {"command": [{"success": True}], "tree": empty_tree, "workspaces": []},
+    ],
+    [
+        {"command": [{"success": True}], "tree": empty_tree, "workspaces": []},
+        {"command": [{"success": False}], "tree": empty_tree, "workspaces": []},
+    ],
+    runner.load_rules(),
+)[0] == {
+    "seed": 7,
+    "verdict": "mismatch",
+    "step": 2,
+    "request": "command",
+    "commands": ["splith", "focus left"],
+    "differences": ["$command[0].success: True != False"],
+}
+
+floating_child = {
+    **empty_tree,
+    "nodes": [{
+        **empty_tree,
+        "type": "floating_con",
+        "floating": "user_on",
+        "percent": 0.4,
+        "nodes": [{**empty_tree, "type": "con", "floating": "auto_off", "percent": 0.5}],
+    }],
+}
+floating_child_variant = copy.deepcopy(floating_child)
+floating_child_variant["nodes"][0]["nodes"][0]["percent"] = 0.501
+assert runner.compare(
+    floating_child, floating_child_variant, "tree", runner.load_rules()
+) == []
+floating_rules = runner.load_rules()
+floating_rules["tree_field_rule"] = [
+    rule for rule in floating_rules["tree_field_rule"]
+    if rule["name"] != "floating-percent-run-variance"
+]
+normalized_floating = copy.deepcopy(floating_child)
+runner.normalize(normalized_floating, floating_rules, "$tree")
+assert normalized_floating["nodes"][0]["percent"] == 0.4
+assert normalized_floating["nodes"][0]["nodes"][0]["percent"] == runner.NORMAL
+
+# Extension keys are removed only for the compositors a rule names; sway's own
+# keys stay compared, and the same extra key is a mismatch for anyone else.
+swayfx_version = {**sway_version, "sway_original_version": "1.12.0"}
+assert runner.compare(sway_version, swayfx_version, "version", runner.load_rules("swayfx")) == []
+for others in ((), ("sway",), ("swayward",)):
+    assert runner.compare(sway_version, swayfx_version, "version", runner.load_rules(*others)) == [
+        "$version: keys differ"
+    ]
+assert runner.compare(sway_version, {**missing_identity, "sway_original_version": "1.12.0"},
+                      "version", runner.load_rules("swayfx")) == ["$version: keys differ"]
+swayfx_outputs = [{**output, "layer_shell_surfaces": []} for output in expected_outputs]
+assert runner.compare(expected_outputs, swayfx_outputs, "outputs", runner.load_rules("swayfx")) == []
+assert runner.compare(expected_outputs, swayfx_outputs, "outputs", runner.load_rules("sway")) == [
+    "$outputs[0]: keys differ", "$outputs[1]: keys differ"
+]
+workspace = {"type": "workspace", "name": "1", "layer_shell_surfaces": []}
+runner.normalize(workspace, runner.load_rules("swayfx"))
+assert "layer_shell_surfaces" in workspace, "only output nodes lose the key"
+fuzz_reply = {"outcome": "reply", "replies": [{"type": runner.TYPES["version"], "payload": {
+    "keys": ["human_readable", "sway_original_version", "variant"]}}]}
+assert runner.fuzz_view(fuzz_reply, runner.load_rules("swayfx"))["replies"][0]["payload"]["keys"] == [
+    "human_readable", "variant"]
+assert runner.fuzz_view(fuzz_reply, runner.load_rules("sway")) == fuzz_reply
+
+print("i3 applicability and differential checks passed")

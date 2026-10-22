@@ -1,0 +1,40 @@
+# Human-reviewed triage of miracle-wm-0.11.2-wire-fuzz sway IPC wire-fuzz mismatches, keyed by case.
+# design difference: miracle-wm documents or deliberately builds the behaviour; deviation: an
+# undocumented difference from sway, with the miracle-wm source that produces it. Every source
+# cites miracle-wm at 2df22b0e (the pin) unless it names sway. contrib/validate prints the untriaged count.
+#
+# Crash rows are compositor-health verdicts, not mismatches, and are not listed:
+# - subscribe-invalid-json (SUBSCRIBE '{'): json::parse throws at src/ipc_message_handler.cpp:112 and nothing
+#   catches it; the process exits with status 1.
+# - command-invalid-utf8 (RUN_COMMAND 0xff): the process exits with status 1 after logging 'Invalid i3 command
+#   type'; the error reply quotes the raw byte, and nlohmann::json throws type_error 316 on invalid UTF-8 when
+#   it is dumped (src/ipc_message_handler.cpp:67-93). The throwing call is inferred, not traced.
+
+
+[[classification]]
+case = "oversized-length"
+triage = "deviation"
+finding = "miracle-ipc-disconnect-on-eof"
+reason = "A header announcing a 0xffffffff-byte payload, after which the client shuts its write side. miracle waits for the payload, then closes the connection when it reads end of file ('Peer has closed connection'); sway keeps the connection open, so the oracle times out (expected timeout, actual disconnect)."
+source = "miracle-wm 2df22b0e src/ipc_connection_manager.cpp:196-221 (the payload stays pending until read_available reaches the announced length; FIONREAD 0 disconnects at 204-209)"
+
+[[classification]]
+case = "unknown-type"
+triage = "design difference"
+finding = "miracle-ipc-unknown-type-disconnect"
+reason = "A request of type 0x7fffffff. miracle treats an unknown message type as fatal and closes the connection; sway logs it, sends nothing and keeps the connection, so the oracle times out (expected timeout, actual disconnect)."
+source = "miracle-wm 2df22b0e src/ipc_message_handler.cpp:286-291 (default: fatal = true), src/ipc_connection_manager.cpp:634-639 (a fatal result disconnects); wiki/docs/ipc/index.md:33-59 (the message types miracle handles); pinned sway 88869399 sway/ipc-server.c:926-927"
+
+[[classification]]
+case = "subscribe-wrong-json"
+triage = "deviation"
+finding = "miracle-subscribe-non-array"
+reason = "SUBSCRIBE with the payload {}. miracle iterates whatever JSON value it gets, an empty object subscribes to nothing, and it answers {\"success\": true}; sway rejects a payload that is not an array with {\"success\": false}."
+source = "miracle-wm 2df22b0e src/ipc_message_handler.cpp:110-170 (json::parse then a range loop over the value, with no array check); wiki/docs/ipc/subscribe.md (the payload is an array of event names); pinned sway 88869399 sway/ipc-server.c:733-737"
+
+[[classification]]
+case = "command-invalid-json"
+triage = "design difference"
+finding = "miracle-command-error-text"
+reason = "RUN_COMMAND with the payload '{'. Both reject it with parse_error true; miracle answers \"Unsupported command type: {\" where sway answers \"Unknown/invalid command '{'\"."
+source = "miracle-wm 2df22b0e src/ipc_command.cpp:163-404 and src/ipc_command_executor.cpp:154-1408 (miracle's own command parser and executor, with their own usage messages); wiki/docs/ipc/run_command.md:10-42 (error is a human-readable message; an unknown command answers \"Unsupported command type: meow\")"

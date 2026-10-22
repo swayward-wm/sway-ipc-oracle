@@ -1,0 +1,17 @@
+# Files whose TAP plan differs between runs or whose run aborts at a different point.
+# Raw outcomes are retained in flaky-runs.toml; whole-file exclusion is reserved
+# for files where assertion-level comparison is not valid.
+
+[sway]
+files = [
+  "211-regress-urgency-assign.t",
+  "240-focus-on-window-activation.t",
+  "261-match-con_id-con_mark-combinations.t",
+  "280-wm-class-change-handler.t",
+]
+
+[swayward]
+files = [
+  "232-cmd-move-criteria.t",
+  "298-ipc-misbehaving-connection.t",
+]

@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+"""Self-test for contrib/regenerate-rc's i3-derived recapture checks, with fake manifests."""
+import importlib.machinery
+import pathlib
+import sys
+import tempfile
+
+sys.dont_write_bytecode = True
+root = pathlib.Path(__file__).resolve().parents[2]
+rc = importlib.machinery.SourceFileLoader("regenerate_rc", str(root / "contrib/regenerate-rc")).load_module()
+
+
+def manifest(*scenarios):
+    """A scenarios.json: scenarios are (digest, test[, outputs]); default one output."""
+    return {"scenarios": [{"name": s[0], "outputs": s[2] if len(s) > 2 else 1,
+                           "provenance": {"test": s[1], "line": 1}} for s in scenarios], "skips": []}
+
+
+# A cut of i3test.pm.in: fresh_workspace and cmp_tree reach cmd, open_floating_window
+# reaches open_window; get_ws only names cmd in a string.
+I3TEST = """sub open_window {
+    return $x->root->create_child(%args);
+}
+sub open_floating_window {
+    return open_window(\\%args);
+}
+sub fresh_workspace {
+    cmd("workspace $unused");
+}
+sub cmp_tree {
+    $ws = fresh_workspace;
+}
+sub get_ws {
+    my $cmd = 'x';
+}
+sub cmd {
+    i3(get_socket_path())->command(@_)->recv;
+}
+sub cmd_nosync {
+    i3(get_socket_path())->command(@_)->recv
+}
+"""
+
+
+with tempfile.TemporaryDirectory() as directory:
+    tests, record = pathlib.Path(directory, "t"), pathlib.Path(directory, "record")
+    tests.mkdir()
+    record.mkdir()
+    (tests / "100-a.t").write_text("cmd 'fullscreen';\n")
+    (tests / "101-b.t").write_text("$i3->command('focus left');\n")
+    (tests / "102-c.t").write_text("cmd qq|split h|;\n")
+    (tests / "187-parser.t").write_text("use i3test i3_autostart => 0;\nmy $cmd = 'x'; parser_calls($cmd);\n")
+    (tests / "200-silent.t").write_text("use i3test i3_autostart => 0;\ncmd_nosync 'nop';\n")
+    (tests / "201-helper.t").write_text("use i3test i3_autostart => 0;\nmy $ws = fresh_workspace;\n")
+    (tests / "202-floating.t").write_text("use i3test i3_autostart => 0;\nopen_floating_window;\n")
+    (tests / "203-autostart.t").write_text("use i3test;\nok(1);\n")
+    (tests / "204-getws.t").write_text("use i3test i3_autostart => 0;\nget_ws(1);\n")
+    old = manifest(("d1", "100-a.t"), ("d2", "101-b.t"), ("d3", "101-b.t"), ("d4", "102-c.t"),
+                   ("m1", "100-a.t", 2), ("m2", "101-b.t", 4))
+    ALL = (("d1", "100-a.t"), ("d2", "101-b.t"), ("d3", "101-b.t"), ("d4", "102-c.t"),
+           ("m1", "100-a.t", 2), ("m2", "101-b.t", 4))
+
+    def check(new, empty=()):
+        for path in record.iterdir():
+            path.unlink()
+        for test in empty:
+            (record / f"{test}.commands.jsonl").write_text("")
+        (record / "100-a.t.commands.jsonl").write_text("{}\n")
+        return rc.capture_checks(new, old, record, tests, I3TEST)
+
+    assert rc.recording_helpers(I3TEST) == ["cmd", "cmd_nosync", "cmp_tree", "fresh_workspace",
+                                            "open_floating_window", "open_window"]
+
+    # Empty logs from tests that do not auto-start sway and never send commands
+    # (directly or through a helper) are accepted and listed.
+    problems, note = check(manifest(*ALL), ["187-parser.t", "204-getws.t"])
+    assert problems == [], problems
+    assert "empty_command_logs=2 accepted_empty=187-parser.t,204-getws.t" in note, note
+    assert "old=6 new=6 kept=6 recredited=0 reshaped=0 single_output_kept=4/4 multi_output_reshaped=0/2" in note, note
+
+    # An empty log fails for a test with committed states, one that calls
+    # cmd_nosync, one that sends commands only through i3test.pm helpers, and
+    # one that auto-starts sway.
+    for test in ("102-c.t", "200-silent.t", "201-helper.t", "202-floating.t", "203-autostart.t"):
+        problems, _ = check(manifest(*ALL), [test])
+        assert problems == [f"empty command logs from tests that send commands: {test}"], (test, problems)
+
+    # A helper list without the known command helpers means the i3test.pm
+    # source could not be read or parsed.
+    problems, _ = rc.capture_checks(manifest(*ALL), old, record, tests, "")
+    assert problems[0] == "i3test.pm source has no fresh_workspace or cmp_tree calling cmd", problems
+
+    # A single-output digest re-credited to an earlier test keeps its test
+    # covered; re-shaped multi-output states are allowed and counted.
+    problems, note = check(manifest(("d1", "100-a.t"), ("d2", "100-a.t"), ("d3", "100-a.t"), ("d4", "102-c.t"),
+                                    ("n1", "100-a.t", 2), ("n2", "100-a.t", 4)))
+    assert problems == [], problems
+    assert ("old=6 new=6 kept=2 recredited=2 reshaped=2 single_output_kept=4/4 multi_output_reshaped=2/2"
+            " recredited_tests=101-b.t") in note, note
+
+    # Fewer states with every committed digest present is accepted.
+    problems, note = check(manifest(("d1", "100-a.t"), ("d2", "101-b.t"), ("d3", "101-b.t"), ("d4", "102-c.t"),
+                                    ("m1", "100-a.t", 2)))
+    assert problems == [], problems
+    assert "old=6 new=5 kept=5 recredited=0 reshaped=1" in note, note
+
+    # Every test truncated to its first state passes the per-test rule but
+    # fails the single-output rule.
+    problems, _ = check(manifest(("d1", "100-a.t"), ("d2", "101-b.t"), ("d4", "102-c.t")))
+    assert problems == ["committed single-output digests missing: 1/4 (d3)"], problems
+
+    # A test that loses every state and every committed digest fails both rules.
+    problems, _ = check(manifest(("d1", "100-a.t"), ("d2", "101-b.t"), ("d3", "101-b.t"), ("d9", "101-b.t", 2)))
+    assert problems == ["committed single-output digests missing: 1/4 (d4)",
+                        "tests lost every state and committed digest: 102-c.t"], problems
+
+    # An empty capture fails; a trial (no committed corpus) checks only that.
+    assert check(manifest())[0] == ["capture is empty"]
+    assert rc.capture_checks(manifest(("d9", "100-a.t")), None, record, tests)[0] == []
+
+print("regenerate-rc capture self-test passed")

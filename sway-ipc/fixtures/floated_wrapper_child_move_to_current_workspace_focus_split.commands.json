@@ -1,0 +1,61 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-fwcm-5 --title=fixture-fwcm-5 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-fwcm-6 --title=fixture-fwcm-6 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent; floating toggle",
+    "reply": [
+      {
+        "success": true
+      },
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-fwcm-9 --title=fixture-fwcm-9 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "[app_id=\"fixture-fwcm-6\"] focus",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "split h",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move --no-auto-back-and-forth container to workspace 1",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

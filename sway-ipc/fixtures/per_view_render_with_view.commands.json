@@ -1,0 +1,52 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-1 --title=fixture-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "allow_tearing yes",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "max_render_time 5",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "allow_tearing toggle",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "max_render_time 0",
+    "reply": [
+      {
+        "error": "Invalid max render time.",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "max_render_time off",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

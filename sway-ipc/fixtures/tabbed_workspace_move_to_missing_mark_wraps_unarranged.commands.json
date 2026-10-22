@@ -1,0 +1,36 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-mtm-1 --title=fixture-mtm-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "focus parent",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "layout tabbed",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move container to mark m",
+    "reply": [
+      {
+        "error": "Mark 'm' not found",
+        "parse_error": false,
+        "success": false
+      }
+    ]
+  }
+]

@@ -1,0 +1,116 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-command-1 --title=fixture-command-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "mark commandmark",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-command-2 --title=fixture-command-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "allow_tearing enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "inhibit_idle focus",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "max_render_time 1",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "opacity 0.9",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "resize grow width 10 px",
+    "reply": [
+      {
+        "error": "Cannot resize any further",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "shortcuts_inhibitor enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "title_format command-title",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "swap container with mark commandmark",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "unmark commandmark",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "rename workspace 1 to command-workspace",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "[app_id=\"^fixture-command-2$\"] kill",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

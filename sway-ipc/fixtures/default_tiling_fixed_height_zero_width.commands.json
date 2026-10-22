@@ -1,0 +1,10 @@
+[
+  {
+    "command": "xdg-toplevel-fixture fixture-fixed-height-zero-width 0 200 0 200 0",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

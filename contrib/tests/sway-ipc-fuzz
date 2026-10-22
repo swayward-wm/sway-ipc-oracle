@@ -1,0 +1,5 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$(readlink -f "$0")")/../.."
+PYTHONPYCACHEPREFIX="${TMPDIR:-/tmp}/sway-ipc-oracle-pycache" \
+    ./contrib/sway-ipc-run fuzz-self-test

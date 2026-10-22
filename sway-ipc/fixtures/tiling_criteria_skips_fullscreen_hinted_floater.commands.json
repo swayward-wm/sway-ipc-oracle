@@ -1,0 +1,26 @@
+[
+  {
+    "command": "xdg-toplevel-fixture fixture-tcfh 400 300 400 300 1",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "fullscreen toggle",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "[tiling] mark --add tiled",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

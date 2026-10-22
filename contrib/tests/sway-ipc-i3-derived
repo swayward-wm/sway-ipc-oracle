@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+"""Check that i3-derived replays preserve each test instance's output count."""
+
+import importlib.machinery
+from pathlib import Path
+
+root = Path(__file__).resolve().parents[2]
+runner = importlib.machinery.SourceFileLoader(
+    "sway_ipc_run", str(root / "contrib/sway-ipc-run")
+).load_module()
+
+layout = [[1280, 720, 0, 0, 0], [1024, 768, 1280, 0, 1]]
+records = [
+    {"kind": "reset", "value": {
+        "instance": 0, "outputs": 2, "output_layout": layout, "initial_focus": 0,
+    }},
+    {"kind": "command", "value": "focus output right"},
+    {"kind": "reset", "value": {"instance": 1, "outputs": 4}},
+    {"kind": "window", "value": "fixture"},
+]
+assert runner.i3_log_segments(records) == [
+    ({"outputs": 2, "output_layout": layout, "initial_focus": 0,
+      "workspace_outputs": []}, [records[1]]),
+    ({"outputs": 4, "output_layout": [], "initial_focus": None,
+      "workspace_outputs": []}, [records[3]]),
+]
+
+configured = [
+    {"kind": "reset", "value": {
+        "instance": 0,
+        "outputs": 2,
+        "workspace_outputs": ["workspace left output fake-0"],
+    }},
+    records[1],
+]
+assert runner.i3_log_segments(configured)[0][0] == {
+    "outputs": 2,
+    "output_layout": [],
+    "initial_focus": None,
+    "workspace_outputs": ["workspace left output fake-0"],
+}
+
+args = type("Args", (), {"timeout": 1})()
+scenario = {"outputs": 2, "output_layout": layout, "initial_focus": 0}
+sway = runner.SwayAdapter(args, Path("/var/empty"), scenario).rendered_config()
+# fake-N is the headless output announced N-th, HEADLESS-(count-N): with two
+# outputs, fake-0 (the first, focused one) is HEADLESS-2.
+assert "output HEADLESS-2 mode 1280x720 position 0 0" in sway
+assert "output HEADLESS-1 mode 1024x768 position 1280 0" in sway
+assert "focus output HEADLESS-2" in sway
+assert runner.SwayAdapter(args, Path("/var/empty"), scenario).translate_command(
+    "move workspace to output fake-1") == "move workspace to output HEADLESS-1"
+swayward = runner.SwaywardAdapter(args, Path("/var/empty"), scenario).rendered_config()
+assert 'output "headless-2" { mode custom=true "1280x720@60"; position x=0 y=0;' in swayward
+assert 'output "headless-1" { mode custom=true "1024x768@60"; position x=1280 y=0;' in swayward
+assert 'output "headless-2"' in swayward.split("focus-at-startup")[0].splitlines()[-1]
+i3 = runner.I3Adapter(args, Path("/var/empty"), scenario)
+assert i3.scenario["output_layout"] == layout
+
+first = [
+    {"scenario": "i3-derived/a", "request": "tree", "verdict": "mismatch",
+     "differences": ["first"]},
+    {"scenario": "i3-derived/a", "request": "outputs", "verdict": "match",
+     "differences": []},
+]
+retry = [
+    {"scenario": "i3-derived/a", "request": "tree", "verdict": "mismatch",
+     "differences": ["second"]},
+    {"scenario": "i3-derived/a", "request": "outputs", "verdict": "match",
+     "differences": []},
+]
+states = iter([
+    {"tree": "first"}, {"tree": "first"},
+    {"tree": "settled"}, {"tree": "settled"}, {"tree": "settled"},
+])
+query_state = runner.query_state
+runner.query_state = lambda _adapter, _compositor: next(states)
+try:
+    assert runner.settled_state(None, "sway") == {"tree": "settled"}
+finally:
+    runner.query_state = query_state
+
+runner.classify_i3_derived_instability(first, retry)
+assert first[0]["verdict"] == "unstable"
+assert first[0]["differences"] == ["first"]
+assert first[1]["verdict"] == "match"

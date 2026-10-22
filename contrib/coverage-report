@@ -1,0 +1,211 @@
+#!/usr/bin/env python3
+"""Validate or summarize raw i3-suite measurements and separate classifications."""
+
+import json
+from pathlib import Path
+import sys
+import tomllib
+
+ROOT = Path(__file__).resolve().parent.parent
+VENDOR = ROOT / "i3/t"
+UNVENDORED = ROOT / "i3/unvendored.toml"
+OUTCOMES = ("pass", "skip", "fail", "unreached")
+
+
+def unstable_assertions(doc):
+    compositor = doc["run"]["compositor"]
+    declared = {
+        (item["file"], number)
+        for item in load(ROOT / "i3/unstable.toml").get("unstable", [])
+        if item["compositor"] == compositor
+        for number in item["assertions"]
+    }
+    derived = set()
+    for run in load(ROOT / "i3/flaky-runs.toml").get("run", []):
+        if run["compositor"] != compositor:
+            continue
+        first = {number: outcome for outcome in OUTCOMES
+                 for number in run[f"first_{outcome}"]}
+        second = {number: outcome for outcome in OUTCOMES
+                  for number in run[f"second_{outcome}"]}
+        derived.update(
+            (run["file"], number)
+            for number in first.keys() | second.keys()
+            if first.get(number) != second.get(number)
+        )
+    if declared != derived:
+        raise SystemExit(f"i3/unstable.toml does not match i3/flaky-runs.toml for {compositor}")
+    return declared
+
+
+def load(path):
+    with path.open("rb") as file:
+        return tomllib.load(file)
+
+
+def result_path():
+    for argument in sys.argv[1:]:
+        if not argument.startswith("-"):
+            return Path(argument)
+    raise SystemExit("coverage-report: RESULT is required")
+
+
+def classification_path(result):
+    return ROOT / "i3/classifications" / result.name
+
+
+def assertion_outcomes(entry):
+    outcomes = {}
+    for outcome in OUTCOMES:
+        numbers = entry.get(f"{outcome}_assertions", [])
+        if entry.get(outcome, 0) != len(numbers):
+            yield f"{outcome} count {entry.get(outcome, 0)} != {len(numbers)} listed assertions"
+        for number in numbers:
+            if number in outcomes:
+                yield f"assertion {number} appears as both {outcomes[number]} and {outcome}"
+            outcomes[number] = outcome
+    expected = set(range(1, entry.get("assertions", 0) + 1))
+    if set(outcomes) != expected:
+        missing = sorted(expected - set(outcomes))
+        extra = sorted(set(outcomes) - expected)
+        if missing:
+            yield f"missing assertion outcomes: {missing}"
+        if extra:
+            yield f"outcomes exceed assertion count: {extra}"
+
+
+def validate(result, doc, classifications):
+    bad = []
+    vendored = {path.name for path in VENDOR.glob("*.t")}
+    files = doc.get("files", {})
+    for name in sorted(vendored - set(files)):
+        bad.append(f"{name}: vendored but has no measurement")
+    for name in sorted(set(files) - vendored):
+        bad.append(f"{name}: measured but is not vendored")
+
+    unstable = unstable_assertions(doc)
+    observed = {}
+    for name, entry in sorted(files.items()):
+        if entry.get("flaky"):
+            continue
+        for problem in assertion_outcomes(entry):
+            bad.append(f"{name}: {problem}")
+        listed_unstable = set(entry.get("unstable_assertions", []))
+        expected_unstable = {number for file, number in unstable if file == name}
+        if listed_unstable != expected_unstable:
+            bad.append(
+                f"{name}: unstable assertions {sorted(listed_unstable)} != "
+                f"i3/unstable.toml {sorted(expected_unstable)}"
+            )
+        for outcome in OUTCOMES:
+            for number in entry.get(f"{outcome}_assertions", []):
+                if (name, number) not in unstable:
+                    observed[(name, number)] = outcome
+
+    classified = {}
+    families = classifications.get("families", {})
+    for item in classifications.get("classification", []):
+        key = (item.get("file"), item.get("assertion"))
+        if key in classified:
+            bad.append(f"{key[0]}:{key[1]}: duplicate classification")
+            continue
+        classified[key] = item
+        actual = observed.get(key)
+        if actual is None:
+            bad.append(f"{key[0]}:{key[1]}: classification has no measurement")
+        elif actual == "pass":
+            bad.append(f"{key[0]}:{key[1]}: classification points at a pass")
+        elif item.get("outcome") != actual:
+            bad.append(f"{key[0]}:{key[1]}: classification says {item.get('outcome')}, measurement says {actual}")
+        reason = item.get("reason")
+        if not reason:
+            bad.append(f"{key[0]}:{key[1]}: classification has no reason")
+        elif reason not in families and reason not in {"unclassified", "upstream_skip"} and len(reason) < 40:
+            bad.append(f"{key[0]}:{key[1]}: unknown reason family {reason!r}")
+        if item.get("reason_verified") is True and not item.get("citation") and reason not in families:
+            bad.append(f"{key[0]}:{key[1]}: verified classification has no citation")
+
+    for key, outcome in sorted(observed.items()):
+        if outcome != "pass" and key not in classified:
+            bad.append(f"{key[0]}:{key[1]}: {outcome} has no classification")
+    return bad
+
+
+def census(doc, classifications):
+    files = doc["files"]
+    unstable = unstable_assertions(doc)
+    stable = [(name, entry) for name, entry in files.items() if not entry.get("flaky")]
+    totals = {
+        outcome: sum(
+            1
+            for name, entry in stable
+            for number in entry.get(f"{outcome}_assertions", [])
+            if (name, number) not in unstable
+        )
+        for outcome in OUTCOMES
+    }
+    rows = classifications.get("classification", [])
+    return {
+        "files": len(files),
+        "assertions": sum(entry.get("assertions", 0) for _, entry in stable)
+        - sum((name, number) in unstable for name, entry in stable
+              for number in range(1, entry.get("assertions", 0) + 1)),
+        "flaky_files": len(files) - len(stable),
+        "unstable": len(unstable),
+        **totals,
+        "classified": len(rows),
+        **review_counts(rows),
+    }
+
+
+def review_counts(rows):
+    """Review status of the classification rows (one per stable non-pass)."""
+    verified = sum(item.get("reason_verified") is True for item in rows)
+    return {
+        "verified": verified,
+        "unverified": len(rows) - verified,
+        "unclassified": sum(item.get("reason") == "unclassified" for item in rows),
+    }
+
+
+def main():
+    if "--help" in sys.argv:
+        print(__doc__)
+        return
+    if "--unvendored" in sys.argv:
+        vendored = {path.name for path in VENDOR.glob("*.t")}
+        listed = set(load(UNVENDORED).get("files", {}))
+        overlap = sorted(vendored & listed)
+        for name in overlap:
+            print(f"unvendored.toml lists {name}, but it is vendored")
+        print(f"{len(overlap)} violation(s)")
+        raise SystemExit(bool(overlap))
+
+    path = result_path()
+    class_path = classification_path(path)
+    if not class_path.exists():
+        raise SystemExit(f"missing classifications: {class_path}")
+    doc, classifications = load(path), load(class_path)
+    violations = validate(path, doc, classifications)
+    if "--check" in sys.argv:
+        for problem in violations:
+            print(f"{path}: {problem}")
+        print(f"{len(violations)} violation(s)")
+        raise SystemExit(bool(violations))
+
+    data = census(doc, classifications)
+    if "--json" in sys.argv:
+        print(json.dumps(data, indent=2))
+        return
+    if "--gaps" in sys.argv:
+        for item in classifications.get("classification", []):
+            if item.get("reason_verified") is not True:
+                print(f"{item['file']}:{item['assertion']} {item['outcome']} [{item['reason']}]")
+        return
+    for key, value in data.items():
+        print(f"{key:12} {value}")
+    print(f"violations   {len(violations)}")
+
+
+if __name__ == "__main__":
+    main()

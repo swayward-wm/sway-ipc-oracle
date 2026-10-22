@@ -1,0 +1,52 @@
+[
+  {
+    "command": "move scratchpad",
+    "reply": [
+      {
+        "error": "Can't move an empty workspace to the scratchpad",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "resize grow width 10 px",
+    "reply": [
+      {
+        "error": "Cannot resize nothing",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "sticky enable",
+    "reply": [
+      {
+        "error": "No current container",
+        "parse_error": false,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "mark empty",
+    "reply": [
+      {
+        "error": "Only containers can have marks",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  },
+  {
+    "command": "border nonsense",
+    "reply": [
+      {
+        "error": "Only views can have borders",
+        "parse_error": true,
+        "success": false
+      }
+    ]
+  }
+]

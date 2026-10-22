@@ -1,0 +1,42 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-odfo-1 --title=fixture-odfo-1 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "exec foot --app-id=fixture-odfo-2 --title=fixture-odfo-2 sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move container to workspace next",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "move container to workspace number 3",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "output fake-1 disable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]

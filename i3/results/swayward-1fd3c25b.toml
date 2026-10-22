@@ -1,0 +1,3286 @@
+# Generated raw result of an unchanged upstream i3 test-suite run.
+# Counts use the first unindented TAP plan and first TAP stream.
+# pass, skip, fail, and unreached together cover each emitted plan.
+
+[run]
+compositor = "swayward"
+version = "swayward beta1 (1fd3c25b)"
+commit = "1fd3c25b1fca4cabc412e7fcfc5f9248f295b7dc"
+i3_suite_commit = "9be3249ac5b377ed3270e36bca83df53d8023337"
+inputs = "91efe6fca67e859b56180b0ded7dbb19242b1b3dd104b9347a14a7a021dded06"
+date = "2026-10-21"
+environment = "headless compositor with private IPC/X11 sockets and real X11 clients"
+
+[files."001-tile.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 3
+tap_plan = 3
+pass = 3
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."003-ipc.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."005-floating.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 13
+tap_plan = 13
+pass = 8
+skip = 0
+fail = 5
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 6, 11, 12, 13]
+skip_assertions = []
+fail_assertions = [5, 7, 8, 9, 10]
+unreached_assertions = []
+
+[files."100-fullscreen.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 79
+tap_plan = "none"
+source_assertions = 79
+pass = 21
+skip = 0
+fail = 2
+unreached = 56
+pass_assertions = [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23]
+skip_assertions = []
+fail_assertions = [4, 16]
+unreached_assertions = [24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79]
+
+[files."101-focus.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 8
+tap_plan = 8
+pass = 4
+skip = 0
+fail = 4
+unreached = 0
+pass_assertions = [1, 2, 3, 8]
+skip_assertions = []
+fail_assertions = [4, 5, 6, 7]
+unreached_assertions = []
+
+[files."102-dock.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 23
+tap_plan = "none"
+source_assertions = 23
+pass = 1
+skip = 0
+fail = 0
+unreached = 22
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+
+[files."104-focus-stack.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 2
+tap_plan = 2
+pass = 2
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."111-goto.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 13
+tap_plan = 13
+pass = 13
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."112-floating-resize.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 15
+tap_plan = 15
+pass = 15
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."113-urgent.t"]
+adapted = ["remove-adapter-ipc-socket", "layout-stacked->stacking"]
+plan_unknown = true
+assertions = 64
+tap_plan = "none"
+source_assertions = 64
+pass = 18
+skip = 0
+fail = 15
+unreached = 31
+pass_assertions = [1, 3, 5, 6, 7, 9, 10, 13, 16, 19, 22, 23, 24, 25, 26, 30, 31, 33]
+skip_assertions = []
+fail_assertions = [2, 4, 8, 11, 12, 14, 15, 17, 18, 20, 21, 27, 28, 29, 32]
+unreached_assertions = [34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]
+
+[files."115-ipc-workspaces.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 9
+tap_plan = 9
+pass = 9
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."116-nestedcons.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 7
+tap_plan = "none"
+source_assertions = 7
+pass = 4
+skip = 0
+fail = 1
+unreached = 2
+pass_assertions = [2, 3, 4, 5]
+skip_assertions = []
+fail_assertions = [1]
+unreached_assertions = [6, 7]
+
+[files."117-workspace.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 92
+tap_plan = "none"
+source_assertions = 92
+pass = 34
+skip = 0
+fail = 16
+unreached = 42
+pass_assertions = [1, 2, 3, 4, 5, 7, 8, 10, 13, 16, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 39, 40, 41, 42, 43, 44, 47, 49, 50]
+skip_assertions = []
+fail_assertions = [6, 9, 11, 12, 14, 15, 17, 18, 19, 20, 36, 37, 38, 45, 46, 48]
+unreached_assertions = [51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92]
+
+[files."118-openkill.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 6
+tap_plan = 6
+pass = 2
+skip = 0
+fail = 4
+unreached = 0
+pass_assertions = [1, 3]
+skip_assertions = []
+fail_assertions = [2, 4, 5, 6]
+unreached_assertions = []
+
+[files."119-match.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 27
+tap_plan = "none"
+source_assertions = 27
+pass = 4
+skip = 0
+fail = 0
+unreached = 23
+pass_assertions = [1, 2, 3, 4]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]
+
+[files."120-multiple-cmds.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 31
+tap_plan = 31
+pass = 17
+skip = 0
+fail = 14
+unreached = 0
+pass_assertions = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 25, 27, 29, 30, 31]
+skip_assertions = []
+fail_assertions = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 26, 28]
+unreached_assertions = []
+
+[files."121-next-prev.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 12
+tap_plan = 12
+pass = 9
+skip = 0
+fail = 3
+unreached = 0
+pass_assertions = [1, 2, 6, 7, 8, 9, 10, 11, 12]
+skip_assertions = []
+fail_assertions = [3, 4, 5]
+unreached_assertions = []
+
+[files."122-split.t"]
+adapted = ["remove-adapter-ipc-socket", "layout-stacked->stacking"]
+assertions = 41
+tap_plan = 41
+pass = 22
+skip = 0
+fail = 19
+unreached = 0
+pass_assertions = [1, 2, 4, 5, 7, 11, 12, 13, 15, 16, 18, 22, 23, 24, 25, 31, 32, 33, 34, 37, 38, 39]
+skip_assertions = []
+fail_assertions = [3, 6, 8, 9, 10, 14, 17, 19, 20, 21, 26, 27, 28, 29, 30, 35, 36, 40, 41]
+unreached_assertions = []
+
+[files."124-move.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 54
+tap_plan = 54
+pass = 30
+skip = 0
+fail = 24
+unreached = 0
+pass_assertions = [4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 17, 19, 22, 23, 24, 26, 27, 28, 29, 31, 32, 33, 35, 36, 38, 39, 40, 42, 43, 44]
+skip_assertions = []
+fail_assertions = [1, 2, 3, 9, 10, 16, 18, 20, 21, 25, 30, 34, 37, 41, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54]
+unreached_assertions = []
+
+[files."126-regress-close.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."127-regress-floating-parent.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 4
+tap_plan = 4
+pass = 4
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."128-open-order.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 7
+tap_plan = 7
+pass = 3
+skip = 0
+fail = 4
+unreached = 0
+pass_assertions = [1, 5, 7]
+skip_assertions = []
+fail_assertions = [2, 3, 4, 6]
+unreached_assertions = []
+
+[files."129-focus-after-close.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 15
+tap_plan = "none"
+source_assertions = 15
+pass = 8
+skip = 0
+fail = 4
+unreached = 3
+pass_assertions = [1, 2, 5, 7, 8, 10, 11, 12]
+skip_assertions = []
+fail_assertions = [3, 4, 6, 9]
+unreached_assertions = [13, 14, 15]
+
+[files."130-close-empty-split.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 8
+tap_plan = 8
+pass = 2
+skip = 0
+fail = 6
+unreached = 0
+pass_assertions = [1, 5]
+skip_assertions = []
+fail_assertions = [2, 3, 4, 6, 7, 8]
+unreached_assertions = []
+
+[files."131-stacking-order.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 7
+tap_plan = 7
+pass = 6
+skip = 0
+fail = 1
+unreached = 0
+pass_assertions = [1, 3, 4, 5, 6, 7]
+skip_assertions = []
+fail_assertions = [2]
+unreached_assertions = []
+
+[files."132-move-workspace.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 160
+tap_plan = "none"
+source_assertions = 160
+pass = 61
+skip = 9
+fail = 30
+unreached = 60
+pass_assertions = [1, 2, 3, 5, 6, 7, 11, 13, 14, 15, 17, 18, 19, 23, 25, 26, 27, 29, 30, 31, 35, 37, 38, 39, 41, 42, 43, 47, 49, 51, 54, 55, 56, 57, 59, 60, 63, 64, 65, 66, 67, 68, 69, 71, 72, 73, 75, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 93, 95, 99]
+skip_assertions = [10, 22, 34, 46, 53, 62, 78, 80, 98]
+fail_assertions = [4, 8, 9, 12, 16, 20, 21, 24, 28, 32, 33, 36, 40, 44, 45, 48, 50, 52, 58, 61, 70, 74, 76, 77, 79, 92, 94, 96, 97, 100]
+unreached_assertions = [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160]
+
+[files."133-size-hints.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 16
+tap_plan = 16
+pass = 0
+skip = 0
+fail = 16
+unreached = 0
+pass_assertions = []
+skip_assertions = []
+fail_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+unreached_assertions = []
+
+[files."134-invalid-command.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."135-floating-focus.t"]
+adapted = ["remove-adapter-ipc-socket", "layout-stacked->stacking"]
+plan_unknown = true
+assertions = 82
+tap_plan = "none"
+source_assertions = 82
+pass = 3
+skip = 0
+fail = 1
+unreached = 78
+pass_assertions = [1, 2, 3]
+skip_assertions = []
+fail_assertions = [4]
+unreached_assertions = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82]
+
+[files."136-floating-ws-empty.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 11
+tap_plan = 11
+pass = 11
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."137-floating-unmap.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 2
+tap_plan = 2
+pass = 1
+skip = 0
+fail = 1
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = [2]
+unreached_assertions = []
+
+[files."138-floating-attach.t"]
+adapted = ["remove-adapter-ipc-socket", "layout-stacked->stacking"]
+assertions = 11
+tap_plan = 11
+pass = 6
+skip = 0
+fail = 5
+unreached = 0
+pass_assertions = [1, 5, 6, 7, 9, 11]
+skip_assertions = []
+fail_assertions = [2, 3, 4, 8, 10]
+unreached_assertions = []
+
+[files."139-ws-numbers.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 8
+tap_plan = 8
+pass = 8
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."140-focus-lost.t"]
+adapted = ["remove-adapter-ipc-socket", "layout-stacked->stacking"]
+assertions = 3
+tap_plan = 3
+pass = 3
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."141-resize.t"]
+adapted = ["remove-adapter-ipc-socket", "layout-stacked->stacking"]
+assertions = 84
+tap_plan = 84
+pass = 71
+skip = 0
+fail = 13
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 24, 25, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83]
+skip_assertions = []
+fail_assertions = [16, 17, 18, 19, 20, 21, 22, 23, 26, 29, 42, 43, 84]
+unreached_assertions = []
+
+[files."142-regress-move-floating.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."143-regress-floating-restart.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 5
+tap_plan = 5
+pass = 3
+skip = 0
+fail = 2
+unreached = 0
+pass_assertions = [1, 3, 4]
+skip_assertions = []
+fail_assertions = [2, 5]
+unreached_assertions = []
+
+[files."144-regress-floating-resize.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 1
+tap_plan = "none"
+source_assertions = 1
+pass = 0
+skip = 0
+fail = 0
+unreached = 1
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [1]
+
+[files."145-flattening.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 8
+tap_plan = 8
+pass = 8
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."146-floating-reinsert.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 3
+tap_plan = 3
+pass = 1
+skip = 0
+fail = 2
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = [2, 3]
+unreached_assertions = []
+
+[files."147-regress-floatingmove.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 2
+tap_plan = 2
+pass = 2
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."148-regress-floatingmovews.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."150-regress-dock-restart.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 11
+tap_plan = "none"
+source_assertions = 11
+pass = 1
+skip = 0
+fail = 0
+unreached = 10
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+
+[files."151-regress-float-size.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."152-regress-level-up.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."153-floating-originalsize.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 7
+tap_plan = 7
+pass = 7
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."154-regress-multiple-dock.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 2
+tap_plan = "none"
+source_assertions = 2
+pass = 1
+skip = 0
+fail = 0
+unreached = 1
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [2]
+
+[files."155-floating-split-size.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 4
+tap_plan = 4
+pass = 2
+skip = 0
+fail = 2
+unreached = 0
+pass_assertions = [1, 3]
+skip_assertions = []
+fail_assertions = [2, 4]
+unreached_assertions = []
+
+[files."156-fullscreen-focus.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+plan_unknown = true
+assertions = 64
+tap_plan = "none"
+source_assertions = 64
+pass = 1
+skip = 0
+fail = 1
+unreached = 62
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = [2]
+unreached_assertions = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]
+
+[files."159-socketpaths.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 8
+tap_plan = "none"
+source_assertions = 8
+pass = 0
+skip = 0
+fail = 0
+unreached = 8
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [1, 2, 3, 4, 5, 6, 7, 8]
+
+[files."161-regress-borders-restart.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 4
+tap_plan = 4
+pass = 1
+skip = 0
+fail = 3
+unreached = 0
+pass_assertions = [3]
+skip_assertions = []
+fail_assertions = [1, 2, 4]
+unreached_assertions = []
+
+[files."162-regress-dock-urgent.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 4
+tap_plan = "none"
+source_assertions = 4
+pass = 1
+skip = 0
+fail = 0
+unreached = 3
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [2, 3, 4]
+
+[files."164-kill-win-vs-client.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 12
+tap_plan = "none"
+source_assertions = 12
+pass = 3
+skip = 0
+fail = 0
+unreached = 9
+pass_assertions = [1, 2, 3]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [4, 5, 6, 7, 8, 9, 10, 11, 12]
+
+[files."165-for_window.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 79
+tap_plan = "none"
+source_assertions = 79
+pass = 17
+skip = 0
+fail = 2
+unreached = 60
+pass_assertions = [1, 2, 3, 4, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+skip_assertions = []
+fail_assertions = [5, 9]
+unreached_assertions = [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79]
+
+[files."166-assign.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+plan_unknown = true
+assertions = 106
+tap_plan = "none"
+source_assertions = 106
+pass = 9
+skip = 0
+fail = 7
+unreached = 90
+pass_assertions = [1, 2, 3, 4, 7, 8, 11, 12, 14]
+skip_assertions = []
+fail_assertions = [5, 6, 9, 10, 13, 15, 16]
+unreached_assertions = [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106]
+
+[files."167-workspace_layout.t"]
+adapted = ["remove-adapter-ipc-socket", "workspace-layout-stacked->stacking", "layout-stacked->stacking"]
+assertions = 87
+tap_plan = 87
+pass = 63
+skip = 0
+fail = 24
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 31, 32, 33, 36, 37, 41, 42, 46, 47, 48, 52, 53, 57, 61, 62, 66, 67, 68, 69, 70, 71, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87]
+skip_assertions = []
+fail_assertions = [16, 29, 30, 34, 35, 38, 39, 40, 43, 44, 45, 49, 50, 51, 54, 55, 56, 58, 59, 60, 63, 64, 65, 72]
+unreached_assertions = []
+
+[files."168-regress-fullscreen-restart.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."169-border-toggle.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 20
+tap_plan = 20
+pass = 0
+skip = 0
+fail = 20
+unreached = 0
+pass_assertions = []
+skip_assertions = []
+fail_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+unreached_assertions = []
+
+[files."170-force_focus_wrapping.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 12
+tap_plan = 12
+pass = 12
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."172-start-on-named-ws.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 7
+tap_plan = 7
+pass = 7
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."173-get-marks.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 3
+tap_plan = 3
+pass = 2
+skip = 0
+fail = 1
+unreached = 0
+pass_assertions = [1, 3]
+skip_assertions = []
+fail_assertions = [2]
+unreached_assertions = []
+
+[files."174-border-config.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 13
+tap_plan = 13
+pass = 9
+skip = 0
+fail = 4
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 11]
+skip_assertions = []
+fail_assertions = [9, 10, 12, 13]
+unreached_assertions = []
+
+[files."176-workspace-baf.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 26
+tap_plan = "none"
+source_assertions = 26
+pass = 21
+skip = 0
+fail = 2
+unreached = 3
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 23]
+skip_assertions = []
+fail_assertions = [20, 22]
+unreached_assertions = [24, 25, 26]
+
+[files."177-bar-config.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 50
+tap_plan = "none"
+source_assertions = 50
+pass = 1
+skip = 0
+fail = 1
+unreached = 48
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = [2]
+unreached_assertions = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50]
+
+[files."178-regress-workspace-open.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."179-regress-multiple-ws.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 6
+tap_plan = 6
+pass = 1
+skip = 2
+fail = 3
+unreached = 0
+pass_assertions = [1]
+skip_assertions = [4, 6]
+fail_assertions = [2, 3, 5]
+unreached_assertions = []
+
+[files."180-fd-leaks.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."181-regress-float-border.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 6
+tap_plan = 6
+pass = 2
+skip = 0
+fail = 4
+unreached = 0
+pass_assertions = [5, 6]
+skip_assertions = []
+fail_assertions = [1, 2, 3, 4]
+unreached_assertions = []
+
+[files."182-regress-focus-dock.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 1
+tap_plan = "none"
+source_assertions = 1
+pass = 0
+skip = 0
+fail = 0
+unreached = 1
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [1]
+
+[files."183-config-variables.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 9
+tap_plan = 9
+pass = 9
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."184-regress-float-split-resize.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."185-scratchpad.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 100
+tap_plan = "none"
+source_assertions = 100
+pass = 2
+skip = 0
+fail = 0
+unreached = 98
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100]
+
+[files."186-regress-assign-focus-parent.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 8
+tap_plan = 8
+pass = 8
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."187-commands-parser.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 25
+tap_plan = 25
+pass = 0
+skip = 0
+fail = 25
+unreached = 0
+pass_assertions = []
+skip_assertions = []
+fail_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
+unreached_assertions = []
+
+[files."188-regress-focus-restart.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 11
+tap_plan = 11
+pass = 11
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."189-floating-constraints.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 28
+tap_plan = 28
+pass = 12
+skip = 0
+fail = 16
+unreached = 0
+pass_assertions = [7, 8, 15, 16, 21, 22, 23, 24, 25, 26, 27, 28]
+skip_assertions = []
+fail_assertions = [1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14, 17, 18, 19, 20]
+unreached_assertions = []
+
+[files."190-scratchpad-diff-ws.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 3
+tap_plan = 3
+pass = 2
+skip = 0
+fail = 1
+unreached = 0
+pass_assertions = [1, 3]
+skip_assertions = []
+fail_assertions = [2]
+unreached_assertions = []
+
+[files."191-resize-levels.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 3
+tap_plan = 3
+pass = 0
+skip = 0
+fail = 3
+unreached = 0
+pass_assertions = []
+skip_assertions = []
+fail_assertions = [1, 2, 3]
+unreached_assertions = []
+
+[files."192-layout.t"]
+adapted = ["remove-adapter-ipc-socket", "layout-stacked->stacking"]
+assertions = 34
+tap_plan = 34
+pass = 23
+skip = 0
+fail = 11
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34]
+skip_assertions = []
+fail_assertions = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+unreached_assertions = []
+
+[files."193-ipc-version.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 4
+tap_plan = 4
+pass = 2
+skip = 0
+fail = 2
+unreached = 0
+pass_assertions = [3, 4]
+skip_assertions = []
+fail_assertions = [1, 2]
+unreached_assertions = []
+
+[files."194-regress-floating-size.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 15
+tap_plan = 15
+pass = 5
+skip = 0
+fail = 10
+unreached = 0
+pass_assertions = [1, 4, 7, 10, 13]
+skip_assertions = []
+fail_assertions = [2, 3, 5, 6, 8, 9, 11, 12, 14, 15]
+unreached_assertions = []
+
+[files."196-randr-output-names.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."197-regression-move-vanish.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 4
+tap_plan = 4
+pass = 4
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."198-regression-scratchpad-crash.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."199-ipc-mode-event.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 2
+tap_plan = 2
+pass = 2
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."200-urgency-timer.t"]
+adapted = ["remove-adapter-ipc-socket", "layout-stacked->stacking"]
+assertions = 12
+tap_plan = 12
+pass = 8
+skip = 0
+fail = 4
+unreached = 0
+pass_assertions = [1, 4, 5, 7, 9, 10, 11, 12]
+skip_assertions = []
+fail_assertions = [2, 3, 6, 8]
+unreached_assertions = []
+
+[files."201-config-parser.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs", "workspace-layout-stacked->stacking"]
+plan_unknown = true
+assertions = 32
+tap_plan = "none"
+source_assertions = 32
+pass = 0
+skip = 0
+fail = 0
+unreached = 32
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]
+
+[files."202-scratchpad-criteria.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 27
+tap_plan = "none"
+source_assertions = 27
+pass = 11
+skip = 0
+fail = 0
+unreached = 16
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]
+
+[files."203-regress-assign-and-move.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 2
+tap_plan = 2
+pass = 2
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."204-regress-scratchpad-move.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."205-ipc-windows.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 4
+tap_plan = 4
+pass = 2
+skip = 0
+fail = 2
+unreached = 0
+pass_assertions = [1, 3]
+skip_assertions = []
+fail_assertions = [2, 4]
+unreached_assertions = []
+
+[files."206-fullscreen-scratchpad.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 8
+tap_plan = "none"
+source_assertions = 8
+pass = 4
+skip = 0
+fail = 0
+unreached = 4
+pass_assertions = [1, 2, 3, 4]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [5, 6, 7, 8]
+
+[files."208-regress-floating-criteria.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."210-mark-unmark.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 17
+tap_plan = 17
+pass = 7
+skip = 0
+fail = 10
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 14]
+skip_assertions = []
+fail_assertions = [7, 8, 9, 10, 11, 12, 13, 15, 16, 17]
+unreached_assertions = []
+
+[files."211-regress-urgency-assign.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 3
+tap_plan = "none"
+source_assertions = 3
+pass = 1
+skip = 0
+fail = 1
+unreached = 1
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = [2]
+unreached_assertions = [3]
+
+[files."212-assign-urgency.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+plan_unknown = true
+assertions = 3
+tap_plan = "none"
+source_assertions = 3
+pass = 0
+skip = 0
+fail = 0
+unreached = 3
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [1, 2, 3]
+
+[files."213-layout-restore-simple.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 18
+tap_plan = 18
+pass = 8
+skip = 0
+fail = 10
+unreached = 0
+pass_assertions = [1, 2, 3, 7, 8, 13, 14, 15]
+skip_assertions = []
+fail_assertions = [4, 5, 6, 9, 10, 11, 12, 16, 17, 18]
+unreached_assertions = []
+
+[files."218-regress-floating-split.t"]
+adapted = ["remove-adapter-ipc-socket", "layout-stacked->stacking"]
+assertions = 2
+tap_plan = 2
+pass = 2
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."219-ipc-window-focus.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 10
+tap_plan = 10
+pass = 8
+skip = 0
+fail = 2
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 9]
+skip_assertions = []
+fail_assertions = [8, 10]
+unreached_assertions = []
+
+[files."220-ipc-window-title.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 4
+tap_plan = 4
+pass = 4
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."221-floating-type-hints.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 8
+tap_plan = "none"
+source_assertions = 8
+pass = 0
+skip = 0
+fail = 2
+unreached = 6
+pass_assertions = []
+skip_assertions = []
+fail_assertions = [1, 2]
+unreached_assertions = [3, 4, 5, 6, 7, 8]
+
+[files."222-regress-dock-resize.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 1
+tap_plan = "none"
+source_assertions = 1
+pass = 0
+skip = 0
+fail = 0
+unreached = 1
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [1]
+
+[files."224-regress-resize-branch.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."225-ipc-window-fullscreen.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 2
+tap_plan = 2
+pass = 2
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."226-internal-workspaces.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 5
+tap_plan = 5
+pass = 1
+skip = 0
+fail = 4
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = [2, 3, 4, 5]
+unreached_assertions = []
+
+[files."227-ipc-workspace-empty.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 3
+tap_plan = 3
+pass = 2
+skip = 0
+fail = 1
+unreached = 0
+pass_assertions = [2, 3]
+skip_assertions = []
+fail_assertions = [1]
+unreached_assertions = []
+
+[files."228-border-widths.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 21
+tap_plan = 21
+pass = 6
+skip = 0
+fail = 15
+unreached = 0
+pass_assertions = [1, 3, 8, 10, 15, 17]
+skip_assertions = []
+fail_assertions = [2, 4, 5, 6, 7, 9, 11, 12, 13, 14, 16, 18, 19, 20, 21]
+unreached_assertions = []
+
+[files."231-ipc-floating-event.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 2
+tap_plan = 2
+pass = 0
+skip = 0
+fail = 2
+unreached = 0
+pass_assertions = []
+skip_assertions = []
+fail_assertions = [1, 2]
+unreached_assertions = []
+
+[files."232-cmd-move-criteria.t"]
+flaky = true
+assertions = 22
+
+[files."233-regress-manage-focus-unmapped.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 2
+tap_plan = 2
+pass = 0
+skip = 0
+fail = 2
+unreached = 0
+pass_assertions = []
+skip_assertions = []
+fail_assertions = [1, 2]
+unreached_assertions = []
+
+[files."235-check-config-no-x.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 8
+tap_plan = 8
+pass = 8
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."236-floating-focus-raise.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 6
+tap_plan = "none"
+source_assertions = 6
+pass = 0
+skip = 0
+fail = 0
+unreached = 6
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [1, 2, 3, 4, 5, 6]
+
+[files."237-regress-assign-focus.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."238-ipc-binding-event.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 15
+tap_plan = 15
+pass = 2
+skip = 0
+fail = 13
+unreached = 0
+pass_assertions = [1, 11]
+skip_assertions = []
+fail_assertions = [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15]
+unreached_assertions = []
+
+[files."240-focus-on-window-activation.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 15
+tap_plan = 15
+pass = 13
+skip = 0
+fail = 2
+unreached = 0
+pass_assertions = [1, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+skip_assertions = []
+fail_assertions = [2, 5]
+unreached_assertions = []
+
+[files."241-consistent-center.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 12
+tap_plan = 12
+pass = 10
+skip = 0
+fail = 2
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 9, 10, 11, 12]
+skip_assertions = []
+fail_assertions = [7, 8]
+unreached_assertions = []
+
+[files."242-no-focus.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 6
+tap_plan = 6
+pass = 3
+skip = 0
+fail = 3
+unreached = 0
+pass_assertions = [1, 2, 5]
+skip_assertions = []
+fail_assertions = [3, 4, 6]
+unreached_assertions = []
+
+[files."243-move-to-mark.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 50
+tap_plan = "none"
+source_assertions = 50
+pass = 3
+skip = 0
+fail = 8
+unreached = 39
+pass_assertions = [1, 4, 7]
+skip_assertions = []
+fail_assertions = [2, 3, 5, 6, 8, 9, 10, 11]
+unreached_assertions = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50]
+
+[files."244-new-workspace-floating-enable-center.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 2
+tap_plan = 2
+pass = 0
+skip = 0
+fail = 2
+unreached = 0
+pass_assertions = []
+skip_assertions = []
+fail_assertions = [1, 2]
+unreached_assertions = []
+
+[files."245-move-position-mouse.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 8
+tap_plan = 8
+pass = 0
+skip = 0
+fail = 8
+unreached = 0
+pass_assertions = []
+skip_assertions = []
+fail_assertions = [1, 2, 3, 4, 5, 6, 7, 8]
+unreached_assertions = []
+
+[files."246-window-decoration-focus.t"]
+adapted = ["remove-adapter-ipc-socket", "layout-stacked->stacking"]
+assertions = 3
+tap_plan = 3
+pass = 3
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."247-config-line-continuation.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 8
+tap_plan = 8
+pass = 7
+skip = 0
+fail = 1
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 7, 8]
+skip_assertions = []
+fail_assertions = [6]
+unreached_assertions = []
+
+[files."248-regress-urgency-clear.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 4
+tap_plan = 4
+pass = 4
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."251-command-criteria-focused.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 11
+tap_plan = "none"
+source_assertions = 11
+pass = 4
+skip = 0
+fail = 2
+unreached = 5
+pass_assertions = [1, 3, 5, 6]
+skip_assertions = []
+fail_assertions = [2, 4]
+unreached_assertions = [7, 8, 9, 10, 11]
+
+[files."252-floating-size.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 49
+tap_plan = 49
+pass = 31
+skip = 0
+fail = 18
+unreached = 0
+pass_assertions = [2, 3, 6, 7, 10, 11, 14, 15, 18, 19, 20, 22, 23, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 37, 38, 39, 40, 42, 43, 46, 47]
+skip_assertions = []
+fail_assertions = [1, 4, 5, 8, 9, 12, 13, 16, 17, 21, 24, 32, 36, 41, 44, 45, 48, 49]
+unreached_assertions = []
+
+[files."254-move-to-output-with-criteria.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 16
+tap_plan = 16
+pass = 10
+skip = 0
+fail = 6
+unreached = 0
+pass_assertions = [1, 3, 5, 7, 9, 11, 13, 14, 15, 16]
+skip_assertions = []
+fail_assertions = [2, 4, 6, 8, 10, 12]
+unreached_assertions = []
+
+[files."255-multiple-marks.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 9
+tap_plan = 9
+pass = 3
+skip = 0
+fail = 6
+unreached = 0
+pass_assertions = [1, 7, 8]
+skip_assertions = []
+fail_assertions = [2, 3, 4, 5, 6, 9]
+unreached_assertions = []
+
+[files."256-no-auto-back-and-forth.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 10
+tap_plan = "none"
+source_assertions = 10
+pass = 8
+skip = 0
+fail = 0
+unreached = 2
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [9, 10]
+
+[files."257-keypress-group1-fallback.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 17
+tap_plan = "none"
+source_assertions = 17
+pass = 1
+skip = 0
+fail = 0
+unreached = 16
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+
+[files."258-keypress-release.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 49
+tap_plan = "none"
+source_assertions = 49
+pass = 1
+skip = 0
+fail = 0
+unreached = 48
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49]
+
+[files."260-invalid-criteria.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 2
+tap_plan = 2
+pass = 1
+skip = 0
+fail = 1
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = [2]
+unreached_assertions = []
+
+[files."261-match-con_id-con_mark-combinations.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 4
+tap_plan = 4
+pass = 2
+skip = 0
+fail = 2
+unreached = 0
+pass_assertions = [1, 3]
+skip_assertions = []
+fail_assertions = [2, 4]
+unreached_assertions = []
+
+[files."262-config-validation.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 2
+tap_plan = "none"
+source_assertions = 2
+pass = 1
+skip = 0
+fail = 0
+unreached = 1
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [2]
+
+[files."263-config-reload-reverts-bind-mode.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 3
+tap_plan = 3
+pass = 1
+skip = 0
+fail = 2
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = [2, 3]
+unreached_assertions = []
+
+[files."264-dock-criteria.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 19
+tap_plan = "none"
+source_assertions = 19
+pass = 0
+skip = 0
+fail = 0
+unreached = 19
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+
+[files."265-ipc-mark.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 2
+tap_plan = 2
+pass = 1
+skip = 0
+fail = 1
+unreached = 0
+pass_assertions = [2]
+skip_assertions = []
+fail_assertions = [1]
+unreached_assertions = []
+
+[files."266-net-moveresize-window.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 12
+tap_plan = "none"
+source_assertions = 12
+pass = 0
+skip = 0
+fail = 0
+unreached = 12
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+
+[files."267-regress-mark-restart.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."268-ipc-config.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 2
+tap_plan = 2
+pass = 1
+skip = 0
+fail = 1
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = [2]
+unreached_assertions = []
+
+[files."269-focus-stack-above.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 5
+tap_plan = 5
+pass = 3
+skip = 0
+fail = 2
+unreached = 0
+pass_assertions = [1, 4, 5]
+skip_assertions = []
+fail_assertions = [2, 3]
+unreached_assertions = []
+
+[files."270-config-no-newline-end.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 2
+tap_plan = 2
+pass = 2
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."271-for_window_tilingfloating.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 20
+tap_plan = 20
+pass = 0
+skip = 0
+fail = 20
+unreached = 0
+pass_assertions = []
+skip_assertions = []
+fail_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+unreached_assertions = []
+
+[files."272-regress-focus-assign.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 8
+tap_plan = "none"
+source_assertions = 8
+pass = 2
+skip = 0
+fail = 1
+unreached = 5
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = [3]
+unreached_assertions = [4, 5, 6, 7, 8]
+
+[files."273-regress-focus-toggle.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."274-move-branch-position.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 16
+tap_plan = 16
+pass = 12
+skip = 0
+fail = 4
+unreached = 0
+pass_assertions = [1, 2, 5, 6, 9, 10, 11, 12, 13, 14, 15, 16]
+skip_assertions = []
+fail_assertions = [3, 4, 7, 8]
+unreached_assertions = []
+
+[files."275-ipc-window-close.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 3
+tap_plan = 3
+pass = 2
+skip = 0
+fail = 1
+unreached = 0
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = [3]
+unreached_assertions = []
+
+[files."276-ipc-window-move.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 2
+tap_plan = 2
+pass = 0
+skip = 0
+fail = 2
+unreached = 0
+pass_assertions = []
+skip_assertions = []
+fail_assertions = [1, 2]
+unreached_assertions = []
+
+[files."277-ipc-window-urgent.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 2
+tap_plan = 2
+pass = 0
+skip = 0
+fail = 2
+unreached = 0
+pass_assertions = []
+skip_assertions = []
+fail_assertions = [1, 2]
+unreached_assertions = []
+
+[files."279-regress-default-floating-border.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 0
+skip = 0
+fail = 1
+unreached = 0
+pass_assertions = []
+skip_assertions = []
+fail_assertions = [1]
+unreached_assertions = []
+
+[files."280-wm-class-change-handler.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 4
+tap_plan = 4
+pass = 0
+skip = 0
+fail = 4
+unreached = 0
+pass_assertions = []
+skip_assertions = []
+fail_assertions = [1, 2, 3, 4]
+unreached_assertions = []
+
+[files."281-regress-reload-bindsym.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."282-tabbed-floating-disable-crash.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."284-ewmh-visible-name.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 5
+tap_plan = "none"
+source_assertions = 5
+pass = 0
+skip = 0
+fail = 0
+unreached = 5
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [1, 2, 3, 4, 5]
+
+[files."285-sticky.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+plan_unknown = true
+assertions = 11
+tap_plan = "none"
+source_assertions = 11
+pass = 2
+skip = 0
+fail = 0
+unreached = 9
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [3, 4, 5, 6, 7, 8, 9, 10, 11]
+
+[files."286-root-window-mouse-binding.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 2
+tap_plan = "none"
+source_assertions = 2
+pass = 1
+skip = 0
+fail = 0
+unreached = 1
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [2]
+
+[files."287-edge-borders.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 31
+tap_plan = 31
+pass = 22
+skip = 0
+fail = 9
+unreached = 0
+pass_assertions = [1, 5, 6, 7, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 24, 25, 26, 28, 29, 30, 31]
+skip_assertions = []
+fail_assertions = [2, 3, 4, 8, 10, 20, 21, 23, 27]
+unreached_assertions = []
+
+[files."289-ipc-shutdown-event.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 4
+tap_plan = "none"
+source_assertions = 4
+pass = 0
+skip = 0
+fail = 0
+unreached = 4
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [1, 2, 3, 4]
+
+[files."290-keypress-numlock.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 85
+tap_plan = "none"
+source_assertions = 85
+pass = 1
+skip = 0
+fail = 0
+unreached = 84
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85]
+
+[files."291-swap.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 148
+tap_plan = "none"
+source_assertions = 148
+pass = 1
+skip = 0
+fail = 0
+unreached = 147
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148]
+
+[files."292-regress-layout-toggle.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."293-focus-follows-mouse.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 10
+tap_plan = 10
+pass = 4
+skip = 0
+fail = 6
+unreached = 0
+pass_assertions = [1, 3, 4, 5]
+skip_assertions = []
+fail_assertions = [2, 6, 7, 8, 9, 10]
+unreached_assertions = []
+
+[files."293-sticky-output-crash.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 3
+tap_plan = 3
+pass = 3
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."294-focus-order.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs", "layout-stacked->stacking"]
+plan_unknown = true
+assertions = 61
+tap_plan = "none"
+source_assertions = 61
+pass = 0
+skip = 0
+fail = 1
+unreached = 60
+pass_assertions = []
+skip_assertions = []
+fail_assertions = [1]
+unreached_assertions = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61]
+
+[files."295-net-wm-state-focused.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 5
+tap_plan = "none"
+source_assertions = 5
+pass = 1
+skip = 0
+fail = 2
+unreached = 2
+pass_assertions = [2]
+skip_assertions = []
+fail_assertions = [1, 3]
+unreached_assertions = [4, 5]
+
+[files."296-regress-focus-behind-fullscreen-floating.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."297-assign-workspace-to-output.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 25
+tap_plan = 25
+pass = 19
+skip = 0
+fail = 6
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22]
+skip_assertions = []
+fail_assertions = [18, 19, 20, 23, 24, 25]
+unreached_assertions = []
+
+[files."297-scroll-tabbed.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+plan_unknown = true
+assertions = 16
+tap_plan = "none"
+source_assertions = 16
+pass = 1
+skip = 0
+fail = 0
+unreached = 15
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+
+[files."298-ipc-misbehaving-connection.t"]
+flaky = true
+assertions = 2
+
+[files."299-regress-scratchpad-focus.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."301-shape.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 4
+tap_plan = "none"
+source_assertions = 4
+pass = 1
+skip = 0
+fail = 1
+unreached = 2
+pass_assertions = [2]
+skip_assertions = []
+fail_assertions = [1]
+unreached_assertions = [3, 4]
+
+[files."302-tree.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 15
+tap_plan = "none"
+source_assertions = 15
+pass = 0
+skip = 0
+fail = 0
+unreached = 15
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+
+[files."303-regress-move-floating.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 3
+tap_plan = 3
+pass = 1
+skip = 0
+fail = 2
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = [2, 3]
+unreached_assertions = []
+
+[files."304-ipc-workspace-init.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 9
+tap_plan = 9
+pass = 9
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."306-move-to-parent.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 2
+tap_plan = "none"
+source_assertions = 2
+pass = 0
+skip = 0
+fail = 0
+unreached = 2
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [1, 2]
+
+[files."307-focus-next-prev.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 9
+tap_plan = "none"
+source_assertions = 9
+pass = 0
+skip = 0
+fail = 0
+unreached = 9
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+[files."308-focus_wrapping.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+plan_unknown = true
+assertions = 32
+tap_plan = "none"
+source_assertions = 32
+pass = 0
+skip = 0
+fail = 0
+unreached = 32
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]
+
+[files."309-crash-move-parent.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 2
+tap_plan = "none"
+source_assertions = 2
+pass = 0
+skip = 0
+fail = 0
+unreached = 2
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [1, 2]
+
+[files."310-client-message-sticky.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 6
+tap_plan = "none"
+source_assertions = 6
+pass = 1
+skip = 0
+fail = 0
+unreached = 5
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [2, 3, 4, 5, 6]
+
+[files."311-get-binding-modes.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 2
+tap_plan = 2
+pass = 2
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."312-regress-layout-default.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 0
+tap_plan = 0
+pass = 0
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."313-include.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 30
+tap_plan = 30
+pass = 21
+skip = 1
+fail = 8
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 24]
+skip_assertions = [19]
+fail_assertions = [10, 23, 25, 26, 27, 28, 29, 30]
+unreached_assertions = []
+
+[files."315-all-criterion.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 18
+tap_plan = "none"
+source_assertions = 18
+pass = 2
+skip = 0
+fail = 0
+unreached = 16
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+
+[files."315-long-commands.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 4
+tap_plan = 4
+pass = 3
+skip = 0
+fail = 1
+unreached = 0
+pass_assertions = [2, 3, 4]
+skip_assertions = []
+fail_assertions = [1]
+unreached_assertions = []
+
+[files."316-drag-container.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs", "remove-bar-primary-output"]
+plan_unknown = true
+assertions = 18
+tap_plan = "none"
+source_assertions = 18
+pass = 1
+skip = 0
+fail = 0
+unreached = 17
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+
+[files."316-transient-for-loop.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."317-bar-config-font-fallback.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 1
+tap_plan = "none"
+source_assertions = 1
+pass = 0
+skip = 0
+fail = 0
+unreached = 1
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [1]
+
+[files."317-bar-config-font-order.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 1
+tap_plan = "none"
+source_assertions = 1
+pass = 0
+skip = 0
+fail = 0
+unreached = 1
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [1]
+
+[files."317-bar-output-trailing-space.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 4
+tap_plan = "none"
+source_assertions = 4
+pass = 0
+skip = 0
+fail = 1
+unreached = 3
+pass_assertions = []
+skip_assertions = []
+fail_assertions = [1]
+unreached_assertions = [2, 3, 4]
+
+[files."319-gaps.t"]
+adapted = ["remove-adapter-ipc-socket", "layout-stacked->stacking", "reload-source-config"]
+assertions = 28
+tap_plan = 28
+pass = 4
+skip = 0
+fail = 24
+unreached = 0
+pass_assertions = [7, 9, 15, 21]
+skip_assertions = []
+fail_assertions = [1, 2, 3, 4, 5, 6, 8, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27, 28]
+unreached_assertions = []
+
+[files."320-mouse-bindings.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 14
+tap_plan = "none"
+source_assertions = 14
+pass = 3
+skip = 0
+fail = 0
+unreached = 11
+pass_assertions = [1, 2, 3]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+
+[files."321-crash-criteria-scratchpad.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 6
+tap_plan = 6
+pass = 1
+skip = 0
+fail = 5
+unreached = 0
+pass_assertions = [6]
+skip_assertions = []
+fail_assertions = [1, 2, 3, 4, 5]
+unreached_assertions = []
+
+[files."322-match-error-crash.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 2
+tap_plan = 2
+pass = 2
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."324-for-window-reload-crash.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."325-layout-percent-and-marks.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 8
+tap_plan = "none"
+source_assertions = 8
+pass = 2
+skip = 0
+fail = 1
+unreached = 5
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = [3]
+unreached_assertions = [4, 5, 6, 7, 8]
+
+[files."500-multi-monitor.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."501-scratchpad.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 44
+tap_plan = 44
+pass = 44
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."502-focus-output.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 19
+tap_plan = 19
+pass = 19
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."503-workspace.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 18
+tap_plan = 18
+pass = 16
+skip = 0
+fail = 2
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+skip_assertions = []
+fail_assertions = [7, 8]
+unreached_assertions = []
+
+[files."504-move-workspace-to-output.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 31
+tap_plan = 31
+pass = 28
+skip = 0
+fail = 3
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 30]
+skip_assertions = []
+fail_assertions = [28, 29, 31]
+unreached_assertions = []
+
+[files."505-scratchpad-resolution.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+plan_unknown = true
+assertions = 90
+tap_plan = "none"
+source_assertions = 90
+pass = 45
+skip = 0
+fail = 0
+unreached = 45
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90]
+
+[files."506-focus-right.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 31
+tap_plan = 31
+pass = 28
+skip = 0
+fail = 3
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 28, 29, 31]
+skip_assertions = []
+fail_assertions = [26, 27, 30]
+unreached_assertions = []
+
+[files."507-workspace-move-crash.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 2
+tap_plan = 2
+pass = 2
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."509-workspace_layout.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 2
+tap_plan = 2
+pass = 1
+skip = 0
+fail = 1
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = [2]
+unreached_assertions = []
+
+[files."510-focus-across-outputs.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs", "layout-stacked->stacking"]
+plan_unknown = true
+assertions = 19
+tap_plan = "none"
+source_assertions = 19
+pass = 2
+skip = 0
+fail = 8
+unreached = 9
+pass_assertions = [5, 6]
+skip_assertions = []
+fail_assertions = [1, 2, 3, 4, 7, 8, 9, 10]
+unreached_assertions = [11, 12, 13, 14, 15, 16, 17, 18, 19]
+
+[files."511-scratchpad-configure-request.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 2
+tap_plan = 2
+pass = 2
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."512-move-wraps.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 10
+tap_plan = 10
+pass = 10
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."513-move-workspace.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 6
+tap_plan = 6
+pass = 2
+skip = 0
+fail = 4
+unreached = 0
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = [3, 4, 5, 6]
+unreached_assertions = []
+
+[files."514-ipc-workspace-multi-monitor.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 4
+tap_plan = 4
+pass = 4
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."515-create-workspace.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 2
+tap_plan = 2
+pass = 2
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."516-move.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+plan_unknown = true
+assertions = 14
+tap_plan = "none"
+source_assertions = 14
+pass = 8
+skip = 0
+fail = 4
+unreached = 2
+pass_assertions = [1, 5, 7, 8, 9, 10, 11, 12]
+skip_assertions = []
+fail_assertions = [2, 3, 4, 6]
+unreached_assertions = [13, 14]
+
+[files."517-regress-move-direction-ipc.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 2
+tap_plan = 2
+pass = 2
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."518-interpret-workspace-numbers.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 4
+tap_plan = 4
+pass = 3
+skip = 0
+fail = 1
+unreached = 0
+pass_assertions = [2, 3, 4]
+skip_assertions = []
+fail_assertions = [1]
+unreached_assertions = []
+
+[files."519-mouse-warping.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 3
+tap_plan = 3
+pass = 3
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."520-regress-focus-direction-floating.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 1
+tap_plan = 1
+pass = 0
+skip = 0
+fail = 1
+unreached = 0
+pass_assertions = []
+skip_assertions = []
+fail_assertions = [1]
+unreached_assertions = []
+
+[files."522-rename-assigned-workspace.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+plan_unknown = true
+assertions = 9
+tap_plan = "none"
+source_assertions = 9
+pass = 4
+skip = 0
+fail = 3
+unreached = 2
+pass_assertions = [1, 2, 5, 6]
+skip_assertions = []
+fail_assertions = [3, 4, 7]
+unreached_assertions = [8, 9]
+
+[files."523-move-position-center.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 4
+tap_plan = 4
+pass = 2
+skip = 0
+fail = 2
+unreached = 0
+pass_assertions = [2, 3]
+skip_assertions = []
+fail_assertions = [1, 4]
+unreached_assertions = []
+
+[files."524-move.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs", "workspace-layout-stacked->stacking"]
+assertions = 38
+tap_plan = 38
+pass = 28
+skip = 0
+fail = 10
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 16, 17, 19, 21, 23, 25, 27, 28, 29, 31, 33, 34, 35, 36, 37]
+skip_assertions = []
+fail_assertions = [12, 14, 18, 20, 22, 24, 26, 30, 32, 38]
+unreached_assertions = []
+
+[files."526-reconfigure-dock.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+plan_unknown = true
+assertions = 3
+tap_plan = "none"
+source_assertions = 3
+pass = 0
+skip = 0
+fail = 0
+unreached = 3
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [1, 2, 3]
+
+[files."527-focus-fallback.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 2
+tap_plan = "none"
+source_assertions = 2
+pass = 1
+skip = 0
+fail = 0
+unreached = 1
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [2]
+
+[files."528-workspace-next-prev-reversed.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 38
+tap_plan = 38
+pass = 16
+skip = 0
+fail = 22
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 20, 21, 22, 23, 24, 25, 26, 27]
+skip_assertions = []
+fail_assertions = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]
+unreached_assertions = []
+
+[files."530-bug-2229.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."531-fullscreen-on-given-output.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 4
+tap_plan = 4
+pass = 1
+skip = 0
+fail = 3
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = [2, 3, 4]
+unreached_assertions = []
+
+[files."534-dont-warp.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 2
+tap_plan = 2
+pass = 2
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."535-workspace-next-prev.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 38
+tap_plan = 38
+pass = 16
+skip = 0
+fail = 22
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 20, 21, 22, 23, 24, 25, 26, 27]
+skip_assertions = []
+fail_assertions = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]
+unreached_assertions = []
+
+[files."537-move-single-to-output.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 8
+tap_plan = 8
+pass = 8
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."538-i3bar-primary-output.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+plan_unknown = true
+assertions = 4
+tap_plan = "none"
+source_assertions = 4
+pass = 0
+skip = 0
+fail = 1
+unreached = 3
+pass_assertions = []
+skip_assertions = []
+fail_assertions = [1]
+unreached_assertions = [2, 3, 4]
+
+[files."539-disable_focus_wrapping.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 10
+tap_plan = 10
+pass = 10
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."540-sigterm-cleanup.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 2
+tap_plan = 2
+pass = 2
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."541-resize-set-tiling.t"]
+adapted = ["remove-adapter-ipc-socket", "layout-stacked->stacking"]
+assertions = 32
+tap_plan = 32
+pass = 30
+skip = 0
+fail = 2
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]
+skip_assertions = []
+fail_assertions = [20, 21]
+unreached_assertions = []
+
+[files."543-move-workspace-to-multiple-outputs.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 63
+tap_plan = 63
+pass = 17
+skip = 0
+fail = 46
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 12, 13, 20, 21, 22, 23, 27, 30, 35, 38, 42, 43]
+skip_assertions = []
+fail_assertions = [6, 7, 8, 9, 10, 11, 14, 15, 16, 17, 18, 19, 24, 25, 26, 28, 29, 31, 32, 33, 34, 36, 37, 39, 40, 41, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63]
+unreached_assertions = []
+
+[files."544-focus-multiple-outputs.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 41
+tap_plan = 41
+pass = 8
+skip = 0
+fail = 33
+unreached = 0
+pass_assertions = [1, 5, 9, 10, 14, 18, 20, 31]
+skip_assertions = []
+fail_assertions = [2, 3, 4, 6, 7, 8, 11, 12, 13, 15, 16, 17, 19, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41]
+unreached_assertions = []
+
+[files."545-i3-registration.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."546-empty-bindcommand.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."547-explicit-mode-default.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 1
+tap_plan = 1
+pass = 1
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."547-nested-variables.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 2
+tap_plan = 2
+pass = 2
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."549-focus-wrapping-gaps.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+assertions = 2
+tap_plan = 2
+pass = 2
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."550-focus-workspace.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 17
+tap_plan = "none"
+source_assertions = 17
+pass = 5
+skip = 0
+fail = 3
+unreached = 9
+pass_assertions = [1, 2, 4, 5, 8]
+skip_assertions = []
+fail_assertions = [3, 6, 7]
+unreached_assertions = [9, 10, 11, 12, 13, 14, 15, 16, 17]
+
+[files."550-split-redundant-containers.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 8
+tap_plan = "none"
+source_assertions = 8
+pass = 0
+skip = 0
+fail = 0
+unreached = 8
+pass_assertions = []
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [1, 2, 3, 4, 5, 6, 7, 8]
+
+[files."551-net-wm-state-maximized.t"]
+adapted = ["remove-adapter-ipc-socket"]
+plan_unknown = true
+assertions = 12
+tap_plan = "none"
+source_assertions = 12
+pass = 0
+skip = 0
+fail = 2
+unreached = 10
+pass_assertions = []
+skip_assertions = []
+fail_assertions = [1, 2]
+unreached_assertions = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+
+[files."553-popup_during_fullscreen.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 20
+tap_plan = 20
+pass = 20
+skip = 0
+fail = 0
+unreached = 0
+pass_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = []
+
+[files."554-commands-crash-for-window.t"]
+adapted = ["remove-adapter-ipc-socket"]
+assertions = 101
+tap_plan = 101
+pass = 68
+skip = 0
+fail = 33
+unreached = 0
+pass_assertions = [12, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 45, 46, 47, 48, 49, 50, 51, 52, 57, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 85, 86, 87, 94, 95, 96, 97, 98, 99, 100, 101]
+skip_assertions = []
+fail_assertions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 18, 44, 53, 54, 55, 56, 58, 59, 60, 61, 62, 63, 64, 82, 83, 84, 88, 89, 90, 91, 92, 93]
+unreached_assertions = []
+
+[files."556-workspace-keeps-focus-after-move.t"]
+adapted = ["remove-adapter-ipc-socket", "fake-outputs->headless-outputs"]
+plan_unknown = true
+assertions = 5
+tap_plan = "none"
+source_assertions = 5
+pass = 3
+skip = 0
+fail = 0
+unreached = 2
+pass_assertions = [1, 2, 3]
+skip_assertions = []
+fail_assertions = []
+unreached_assertions = [4, 5]

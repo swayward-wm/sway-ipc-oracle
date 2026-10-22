@@ -1,0 +1,31 @@
+# Human-reviewed triage of swayward-1fd3c25b i3-derived mismatches, keyed by
+# scenario.request, against the committed result (T4 measurement: oracle b70abe84, swayward 1fd3c25b, image rc-1fd3c25b, two agreeing runs).
+# contrib/validate prints the untriaged count.
+
+[[classification]]
+rows = ["i3-derived/863aeeded2cace42.tree", "i3-derived/863aeeded2cace42.workspaces", "i3-derived/863aeeded2cace42.outputs"]
+triage = "harness issue"
+finding = "i3-derived-duplicate-workspace-config"
+reason = "The 297-assign-workspace-to-output.t setup assigns workspaces 1 and bar twice. Sway merges repeated assignments into one workspace config (workspace_config_find_or_create, then appends the outputs). SwaywardAdapter.rendered_config emits one KDL workspace block per line, so the config holds duplicate workspace \"1\" and \"bar\" blocks, which swayward's config decoder rejects; swayward then starts on its default config. The rows show it: every output reports the default 1280x720 mode instead of the configured 1024x768, and the workspace placement ignores every assignment. `swayward validate` on the rendered config reports both duplicates (checked with a local swayward build; the decoder check is unchanged at 1fd3c25b)."
+source = "sway/sway/commands/workspace.c:13-29,152-161; contrib/sway-ipc-run SwaywardAdapter.rendered_config; swayward swayward-config/src/workspace.rs:76-86 (duplicate named workspace); swayward src/main.rs:203-207 (falls back to Config::load_default)"
+
+[[classification]]
+rows = ["i3-derived/05c86021f6914103.tree", "i3-derived/05c86021f6914103.workspaces", "i3-derived/05c86021f6914103.commands"]
+triage = "swayward bug"
+finding = "i3-derived-rename-assigned-workspace"
+reason = "From 522-rename-assigned-workspace.t:104. Sway accepts `rename workspace 5 to 2` (command 12) and ends with workspaces 1 and 2, 2 focused. Swayward rejects that rename and ends with four workspaces; the focused workspace sway reports as 2 is still 5, unfocused, in swayward. No KNOWN_DEVIATIONS entry covers the rename (#workspace-rename-edge-cases covers only `to to bla` and case-only renames)."
+source = "sway/sway/commands/rename.c:20-110; sway-ipc/i3-derived/05c86021f6914103.json; i3/t/522-rename-assigned-workspace.t"
+
+[[classification]]
+rows = [
+    "i3-derived/8b2eea30ee35df2d.tree",
+    "i3-derived/8b2eea30ee35df2d.workspaces",
+    "i3-derived/8b2eea30ee35df2d.outputs",
+    "i3-derived/461f78eb0f70c989.tree",
+    "i3-derived/461f78eb0f70c989.workspaces",
+    "i3-derived/461f78eb0f70c989.outputs",
+]
+triage = "swayward bug"
+finding = "i3-derived-move-workspace-multi-match-focus"
+reason = "From 543-move-workspace-to-multiple-outputs.t:75,88. `[con_mark=a] move workspace to output ...` matches the containers marked aa and ab, so sway runs it once per match and each run focuses the moved workspace's focus-inactive container; workspace 3 ends focused. Swayward ends with workspace 1 focused and visible. Only focused, visible and current_workspace differ; workspace placement matches. #workspace-output-lists covers the single-target grammar, not focus."
+source = "sway/sway/commands.c:301-326 (per-match command loop); sway/sway/commands/move.c:630-670 (seat_set_focus after the move); sway-ipc/i3-derived/8b2eea30ee35df2d.json; sway-ipc/i3-derived/461f78eb0f70c989.json"

@@ -1,0 +1,18 @@
+[
+  {
+    "command": "exec foot --app-id=fixture-gaps-full --title=fixture-gaps-full sh -c 'sleep 300'",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  },
+  {
+    "command": "fullscreen enable",
+    "reply": [
+      {
+        "success": true
+      }
+    ]
+  }
+]
