@@ -1,0 +1,67 @@
+00:00:00.032 [ERROR] [sway/config/output.c:1219] failed to execute 'swaybg' (background configuration probably not applied): No such file or directory
+warn: wayland.c:1854: compositor does not implement the xdg-toplevel-icon protocol
+warn: wayland.c:1854: compositor does not implement the xdg-toplevel-icon protocol
+warn: wayland.c:1854: compositor does not implement the xdg-toplevel-icon protocol
+warn: wayland.c:1854: compositor does not implement the xdg-toplevel-icon protocol
+warn: wayland.c:1854: compositor does not implement the xdg-toplevel-icon protocol
+warn: terminal.c:2034: slave exited with signal 1 (Hangup)
+warn: terminal.c:2034: slave exited with signal 1 (Hangup)
+warn: terminal.c:2034: slave exited with signal 1 (Hangup)
+warn: terminal.c:2034: slave exited with signal 1 (Hangup)
+warn: wayland.c:1854: compositor does not implement the xdg-toplevel-icon protocol
+warn: wayland.c:1854: compositor does not implement the xdg-toplevel-icon protocol
+warn: wayland.c:1854: compositor does not implement the xdg-toplevel-icon protocol
+warn: wayland.c:1854: compositor does not implement the xdg-toplevel-icon protocol
+warn: wayland.c:1854: compositor does not implement the xdg-toplevel-icon protocol
+warn: wayland.c:1854: compositor does not implement the xdg-toplevel-icon protocol
+../sway/commands/mode.c:76:3: runtime error: load of value 190, which is not a valid value for type '_Bool'
+../sway/commands/mode.c:78:3: runtime error: load of value 190, which is not a valid value for type '_Bool'
+ err: wayland.c:1735: failed to read events from the Wayland socket: Broken pipe
+ err: wayland.c:2417: failed to roundtrip Wayland display: Broken pipe
+ err: wayland.c:2417: failed to roundtrip Wayland display: Broken pipe
+ err: wayland.c:2417: failed to roundtrip Wayland display: Broken pipe
+ err: wayland.c:1735: failed to read events from the Wayland socket: Broken pipe
+ err: wayland.c:2417: failed to roundtrip Wayland display: Broken pipewarn: 
+terminal.c:2034:  err: slave exited with signal 1 (Hangup)wayland.c:2417: 
+failed to roundtrip Wayland display: Broken pipe
+ err: wayland.c:2417: failed to roundtrip Wayland display: Broken pipe
+ err: wayland.c:1735: failed to read events from the Wayland socket: Broken pipe
+ err: wayland.c:2382: failed to flush wayland socket: Broken pipe
+ err: wayland.c:2417: failed to roundtrip Wayland display: Broken pipe
+ err: wayland.c:2417: failed to roundtrip Wayland display: Broken pipe
+warn: wayland.c:1854: compositor does not implement the xdg-toplevel-icon protocol
+warn: wayland.c:1854: compositor does not implement the xdg-toplevel-icon protocol
+warn: wayland.c:1854: compositor does not implement the xdg-toplevel-icon protocol
+warn: wayland.c:1854: compositor does not implement the xdg-toplevel-icon protocol
+warn: terminal.c:2034: slave exited with signal 1 (Hangup)
+../sway/tree/view.c:1188:25: runtime error: member access within null pointer of type 'struct sway_workspace'
+AddressSanitizer:DEADLYSIGNAL
+=================================================================
+==13789==ERROR: AddressSanitizer: SEGV on unknown address 0x000000000050 (pc 0x0000005d7954 bp 0x7ffcab97a970 sp 0x7ffcab97a910 T0)
+==13789==The signal is caused by a READ memory access.
+==13789==Hint: address points to the zero page.
+    #0 0x0000005d7954 in view_is_visible ../sway/tree/view.c:1188
+    #1 0x000000479497 in transaction_commit ../sway/desktop/transaction.c:848
+    #2 0x00000047a5a2 in transaction_commit_pending ../sway/desktop/transaction.c:902
+    #3 0x00000047b9e2 in _transaction_commit_dirty ../sway/desktop/transaction.c:979
+    #4 0x00000047b9ff in transaction_commit_dirty ../sway/desktop/transaction.c:983
+    #5 0x000000438b87 in ipc_client_handle_command ../sway/ipc-server.c:657
+    #6 0x0000004356f4 in ipc_client_handle_readable ../sway/ipc-server.c:261
+    #7 0x7fc1a98f9811 in wl_event_loop_dispatch (/lib64/libwayland-server.so.0+0x6811) (BuildId: 1899fd337b2ae594cf1f058c65a004bbfa030c28)
+    #8 0x7fc1a98fb974 in wl_display_run (/lib64/libwayland-server.so.0+0x8974) (BuildId: 1899fd337b2ae594cf1f058c65a004bbfa030c28)
+    #9 0x00000044fb2e in server_run ../sway/server.c:805
+    #10 0x00000044427e in main ../sway/main.c:395
+    #11 0x7fc1a7acb680 in __libc_start_call_main (/lib64/libc.so.6+0x3680) (BuildId: 85075e2ae2e13352a1413d41c327dacf6461526c)
+    #12 0x7fc1a7acb797 in __libc_start_main@GLIBC_2.2.5 (/lib64/libc.so.6+0x3797) (BuildId: 85075e2ae2e13352a1413d41c327dacf6461526c)
+    #13 0x0000004033e4 in _start (/w/sway-master/build/sway/sway+0x4033e4) (BuildId: 07b27c062df0595ffb1721634719912812474b38)
+
+==13789==Register values:
+rax = 0x0000000000000000  rbx = 0x00007ce1a5be0040  rcx = 0x00007fc1a7cd77eb  rdx = 0x0000000000000000  
+rdi = 0x00000000005d790c  rsi = 0x00007ffcab97a900  rbp = 0x00007ffcab97a970  rsp = 0x00007ffcab97a910  
+ r8 = 0x00007ffcab97a34e   r9 = 0x000000000000006e  r10 = 0x0000000000000001  r11 = 0x0000000000000202  
+r12 = 0x00007c31a5cb5eb0  r13 = 0x00007bc1a4ab2e00  r14 = 0x00007be1a603953f  r15 = 0x00007ffcab97ac00  
+AddressSanitizer can not provide additional info.
+SUMMARY: AddressSanitizer: SEGV ../sway/tree/view.c:1188 in view_is_visible
+==13789==ABORTING
+ err:  err: wayland.c:1735: wayland.c:1735: failed to read events from the Wayland socket err:  err: failed to read events from the Wayland socket: Broken pipe err: wayland.c:1735: wayland.c:1735:  err: : Broken pipe
+wayland.c:1735:  err: failed to read events from the Wayland socketfailed to read events from the Wayland socketwayland.c:1735: 

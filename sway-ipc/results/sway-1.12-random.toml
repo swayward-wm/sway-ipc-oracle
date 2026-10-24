@@ -6,7 +6,7 @@
 compositor = "sway"
 version = "1.12-88869399 (Oct 18 2026, branch 'HEAD')"
 commit = "88869399f421d9180dd8b6ed0b5a1f4a3585d252"
-inputs = "919c94ff505553158f60205eda8ee18b9ddc138cb72465799bec95d4d6adacb9"
+inputs = "011bc06f9dfea936f942eaf12997d21cd88d07894aa37e28c87eb60b0513ff4c"
 date = "2026-10-20"
 normalization = "sway-ipc/normalize.toml"
 normalization_rules = ["runtime-identifiers", "focus-by-child-position", "rectangle-semantics", "backend-output-reference", "backend-output-properties", "backend-output-capabilities", "version-runtime-identity", "backend-output-name", "floating-rect-run-variance", "tree-rect-tolerance", "floating-percent-run-variance", "floating-descendant-percent-run-variance", "hidden-scratchpad-descendant-rect", "hidden-scratchpad-descendant-percent", "tree-percent-tolerance", "focus-child-position-comparison", "backend-mode-array-length"]

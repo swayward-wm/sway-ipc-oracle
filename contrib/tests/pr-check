@@ -1,0 +1,1218 @@
+#!/usr/bin/env python3
+"""pr-check explorer: outcome classification, recording, JSONL rows and cleanup.
+
+Fake adapters stand in for sway; no compositor or foot is started.
+"""
+
+import contextlib
+import importlib.machinery
+import io
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.dont_write_bytecode = True
+pc = importlib.machinery.SourceFileLoader("pr_check", str(ROOT / "contrib/pr-check")).load_module()
+runner = pc.runner
+pc.SETTLE = pc.FAILURE_SETTLE = 0
+pc.foot_missing = lambda: False
+
+VIEW = {"type": "con", "shell": "xdg_shell", "app_id": "fixture-diff-1", "id": 42,
+        "nodes": [], "floating_nodes": [], "layout": "none", "focused": True}
+TREE = {"type": "root", "id": 1, "nodes": [{"type": "output", "name": "HEADLESS-1", "id": 3, "nodes": [
+    {"type": "workspace", "name": "1", "id": 7, "layout": "splith", "nodes": [VIEW],
+     "floating_nodes": []}]}]}
+WORKSPACES = [{"name": "1", "focused": True}]
+
+
+class Process:
+    def __init__(self):
+        self.code = None
+
+    def poll(self):
+        return self.code
+
+    def wait(self, timeout=None):
+        if self.code is None:
+            raise subprocess.TimeoutExpired("sway", timeout)
+        return self.code
+
+
+class Fake:
+    """A sway that dies with exit code `code` at step `die_at`.
+
+    raise_on_death: the dying step raises (connection reset) instead of
+    replying first and dying a transaction later. code None: the process
+    stays but stops answering IPC.
+    """
+    def __init__(self, die_at=None, code=1, raise_on_death=True, fail_start=False,
+                 fail_alive_at=None):
+        self.die_at, self.code, self.raise_on_death = die_at, code, raise_on_death
+        self.fail_start, self.fail_alive_at = fail_start, fail_alive_at
+        self.process = Process()
+        self.socket = Path("/nonexistent/fake.sock")
+        self.steps, self.sent, self.stopped, self.dead = 0, [], False, False
+
+    def start(self, log):
+        if self.fail_start:
+            raise RuntimeError("compositor exited with 1")
+        log.write("fake sway started\n")
+
+    def set_differential_mode(self):
+        return [{"success": True}]
+
+    def translate_command(self, text):
+        return runner.translate_fake_outputs(text, "HEADLESS", 1)
+
+    def stop(self):
+        self.stopped = True
+
+
+def install(fake):
+    def adapter(compositor, args, run_dir, scenario=None):
+        assert compositor == "sway" and args.unpinned is True
+        assert len(str(run_dir / "wayland-1")) < 100
+        fake.args = args
+        return fake
+
+    def ipc(sock, kind, payload=""):
+        if fake.dead:
+            raise ConnectionRefusedError(111, "Connection refused")
+        return {"tree": TREE, "workspaces": WORKSPACES, "version": {}}[kind]
+
+    def observation(adapter, text):
+        assert "@con:" not in text  # resolved before it is executed
+        adapter.steps += 1
+        adapter.sent.append(text)
+        if adapter.fail_alive_at == adapter.steps:
+            raise RuntimeError("timed out waiting for generated window")
+        if adapter.die_at is not None and adapter.steps >= adapter.die_at:
+            adapter.dead = True
+            adapter.process.code = adapter.code
+            if adapter.raise_on_death:
+                raise ConnectionResetError(104, "Connection reset by peer")
+        return {"command": [{"success": True}], "tree": TREE, "workspaces": WORKSPACES}
+
+    runner.differential_adapter = adapter
+    runner.ipc = ipc
+    runner.random_observation = observation
+    return fake
+
+
+def run(fake, commands, log):
+    install(fake)
+    record = pc.new_record()
+    result = pc.run_sequence(Path("/bin/true"), None, pc.Fixed(commands), record, log, 7)
+    assert fake.stopped, "adapter not stopped"
+    return result, record
+
+
+# crash_signature: the fixture is an excerpt of a real ASan+UBSan sway log, with non-fatal
+# UBSan runtime errors (commands/mode.c) well before the fatal SEGV.
+ASAN_LOG = (ROOT / "contrib/tests/fixtures/pr-check-asan.log").read_text()
+sig = pc.crash_signature(ASAN_LOG, 1)
+assert sig["key"] == "SEGV: view_is_visible < transaction_commit < transaction_commit_pending", sig
+assert sig["kind"] == "asan" and len(sig["frames"]) == 3, sig
+assert sig["detail"].splitlines()[0].startswith("==13789==ERROR: AddressSanitizer: SEGV")
+# Up to 30 lines from the block (the excerpt ends 28 lines after it), no earlier UBSan noise.
+assert sig["detail"].splitlines() == ASAN_LOG.splitlines()[-28:], sig["detail"]
+assert "SUMMARY: AddressSanitizer: SEGV" in sig["detail"] and "runtime error" not in sig["detail"]
+long = ASAN_LOG + "".join(f"after {n}\n" for n in range(10))
+assert len(pc.crash_signature(long, 1)["detail"].splitlines()) == 30
+
+
+def asan_block(pid, bug, frames):
+    lines = [f"=={pid}==ERROR: AddressSanitizer: {bug} on address 0x602000000010 (pc 0x1)",
+             f"=={pid}==The signal is caused by a READ memory access."]
+    lines += [f"    #{n} 0x{n:012x} {f'in {func} ' if func else ''}{path}"
+              for n, (func, path) in enumerate(frames)]
+    return "\n".join(lines + ["", f"SUMMARY: AddressSanitizer: {bug}", ""])
+
+
+# Frames differing only in line numbers give the same key; non-sway frames are skipped.
+old = asan_block(1, "heap-use-after-free", [
+    ("free", "(/lib64/libasan.so.8+0xf4d38)"), ("seat_get_focus", "../sway/input/seat.c:329"),
+    ("wl_event_loop_dispatch", "(/lib64/libwayland-server.so.0+0x6811)"),
+    ("focus_cmd", "../sway/commands/focus.c:12"), ("execute_command", "/src/sway/commands.c:301"),
+    ("main", "../sway/main.c:395")])
+new = old.replace("seat.c:329", "seat.c:341").replace("focus.c:12", "focus.c:20")
+assert pc.crash_signature(old, 1)["key"] == pc.crash_signature(new, 1)["key"] == \
+    "heap-use-after-free: seat_get_focus < focus_cmd < execute_command"
+assert pc.crash_signature(old, 1)["frames"] == ["seat_get_focus", "focus_cmd", "execute_command"]
+
+# Two ASan blocks: the last one is the fatal report.
+first = asan_block(7, "SEGV", [("view_is_visible", "../sway/tree/view.c:1188")])
+last = asan_block(8, "stack-overflow", [("node_get_parent", "../sway/tree/node.c:80")])
+sig = pc.crash_signature(f"{first}\nnoise\n{last}", 1)
+assert sig["key"] == "stack-overflow: node_get_parent" and sig["detail"].startswith("==8=="), sig
+
+# The bug type stops before variable details.
+sized = asan_block(5, "x", [("list_add", "../sway/list.c:9")]).replace(
+    "x on address 0x602000000010 (pc 0x1)", "allocation-size-too-big: requested allocation size 0xffff")
+assert pc.crash_signature(sized, 1)["key"] == "allocation-size-too-big: list_add"
+double = sized.replace("allocation-size-too-big: requested allocation size 0xffff",
+                       "attempting double-free on 0x602000000010 in thread T0:")
+assert pc.crash_signature(double, 1)["key"] == "attempting double-free: list_add"
+
+# An unsymbolized frame (func None) does not end the stack; later in-sway frames still count.
+# The shape of a real ASan run in the oracle image, and a raise in front of three sway frames.
+reviewed = asan_block(3, "SEGV", [
+    ("sway_fault", "/tmp/x/sway/main.c:2"), (None, " (/tmp/x/libforeign.so+0x39a)"),
+    ("foreign_bridge", "/tmp/x/foreign.c:1"), ("container_swap", "/tmp/x/sway/main.c:3"),
+    ("cmd_swap", "/tmp/x/sway/main.c:4")])
+sig = pc.crash_signature(reviewed, 1)
+assert sig["frames"] == ["sway_fault", "container_swap", "cmd_swap"], sig
+assert sig["key"] == "SEGV: sway_fault < container_swap < cmd_swap", sig
+raised = asan_block(4, "SEGV", [
+    ("raise", "(/lib64/libc.so.6+0x1)"), (None, "(/lib64/libext.so+0x2)"),
+    ("container_swap", "../sway/tree/container.c:9"), ("cmd_swap", "../sway/commands/swap.c:5"),
+    ("execute_command", "../sway/commands.c:301")])
+assert pc.crash_signature(raised, 1)["key"] == "SEGV: container_swap < cmd_swap < execute_command"
+# Unsymbolized frames are never named, also in the fallback.
+foreign = asan_block(9, "SEGV", [(None, "(/lib64/libx.so+0x9)")] +
+                     [(f"f{n}", f"(/lib64/libx.so+0x{n})") for n in range(4)])
+assert pc.crash_signature(foreign, 1)["frames"] == ["f0", "f1", "f2"]
+
+# No in-sway frames: the first three frames of any path; no frames at all: empty.
+foreign = asan_block(9, "SEGV", [(f"f{n}", f"(/lib64/libx.so+0x{n})") for n in range(5)])
+assert pc.crash_signature(foreign, 1)["frames"] == ["f0", "f1", "f2"]
+assert pc.crash_signature(asan_block(9, "SEGV", []), 1)["key"] == "SEGV: "
+
+# No ASan report: the exit code is the key, frames empty, detail the log's tail.
+plain = "\n".join(f"line {n}" for n in range(50)) + \
+    "\n../sway/commands/mode.c:76:3: runtime error: load of value 190\n"
+for code, key in ((-11, "signal:SIGSEGV"), (-6, "signal:SIGABRT"), (-200, "signal:200"),
+                  (1, "exit:1"), (0, "exit:0"), (None, "unresponsive")):
+    sig = pc.crash_signature(plain, code)
+    assert sig == {"kind": "signal", "frames": [], "key": key,
+                   "detail": "\n".join(plain.splitlines()[-30:])}, (code, sig)
+
+COMMANDS = ["exec foot", "split h", "[con_id=@con:fixture-diff-1] focus",
+            "move container to output fake-0", "nop"]
+
+with tempfile.TemporaryDirectory(prefix="pc-test-") as work:
+    work = Path(work)
+    log = work / "seeds/head-0/explore.log"
+
+    # Alive after the last step: survived, and the log is kept.
+    result, record = run(Fake(), COMMANDS, log)
+    assert result == {"outcome": "survived", "step": None, "error": None, "exit_code": None}, result
+    assert log.read_text() == "fake sway started\n"
+    # Symbolic, resolved against the live tree, and as sent (fake-N translated).
+    assert record["commands"] == COMMANDS
+    assert record["resolved"][2] == "[con_id=42] focus", record["resolved"]
+    assert record["sent"][3] == "move container to output HEADLESS-1", record["sent"]
+    assert record["resolved"][3] == COMMANDS[3]
+
+    # ASan exits 1 at the step that killed sway; the step keeps its entries.
+    result, record = run(Fake(die_at=3, code=1), COMMANDS, log)
+    assert (result["outcome"], result["step"], result["exit_code"]) == ("crashed", 3, 1), result
+    assert "Connection reset" in result["error"]
+    assert len(record["commands"]) == len(record["resolved"]) == len(record["sent"]) == 3
+    assert record["resolved"][2] == "[con_id=42] focus"
+
+    # Death a transaction after the last reply is seen by the final liveness check.
+    result, _ = run(Fake(die_at=5, code=-11, raise_on_death=False), COMMANDS, log)
+    assert (result["outcome"], result["step"], result["exit_code"]) == ("crashed", 5, -11), result
+
+    # Death after step 2's reply is seen when resolving step 3 needs the tree.
+    result, record = run(Fake(die_at=2, code=-6, raise_on_death=False), COMMANDS, log)
+    assert (result["outcome"], result["step"]) == ("crashed", 2), result
+    assert record["commands"] == COMMANDS[:2]
+
+    # Still running but no longer answering IPC: crashed, exit code unknown.
+    result, _ = run(Fake(die_at=4, code=None), COMMANDS, log)
+    assert (result["outcome"], result["step"], result["exit_code"]) == ("crashed", 4, None), result
+
+    # The timeout wrapper or a SIGKILL ended sway: harness, never a crash.
+    for code in (124, 137, -9):
+        result, _ = run(Fake(die_at=2, code=code), COMMANDS, log)
+        assert (result["outcome"], result["exit_code"]) == ("harness", code), (code, result)
+        result, _ = run(Fake(die_at=5, code=code, raise_on_death=False), COMMANDS, log)
+        assert result["outcome"] == "harness", (code, result)
+
+    # A failing step while sway lives on is a harness problem (foot, fixture client).
+    result, record = run(Fake(fail_alive_at=2), COMMANDS, log)
+    assert (result["outcome"], result["step"]) == ("harness", 2), result
+    assert "generated window" in result["error"] and len(record["sent"]) == 2
+
+    # A failed start is harness, and the adapter is still stopped.
+    result, record = run(Fake(fail_start=True), COMMANDS, log)
+    assert result["outcome"] == "harness" and "startup failed" in result["error"], result
+    assert record == pc.new_record()
+
+    # Missing foot is harness before anything starts.
+    pc.foot_missing = lambda: True
+    result = pc.run_sequence(Path("/bin/true"), None, pc.Fixed(COMMANDS), pc.new_record(), log, 7)
+    assert result["outcome"] == "harness" and "foot" in result["error"], result
+    pc.foot_missing = lambda: False
+
+    # Hinted windows are disabled when the fixture toolchain is missing.
+    which = pc.shutil.which
+    pc.shutil.which = lambda tool: None if tool == "wayland-scanner" else "/usr/bin/" + tool
+    cfg, missing = pc.make_cfg(9)
+    pc.shutil.which = which
+    assert missing == "wayland-scanner" and cfg["vocabulary"]["hinted_fraction"] == 0
+    assert cfg["timeout"] == 9 and cfg["recipes"]
+    assert pc.v3.load_v3()[0]["hinted_fraction"] > 0  # the loaded vocabulary is not mutated
+    pc.missing_fixture_toolchain = lambda: None
+    cfg, missing = pc.make_cfg(9)
+    assert missing is None and cfg["vocabulary"]["hinted_fraction"] > 0
+
+    # explore(): one JSONL row per seed through the worker pool, observations per step.
+    install(Fake())
+    out = work / "out"
+    out.mkdir()
+    rows = pc.explore(Path("/bin/true"), range(3, 5), 6, out, cfg, jobs=2)
+    lines = [json.loads(line) for line in (out / "results.jsonl").read_text().splitlines()]
+    assert sorted(row["seed"] for row in lines) == [3, 4] and len(rows) == 2
+    for row in lines:
+        assert set(row) == {"phase", "side", "seed", "outputs", "commands", "resolved", "sent",
+                            "outcome", "step", "error", "exit_code", "signature", "log"}, row
+        assert row["signature"] is None, row
+        assert row["phase"] == "explore" and row["side"] == "head", row
+        assert row["outcome"] == "survived" and len(row["commands"]) == 6, row
+        assert row["log"] == f"seeds/head-{row['seed']}/explore.log"
+        observations = (out / f"seeds/head-{row['seed']}/observations.jsonl").read_text().splitlines()
+        assert [json.loads(line)["step"] for line in observations] == list(range(1, 7))
+    # The same seed generates the same list.
+    again = pc.explore_seed(Path("/bin/true"), 3, 6, work / "again", cfg)
+    assert again["commands"] == next(row for row in lines if row["seed"] == 3)["commands"]
+
+    # A crashed seed carries the signature of its log, read after sway was stopped.
+    class Logging(Fake):
+        def __init__(self, text, **kwargs):
+            super().__init__(**kwargs)
+            self.text = text
+
+        def start(self, log):
+            self.log = log
+
+        def stop(self):
+            self.log.write(self.text)
+            super().stop()
+
+    install(Logging(ASAN_LOG, die_at=3, code=1))
+    row = pc.explore_seed(Path("/bin/true"), 3, 6, work / "asan", cfg)
+    assert (row["outcome"], row["exit_code"]) == ("crashed", 1), row
+    assert row["signature"]["key"] == \
+        "SEGV: view_is_visible < transaction_commit < transaction_commit_pending", row
+    install(Logging("no sanitizer here\n", die_at=3, code=-11, raise_on_death=False))
+    row = pc.explore_seed(Path("/bin/true"), 3, 6, work / "segv", cfg)
+    assert row["signature"]["key"] == "signal:SIGSEGV", row
+    install(Logging("", die_at=2, code=None))
+    row = pc.explore_seed(Path("/bin/true"), 3, 6, work / "hung", cfg)
+    assert (row["exit_code"], row["signature"]["key"]) == (None, "unresponsive"), row
+
+    # A seed that raises outside run_sequence becomes a harness row; others go on.
+    pc.CFG = None  # explore_seed fails on cfg["vocabulary"]
+    row = pc.explore_task((Path("/bin/true"), 9, 6, work / "broken", "head"))
+    assert row["outcome"] == "harness" and "TypeError" in row["error"], row
+
+    # replay(): the explore loop on a Fixed list with the row's output layout; it records
+    # its own resolution and signs a crash from its own log.
+    scenarios = []
+    real_adapter = runner.differential_adapter
+    install(Logging(ASAN_LOG, die_at=3, code=1))
+    patched = runner.differential_adapter
+    runner.differential_adapter = lambda *a: scenarios.append(a[3]) or patched(*a)
+    replayed = pc.replay(Path("/bin/true"), COMMANDS, 2, work / "r/judge-head-1.log", 7)
+    assert scenarios == [{"outputs": 2, "output_layout": pc.v3.TWO_OUTPUT_LAYOUT}], scenarios
+    assert (replayed["outcome"], replayed["step"]) == ("crashed", 3), replayed
+    assert replayed["signature"]["key"].startswith("SEGV: view_is_visible"), replayed
+    assert replayed["commands"] == COMMANDS[:3] and replayed["resolved"][2] == "[con_id=42] focus"
+    assert len(replayed["sent"]) == 3 and (work / "r/judge-head-1.log").exists()
+    install(Fake())
+    scenarios.clear()
+    patched = runner.differential_adapter
+    runner.differential_adapter = lambda *a: scenarios.append(a[3]) or patched(*a)
+    replayed = pc.replay(Path("/bin/true"), COMMANDS, 1, work / "r/judge-base-1.log", 7)
+    assert scenarios == [None] and replayed["outcome"] == "survived", replayed
+    assert replayed["signature"] is None and replayed["sent"][3].endswith("HEADLESS-1")
+    assert "observations" not in replayed
+    # keep_observations: the per-step entries explore writes to observations.jsonl.
+    install(Fake())
+    kept = pc.replay(Path("/bin/true"), COMMANDS, 1, work / "r/obs.log", 7, keep_observations=True)
+    explored = [json.loads(line) for line in
+                (out / "seeds/head-3/observations.jsonl").read_text().splitlines()]
+    assert kept["observations"] == [{**entry, "step": n} for n, entry in
+                                    enumerate(explored[:1] * len(COMMANDS), 1)], kept
+    install(Fake(die_at=3, code=1))
+    kept = pc.replay(Path("/bin/true"), COMMANDS, 1, work / "r/obs.log", 7, keep_observations=True)
+    assert kept["outcome"] == "crashed" and [o["step"] for o in kept["observations"]] == [1, 2]
+
+    # classify() and judge(): a fake replay per binary scripts each of the 4 replays.
+    S, T = "SEGV: a < b < c", "heap-use-after-free: x"
+
+    def crashed(step, key=S):
+        return {"outcome": "crashed", "step": step, "signature": {"key": key}}
+    ok = {"outcome": "survived", "step": None, "signature": None}
+    harness = {"outcome": "harness", "step": 2, "signature": None}
+    TABLE = [  # (explorer replays, other replays, outcome)
+        ([crashed(5), crashed(5)], [ok, ok], "new"),
+        ([crashed(5), crashed(5)], [crashed(5), crashed(7)], "pre-existing"),
+        # H is the explorer's earliest step for S across its replays, not the explore step.
+        ([crashed(6), crashed(4)], [crashed(4), crashed(4)], "pre-existing"),
+        ([crashed(5), crashed(5)], [crashed(5, T), crashed(5, T)], "blocked"),
+        ([crashed(5), crashed(5)], [crashed(5), crashed(5, T)], "blocked"),
+        ([crashed(5), crashed(5)], [crashed(2, T), crashed(2, T)], "blocked"),  # earlier, other key
+        ([crashed(5), crashed(5)], [crashed(3), crashed(5)], "blocked"),  # same key, earlier step
+        ([crashed(5), crashed(5)], [crashed(5), ok], "blocked"),  # 1 of 2
+        ([crashed(5), crashed(5)], [ok, crashed(9, T)], "blocked"),
+        ([crashed(5), ok], [ok, ok], "unconfirmed"),  # 1 of 2 on the explorer
+        ([crashed(5), crashed(5, T)], [ok, ok], "unconfirmed"),
+        ([ok, ok], [crashed(5), crashed(5)], "unconfirmed"),
+        ([crashed(5), ok], [crashed(2, T), ok], "unconfirmed"),  # unconfirmed beats blocked
+        ([crashed(5), crashed(5)], [ok, harness], "harness"),  # a harness on base
+        ([harness, crashed(5)], [ok, ok], "harness"),
+        ([crashed(5), ok], [harness, crashed(2, T)], "harness"),  # harness beats everything
+    ]
+    for explorer, other, expected in TABLE:
+        assert pc.classify(S, explorer, other) == expected, (explorer, other, expected)
+
+    HEAD, BASE = Path("/bin/true").resolve(), Path("/bin/false").resolve()
+    candidate = {"phase": "explore", "side": "head", "seed": 37, "outputs": 2,
+                 "commands": COMMANDS, "resolved": [], "sent": [], "outcome": "crashed",
+                 "step": 5, "signature": {"key": S}}
+    real_replay = pc.replay
+    for explorer, other, expected in TABLE:
+        calls, script = [], {HEAD: iter(explorer), BASE: iter(other)}
+
+        def fake_replay(binary, commands, outputs, out_log, timeout):
+            calls.append((binary, commands, outputs, out_log, timeout))
+            return {**next(script[binary]), "resolved": commands, "sent": commands}
+        pc.replay = fake_replay
+        judged = pc.judge(candidate, HEAD, BASE, work / "judge", 11)
+        assert judged["outcome"] == expected, (judged, expected)
+        seed_dir = work / "judge/seeds/head-37"
+        assert calls == [(HEAD, COMMANDS, 2, seed_dir / "judge-head-1.log", 11),
+                         (HEAD, COMMANDS, 2, seed_dir / "judge-head-2.log", 11),
+                         (BASE, COMMANDS, 2, seed_dir / "judge-base-1.log", 11),
+                         (BASE, COMMANDS, 2, seed_dir / "judge-base-2.log", 11)], calls
+        assert judged["head_key"] == S and judged["phase"] == "judge" and judged["seed"] == 37
+        assert judged["head_steps"] == [r["step"] for r in explorer]
+        assert judged["base_steps"] == [r["step"] for r in other]
+        assert judged["base_keys"] == [r["signature"]["key"] if r["outcome"] == "crashed"
+                                       else None for r in other], judged
+        assert judged["base_outcomes"] == [r["outcome"] for r in other]
+
+    # A base-explored row: base is the explorer and is replayed first; keys stay per side.
+    # The same table with sides swapped, "new" renamed "fixed" (base crashes, head survives).
+    calls, script = [], {BASE: iter([crashed(3), crashed(3)]), HEAD: iter([ok, ok])}
+    judged = pc.judge({**candidate, "side": "base"}, BASE, HEAD, work / "judge", 11)
+    assert [call[0] for call in calls] == [BASE, BASE, HEAD, HEAD]
+    assert calls[0][3] == work / "judge/seeds/base-37/judge-base-1.log"
+    assert judged["outcome"] == "fixed" and judged["base_key"] == S and "head_key" not in judged
+    assert judged["base_steps"] == [3, 3] and judged["head_keys"] == [None, None], judged
+    for explorer, other, expected in TABLE:
+        script = {BASE: iter(explorer), HEAD: iter(other)}
+        judged = pc.judge({**candidate, "side": "base"}, BASE, HEAD, work / "judge", 11)
+        assert judged["outcome"] == {"new": "fixed"}.get(expected, expected), (judged, expected)
+        assert judged["base_outcomes"] == [r["outcome"] for r in explorer], judged
+
+    # The judge deadline: checked before every replay; past it the row is unjudged and
+    # keeps the replays done. Each fake replay takes 1 s.
+    clock = {"now": 0.0}
+    real_time = pc.time
+    pc.time = type("Clock", (), {"monotonic": staticmethod(lambda: clock["now"])})
+
+    def ticking(binary, commands, outputs, out_log, timeout):
+        clock["now"] += 1
+        return {**crashed(5), "resolved": commands, "sent": commands}
+    pc.replay = ticking
+    judged = pc.judge(candidate, HEAD, BASE, work / "judge", 11, deadline=1.5)
+    assert judged["outcome"] == "unjudged" and judged["head_steps"] == [5, 5], judged
+    assert judged["base_outcomes"] == [None, None] and "error" not in judged, judged
+    clock["now"] = 10.0
+    judged = pc.judge(candidate, HEAD, BASE, work / "judge", 11, deadline=5)
+    assert judged["outcome"] == "unjudged" and judged["head_outcomes"] == [None, None], judged
+    pc.time = real_time
+
+    # judge_all(): crashed rows only, through the pool, one JSONL row each.
+    out = work / "judged"
+    out.mkdir()
+    pc.replay = lambda binary, *rest: crashed(4) if binary == HEAD else ok
+    explored = [candidate, {**candidate, "seed": 38}, {**candidate, "seed": 39, "outcome": "survived"},
+                {**candidate, "seed": 40, "outcome": "harness"}]
+    judged = pc.judge_all(explored, BASE, HEAD, out, cfg, jobs=2)
+    lines = [json.loads(line) for line in (out / "results.jsonl").read_text().splitlines()]
+    assert sorted(row["seed"] for row in lines) == [37, 38] and len(judged) == 2, lines
+    assert {row["outcome"] for row in lines} == {"new"}, lines
+    SCHEMA = {"phase", "side", "seed", "outcome", "head_key", "head_outcomes", "head_keys",
+              "head_steps", "base_outcomes", "base_keys", "base_steps"}
+    for row in lines:
+        assert set(row) == SCHEMA, row
+    # A judgement that raises is a harness row with the same schema; the others go on.
+    pc.CFG = cfg
+
+    def broken(*args):
+        raise OSError("no space")
+    pc.replay = broken
+    row = pc.judge_task((candidate, HEAD, BASE, work / "judge", pc.math.inf))
+    assert set(row) == SCHEMA | {"error"} and "OSError" in row["error"], row
+    assert (row["outcome"], row["seed"], row["head_key"]) == ("harness", 37, S), row
+    assert row["head_keys"] == row["head_steps"] == row["base_steps"] == [None, None], row
+    # A failure on the 3rd replay keeps the first two.
+    script = iter([crashed(5), crashed(6)])
+    pc.replay = lambda *args: next(script)
+    row = pc.judge_task((candidate, HEAD, BASE, work / "judge", pc.math.inf))
+    assert set(row) == SCHEMA | {"error"} and "StopIteration" in row["error"], row
+    assert row["outcome"] == "harness" and row["head_steps"] == [5, 6], row
+    assert row["head_keys"] == [S, S] and row["base_keys"] == [None, None], row
+    assert row["base_outcomes"] == [None, None], row
+    # The real replay: a directory where judge-head-1.log goes is a harness replay, not
+    # an escaping IsADirectoryError, and the row keeps the full schema.
+    pc.replay = real_replay
+    install(Fake())
+    (work / "isdir/seeds/head-37/judge-head-1.log").mkdir(parents=True)
+    row = pc.judge_task((candidate, HEAD, BASE, work / "isdir", pc.math.inf))
+    assert set(row) == SCHEMA, row
+    assert (row["outcome"], row["head_key"]) == ("harness", S), row
+    assert row["head_outcomes"] == ["harness", "survived"], row
+    assert row["base_outcomes"] == ["survived", "survived"], row
+    runner.differential_adapter = real_adapter
+
+    # pooled(): an endless task stream stops at the deadline; at most jobs tasks overrun it.
+    real_seed = pc.explore_seed
+
+    def slow_seed(binary, seed, steps, out, cfg, side):
+        pc.time.sleep(0.1)
+        return {"phase": "explore", "side": side, "seed": seed, "outcome": "survived"}
+    pc.explore_seed = slow_seed
+    out = work / "endless"
+    out.mkdir()
+    rows = pc.explore(HEAD, pc.itertools.count(100), 6, out, cfg, 2, "base",
+                      pc.time.monotonic() + 0.5)
+    pc.explore_seed = real_seed
+    seeds = sorted(row["seed"] for row in rows)
+    assert 2 <= len(seeds) <= 14 and seeds == list(range(100, 100 + len(seeds))), seeds
+    assert {row["side"] for row in rows} == {"base"}
+    assert pc.explore(HEAD, pc.itertools.count(), 6, out, cfg, 2, "head", 0) == []
+
+    # main(): preflight, head then base exploration (seeds continue after head's), judging
+    # each crashed row on its explorer first, then the report and exit code.
+    calls = {"explore": [], "preflight": []}
+    real_explore, real_judge, real_preflight = pc.explore, pc.judge, pc.preflight
+    real_minimise = pc.minimise
+
+    def fake_explore(binary, seeds, steps, out, cfg, jobs, side, deadline):
+        calls["explore"].append((binary, side, deadline))
+        seeds = list(pc.itertools.islice(seeds, 3))
+        rows = [{"phase": "explore", "side": side, "seed": seed, "outputs": 1,
+                 "commands": ["nop"], "outcome": "crashed" if seed % 2 == 0 else "survived",
+                 "step": 1, "error": None, "signature": {"key": S}} for seed in seeds]
+        for row in rows:
+            pc.append_row(out, row)
+        return rows
+
+    def fake_judge(row, explorer, other, out, timeout, deadline):
+        side, other_side = row["side"], "base" if row["side"] == "head" else "head"
+        # Runs in a pool worker: the binaries travel back in the row.
+        return {**pc.judge_row(row, {side: [crashed(1), crashed(1)], other_side: [ok, ok]}, 2),
+                "binaries": [str(explorer), str(other)]}
+    pc.explore, pc.judge = fake_explore, fake_judge
+    pc.preflight = lambda binary, out, timeout, side: calls["preflight"].append(side)
+    pc.minimise = lambda row, judged, base, head, out, deadline, *, n, timeout, counts: {
+        "phase": "minimise", "side": "head", "seed": row["seed"], "n": n, "key": S,
+        "length": 1, "minimised": True, "repro": "verified", "fallback": None, "counts": None,
+        "dir": f"new-{n}"}
+    stdout = io.StringIO()
+    with contextlib.redirect_stdout(stdout):
+        code = pc.main(["--base", str(BASE), "--head", str(HEAD), "--out", str(work / "main"),
+                        "--seeds", "3", "--seed", "4", "--also-base", "3", "--jobs", "1"])
+    report = stdout.getvalue()
+    assert code == 1, report
+    assert calls["preflight"] == ["base", "head"], calls
+    assert [(b, side) for b, side, _ in calls["explore"]] == [(HEAD, "head"), (BASE, "base")]
+    assert all(deadline == pc.math.inf for *_, deadline in calls["explore"]), calls
+    # Head explored 4, 5, 6; base 7, 8, 9. Crashed even seeds: head 4, 6 and base 8.
+    judge_rows = [row for row in pc.load_rows(work / "main") if row["phase"] == "judge"]
+    assert sorted((row["side"], row["seed"], *row["binaries"]) for row in judge_rows) == [
+        ("base", 8, str(BASE), str(HEAD)), ("head", 4, str(HEAD), str(BASE)),
+        ("head", 6, str(HEAD), str(BASE))], judge_rows
+    assert "explored 3 seeds (head), 3 (base), " in report and ", 1 jobs; " in report, report
+    assert "--seeds 3: fixed exploration size, no wall limit (--minutes ignored)" in report
+    assert "NEW in head: 2\n  1. SEGV: a < b < c\n     head 2/2, base 0/2; repro.sh verified" \
+        in report, report
+    assert f"pre-existing 0, fixed 1, blocked 0, unconfirmed 0, harness 0. Details: " \
+        f"{work / 'main/report.txt'}\n" in report, report
+    details = (work / "main/report.txt").read_text()
+    assert details.startswith(report.rstrip("\n")) and "== fixed (1) ==" in details, details
+    assert "  base seed 8 (1 outputs, explore crashed at step 1): SEGV: a < b < c" in details
+    assert json.loads((work / "main/run.json").read_text())["budget"] is None
+    # --minutes without --seeds: absolute deadlines from plan_budget, endless head seeds.
+    calls["explore"].clear()
+    before = pc.time.monotonic()
+    with contextlib.redirect_stdout(io.StringIO()) as stdout:
+        code = pc.main(["--base", str(BASE), "--head", str(HEAD), "--out", str(work / "timed"),
+                        "--minutes", "2", "--also-base", "5"])
+    (_, _, head_end), (_, _, base_end) = calls["explore"]
+    assert before + 36 <= head_end <= pc.time.monotonic() + 36, (before, head_end)
+    assert abs(base_end - head_end - 36) < 1e-6, (head_end, base_end)
+    assert "(--minutes ignored)" not in stdout.getvalue()
+    assert json.loads((work / "timed/run.json").read_text())["budget"]["run"] == 120
+    # A binary that fails to start: nothing is explored, exit 2, the report says why.
+    calls["explore"].clear()
+    pc.preflight = lambda binary, out, timeout, side: "harness: startup failed: boom" \
+        if side == "head" else None
+    with contextlib.redirect_stdout(io.StringIO()) as stdout:
+        code = pc.main(["--base", str(BASE), "--head", str(HEAD), "--out", str(work / "nostart")])
+    assert code == 2 and calls["explore"] == [], calls
+    assert "error: head failed to start: harness: startup failed: boom\n" in stdout.getvalue()
+    assert "error: no seeds explored" in stdout.getvalue()
+    pc.explore, pc.judge, pc.preflight = real_explore, real_judge, real_preflight
+    pc.minimise = real_minimise
+
+    # CLI: --out must be new or empty, binaries must be executable.
+    (work / "full").mkdir()
+    (work / "full/x").write_text("")
+    for argv in (["--base", "/bin/true", "--head", "/bin/true", "--out", str(work / "full")],
+                 ["--base", "/nonexistent", "--head", "/bin/true", "--out", str(work / "new")]):
+        try:
+            with contextlib.redirect_stderr(io.StringIO()):
+                pc.main(argv)
+        except SystemExit as error:
+            assert error.code == 2
+        else:
+            raise AssertionError(f"accepted {argv}")
+
+    # CLI: a relative binary is made absolute, so the runner's env/timeout wrappers run that
+    # file rather than a same-named executable earlier on PATH, and run.json names it.
+    (work / "shadow").mkdir()
+    (work / "build").mkdir()
+    for path, word in ((work / "shadow/sway", "SHADOW"), (work / "build/sway", "STUB")):
+        path.write_text(f"#!/bin/sh\necho {word}\n")
+        path.chmod(0o755)
+    stub = (work / "build/sway").resolve()
+    explored = []
+    real_explore, cwd, env_path = pc.explore, os.getcwd(), os.environ.get("PATH", "")
+    pc.explore = lambda head, *rest: explored.append(head) or []
+    pc.preflight = lambda *args: None
+    os.environ["PATH"] = f"{work / 'shadow'}:{env_path}"
+    try:
+        os.chdir(work / "build")
+        with contextlib.redirect_stdout(io.StringIO()):
+            assert pc.main(["--base", "./sway", "--head", "sway", "--out", str(work / "rel")]) == 2
+        os.chdir(work)
+        with contextlib.redirect_stdout(io.StringIO()):
+            assert pc.main(["--base", "build/sway", "--head", "build/sway",
+                            "--out", str(work / "rel2")]) == 2  # no seeds explored
+        assert explored == [stub, stub], explored
+        assert all(head.is_absolute() for head in explored)
+        ran = subprocess.run(["env", str(explored[0])], capture_output=True, text=True, check=True)
+        assert ran.stdout == "STUB\n", ran.stdout
+        for out in ("rel", "rel2"):
+            provenance = json.loads((work / out / "run.json").read_text())
+            assert provenance["base"]["binary"] == provenance["head"]["binary"] == str(stub)
+    finally:
+        os.chdir(cwd)
+        os.environ["PATH"] = env_path
+        pc.explore, pc.preflight = real_explore, real_preflight
+
+# minimise(): a fake replay per binary decides from the candidate's commands.
+S, T = "SEGV: a < b < c", "heap-use-after-free: x"
+HEAD, BASE = Path("/bin/true").resolve(), Path("/bin/false").resolve()
+
+
+def outcome(kind, key=None, step=3):
+    return {"outcome": kind, "step": step if kind != "survived" else None, "error": None,
+            "exit_code": 1 if kind == "crashed" else None,
+            "signature": {"key": key, "detail": f"detail of {key}"} if kind == "crashed" else None}
+
+
+def scripted(head_rule, base_rule, calls):
+    """A fake replay: head_rule/base_rule(commands) -> outcome; calls logs (side, commands, log)."""
+    def fake(binary, commands, outputs, out_log, timeout):
+        side = "head" if binary == HEAD else "base"
+        calls.append((side, list(commands), out_log.name, outputs, timeout))
+        result = (head_rule if side == "head" else base_rule)(commands)
+        out_log.parent.mkdir(parents=True, exist_ok=True)
+        out_log.write_text(f"{commands} {result['outcome']}\n")
+        # Like translate_command, which only renames fake-N outputs.
+        sent = [text if text.startswith("xdg-") else f"sent {text}" for text in commands]
+        return {**result, "commands": list(commands), "resolved": list(commands), "sent": sent}
+    return fake
+
+
+def head_rule(commands):  # x crashes head with S; q without x crashes it with another key
+    if "x" in commands:
+        return outcome("crashed", S)
+    return outcome("crashed", T) if "q" in commands else outcome("survived")
+
+
+def base_rule(commands):  # y without z crashes base
+    return outcome("crashed", T) if "y" in commands and "z" not in commands else outcome("survived")
+
+
+def script_runs(results):
+    """A fake run_script returning results[label] in turn; logs (label, script text)."""
+    seen = []
+
+    def fake(binary, script, outputs, log_path, timeout):
+        label = "head" if binary == HEAD else "base"
+        seen.append((label, Path(script).read_text(), log_path.name))
+        return results[label].pop(0)
+    return fake, seen
+
+
+EXPLORED = {"phase": "explore", "side": "head", "seed": 37, "outputs": 2,
+            "commands": ["p", "y", "x", "z", "q"], "resolved": ["p", "y", "x", "z", "q"],
+            "sent": ["explore p", "explore y", "explore x", "explore z", "explore q"],
+            "outcome": "crashed", "step": 5, "signature": {"key": S, "detail": "explore detail"}}
+JUDGED = {"phase": "judge", "side": "head", "seed": 37, "outcome": "new", "head_key": S}
+real_replay, real_run_script = pc.replay, pc.run_script
+
+with tempfile.TemporaryDirectory(prefix="pc-min-") as work:
+    work = Path(work)
+    calls = []
+    pc.replay = scripted(head_rule, base_rule, calls)
+    pc.run_script, seen = script_runs({"head": [outcome("crashed", S)] * 2,
+                                       "base": [outcome("survived")] * 2})
+    row = pc.minimise(EXPLORED, JUDGED, BASE, HEAD, work, float("inf"), n=1, timeout=13)
+    assert (row["phase"], row["seed"], row["n"], row["key"]) == ("minimise", 37, 1, S), row
+    assert (row["length"], row["minimised"], row["repro"], row["fallback"]) == (1, True, "verified", None), row
+    saved = json.loads((work / "new-1/commands.json").read_text())
+    assert saved == {"commands": ["x"], "outputs": 2, "key": S}, saved
+    # A candidate that crashes base is rejected although head crashed with S: [p, y, x]
+    # was probed on base, and the result keeps neither p nor y.
+    probes = [(side, commands) for side, commands, log, *_ in calls if log.startswith("min-")]
+    assert probes[:3] == [("head", ["z", "q"]), ("head", ["p", "y", "x"]),
+                          ("base", ["p", "y", "x"])], probes
+    # Head crashing with another key is not reproduced, and base is then not replayed.
+    assert ("base", ["z", "q"]) not in probes, probes
+    assert all(outputs == 2 and timeout == 13 for *_, outputs, timeout in calls)
+    # Every probe has its own logs under the seed's directory.
+    logs = [log for _, _, log, *_ in calls]
+    assert len(set(logs)) == len(logs) and logs[:3] == ["min-1-head.log", "min-2-head.log", "min-2-base.log"]
+    # The final check replays the minimised list 2x head, then 2x base.
+    finals = [(side, commands, log) for side, commands, log, *_ in calls if log.startswith("final-")]
+    assert finals == [("head", ["x"], "final-reduced-head-1.log"), ("head", ["x"], "final-reduced-head-2.log"),
+                      ("base", ["x"], "final-reduced-base-1.log"), ("base", ["x"], "final-reduced-base-2.log")]
+    assert row["counts"]["replay"]["reduced"]["head"]["crashed_key"] == 2
+    assert row["counts"]["replay"]["reduced"]["base"]["survived"] == 2
+    assert row["counts"]["replay"]["fallback"] is None
+    # resolved.json and sent.json come from the final head replay; repro.sh renders sent.
+    assert json.loads((work / "new-1/sent.json").read_text()) == ["sent x"]
+    assert json.loads((work / "new-1/resolved.json").read_text()) == ["x"]
+    assert (work / "new-1/signature.txt").read_text().startswith(f"{S}\n\ndetail of {S}")
+    script = (work / "new-1/repro.sh").read_text()
+    assert script.endswith("\nswaymsg 'sent x'\n") and S in script, script
+    assert os.access(work / "new-1/repro.sh", os.X_OK)
+    assert [(label, log) for label, _, log in seen] == [
+        ("head", "repro-head-1.log"), ("head", "repro-head-2.log"),
+        ("base", "repro-base-1.log"), ("base", "repro-base-2.log")], seen
+    assert row["counts"]["script"] == {
+        "head": {"runs": 2, "crashed_key": 2, "crashed_other": 0, "survived": 0, "harness": 0},
+        "base": {"runs": 2, "crashed_key": 0, "crashed_other": 0, "survived": 2, "harness": 0}}
+
+    # Script verification needs head's key S every time and base surviving every time.
+    for head_runs, base_runs in (([outcome("crashed", S), outcome("crashed", T)], [outcome("survived")] * 2),
+                                 ([outcome("crashed", S)] * 2, [outcome("survived"), outcome("harness")]),
+                                 ([outcome("harness"), outcome("crashed", S)], [outcome("survived")] * 2)):
+        pc.run_script, _ = script_runs({"head": list(head_runs), "base": list(base_runs)})
+        row = pc.minimise(EXPLORED, JUDGED, BASE, HEAD, work / "unverified", float("inf"),
+                          n=1, timeout=13)
+        assert row["repro"] == "unverified", row
+        assert (work / "unverified/new-1/repro.sh").exists()
+    assert row["counts"]["script"]["head"]["harness"] == 1, row
+
+    # The minimised list fails the final check: fall back to the full list and say so.
+    # Each check keeps its own logs and counts.
+    def flaky_head(commands):
+        if any(log.startswith("final-") for _, _, log, *_ in calls[-1:]):
+            return outcome("crashed", S) if len(commands) == 5 else outcome("survived")
+        return head_rule(commands)
+    calls = []
+    pc.replay = scripted(flaky_head, base_rule, calls)
+    pc.run_script, _ = script_runs({"head": [outcome("crashed", S)] * 2,
+                                    "base": [outcome("survived")] * 2})
+    row = pc.minimise(EXPLORED, JUDGED, BASE, HEAD, work / "fallback", float("inf"), n=2, timeout=13)
+    assert (row["length"], row["minimised"], row["repro"]) == (5, False, "verified"), row
+    assert "did not reproduce" in row["fallback"] and "full list" in row["fallback"], row
+    assert json.loads((work / "fallback/new-2/commands.json").read_text())["commands"] == EXPLORED["commands"]
+    assert json.loads((work / "fallback/new-2/sent.json").read_text())[0] == "sent p"
+    logs = [log for _, _, log, *_ in calls]
+    assert len(set(logs)) == len(logs), logs
+    assert [log for log in logs if log.startswith("final-")] == [
+        "final-reduced-head-1.log", "final-reduced-head-2.log", "final-fallback-head-1.log",
+        "final-fallback-head-2.log", "final-fallback-base-1.log", "final-fallback-base-2.log"], logs
+    seed_logs = work / "fallback/seeds/head-37"
+    assert (seed_logs / "final-reduced-head-1.log").read_text() == "['x'] survived\n"
+    assert (seed_logs / "final-fallback-head-1.log").read_text() == f"{EXPLORED['commands']} crashed\n"
+    assert row["counts"]["replay"] == {
+        "reduced": {"head": {"runs": 2, "crashed_key": 0, "crashed_other": 0, "survived": 2, "harness": 0},
+                    "base": {"runs": 0, "crashed_key": 0, "crashed_other": 0, "survived": 0, "harness": 0}},
+        "fallback": {"head": {"runs": 2, "crashed_key": 2, "crashed_other": 0, "survived": 0, "harness": 0},
+                     "base": {"runs": 2, "crashed_key": 0, "crashed_other": 0, "survived": 2, "harness": 0}}}, row
+
+    # Deadline: every replay and script run checks it before starting. Each takes 1 s on a
+    # fake clock; once it passes nothing else starts, the best list so far is kept and the
+    # candidate is unminimised with no repro.sh.
+    def timed(explored, deadline, head_rule, base_rule, name, start=0.0):
+        clock = {"now": start}
+        calls, seen = [], []
+        fake = scripted(head_rule, base_rule, calls)
+
+        def ticking_replay(*args):
+            clock["now"] += 1
+            return fake(*args)
+
+        def ticking_script(binary, script, outputs, log_path, timeout):
+            clock["now"] += 1
+            seen.append(("head" if binary == HEAD else "base", log_path.name))
+            return outcome("crashed", S) if binary == HEAD else outcome("survived")
+        pc.replay, pc.run_script = ticking_replay, ticking_script
+        real_time = pc.time
+        pc.time = type("Clock", (), {"monotonic": staticmethod(lambda: clock["now"]),
+                                     "sleep": staticmethod(lambda s: None)})
+        try:
+            row = pc.minimise(explored, JUDGED, BASE, HEAD, work / name, deadline, n=1, timeout=13)
+        finally:
+            pc.time = real_time
+        saved = json.loads((work / name / "new-1/commands.json").read_text())["commands"]
+        assert len(saved) == row["length"]
+        return row, [(side, log) for side, _, log, *_ in calls], seen, saved
+
+    def unminimised(row, name, explored, partial=None):
+        """Out of time: the full explored list is the candidate's; best.json the partial one."""
+        assert (row["minimised"], row["repro"]) == (False, "unminimised"), row
+        assert row["counts"]["script"] is None and not (work / name / "new-1/repro.sh").exists()
+        saved = json.loads((work / name / "new-1/commands.json").read_text())["commands"]
+        assert saved == explored["commands"] and row["length"] == len(saved), (saved, row)
+        best = work / name / "new-1/best.json"
+        if partial is None:
+            assert row["partial"] is None and not best.exists(), row
+        else:
+            assert json.loads(best.read_text())["commands"] == partial, best.read_text()
+            assert row["partial"] == len(partial), row
+
+    # Probes [z,q] (head only, t=0..1), [p,y,x] (2 s), [x,z,q] (2 s, accepted at t=5); [z,q]'s
+    # next probe would start at t=5 > 4.5.
+    row, calls, seen, saved = timed(EXPLORED, 4.5, head_rule, base_rule, "late")
+    unminimised(row, "late", EXPLORED, ["x", "z", "q"])
+    assert calls == [("head", "min-1-head.log"), ("head", "min-2-head.log"), ("base", "min-2-base.log"),
+                     ("head", "min-3-head.log"), ("base", "min-3-base.log")] and seen == [], calls
+    assert row["counts"]["replay"] == {"reduced": None, "fallback": None}
+    # The full list keeps the explore record's resolved and sent.
+    assert json.loads((work / "late/new-1/sent.json").read_text()) == EXPLORED["sent"]
+    # Expiring during a head probe: base is not started; nothing was accepted, so no best.json.
+    row, calls, seen, saved = timed(EXPLORED, 1.5, head_rule, base_rule, "mid-head")
+    unminimised(row, "mid-head", EXPLORED)
+    assert calls == [("head", "min-1-head.log"), ("head", "min-2-head.log")] and seen == [], calls
+    assert row["counts"]["probes"] == 2
+    # The last reduction reaches one command, so the minimiser returns without another probe.
+    pair = {**EXPLORED, "commands": ["a", "b"]}
+    b_crashes = lambda c: outcome("crashed", S) if "b" in c else outcome("survived")
+    survives = lambda c: outcome("survived")
+    probe = [("head", "min-1-head.log"), ("base", "min-1-base.log")]
+    reduced = [("head", "final-reduced-head-1.log"), ("head", "final-reduced-head-2.log"),
+               ("base", "final-reduced-base-1.log"), ("base", "final-reduced-base-2.log")]
+    scripts = [("head", "repro-head-1.log"), ("head", "repro-head-2.log"),
+               ("base", "repro-base-1.log"), ("base", "repro-base-2.log")]
+    # With time left: the final check and the script runs follow.
+    row, calls, seen, saved = timed(pair, 100, b_crashes, survives, "one-left")
+    assert (row["minimised"], row["repro"], saved) == (True, "verified", ["b"]), row
+    assert calls == probe + reduced and seen == scripts, (calls, seen)
+    # Expired when the minimiser returns (t=2 > 1.5): no final check, no script run.
+    row, calls, seen, saved = timed(pair, 1.5, b_crashes, survives, "one-expired")
+    unminimised(row, "one-expired", pair, ["b"])
+    assert calls == probe and seen == [], calls
+    assert row["counts"]["replay"] == {"reduced": None, "fallback": None}
+    # Expired during the final check (t=3 > 2.5): its second head replay does not start.
+    row, calls, seen, saved = timed(pair, 2.5, b_crashes, survives, "final-expired")
+    unminimised(row, "final-expired", pair, ["b"])
+    assert calls == probe + reduced[:1] and seen == [], calls
+    # Expired during the script runs (t=7 > 6.5): one script run, then nothing.
+    row, calls, seen, saved = timed(pair, 6.5, b_crashes, survives, "script-expired")
+    unminimised(row, "script-expired", pair, ["b"])
+    assert calls == probe + reduced and seen == scripts[:1], (calls, seen)
+    # Expired during the fallback check: the reduction failed its check, so no best.json.
+    # [b] crashes head in its probe only; the full list always (t=5 > 4.5 after one fallback replay).
+    probed = []
+    b_once = lambda c: outcome("crashed", S) if c == ["a", "b"] or not probed.append(c) and \
+        len(probed) == 1 else outcome("survived")
+    row, calls, seen, saved = timed(pair, 4.5, b_once, survives, "fallback-expired")
+    unminimised(row, "fallback-expired", pair)
+    assert "did not reproduce" in row["fallback"], row
+    assert calls == probe + reduced[:2] + [("head", "final-fallback-head-1.log")], calls
+    # The reviewer's case: 16 commands reduced to 2 when time runs out; the report lists all 16.
+    sixteen = {**EXPLORED, "commands": [f"c{i}" for i in range(14)] + ["b", "x"],
+               "resolved": [f"c{i}" for i in range(16)], "sent": [f"c{i}" for i in range(16)]}
+    bx = lambda c: outcome("crashed", S) if "b" in c and "x" in c else outcome("survived")
+    # Probes of 8, 4 and 2 commands are accepted by t=6, then [b] is rejected at t=7 > 6.5.
+    row, calls, seen, saved = timed(sixteen, 6.5, bx, survives, "sixteen")
+    unminimised(row, "sixteen", sixteen, ["b", "x"])
+    assert row["length"] == 16 and row["partial"] == 2, row
+    # Its report (stdout and report.txt) lists all 16 and points at best.json.
+    sixteen_rows = [{**sixteen, "seed": 37}, {**JUDGED, "head_outcomes": ["crashed"] * 2,
+                    "head_keys": [S] * 2, "head_steps": [3, 3], "base_outcomes": ["survived"] * 2,
+                    "base_keys": [None] * 2, "base_steps": [None] * 2}, row]
+    sixteen_run = {"out": str(work / "sixteen"), "jobs": 1, "seeds": 1, "also_base": 0,
+                   "hinted_disabled": None, "foot_missing": False, "startup": {},
+                   "base": {"asan": True}, "head": {"asan": True}}
+    for details in (False, True):
+        text = pc.render_report(sixteen_run, sixteen_rows, 1, details=details)
+        assert "no repro.sh, out of time (unminimised, full list) (16 commands) (best partial " \
+            "reduction: 2 commands in best.json, unverified): " in text, text
+    assert "     commands (16), replay with --replay:\n" in text and "      16. x\n" in text, text
+    # A singleton input past its deadline: the minimiser never probes it, nothing starts.
+    single = {**EXPLORED, "commands": ["x"]}
+    row, calls, seen, saved = timed(single, 0, head_rule, base_rule, "single-past", start=10)
+    unminimised(row, "single-past", single)
+    assert calls == [] and seen == [], calls
+    # A deadline already past: no replay at all, the full list.
+    row, calls, seen, saved = timed(EXPLORED, -1, head_rule, base_rule, "past")
+    unminimised(row, "past", EXPLORED)
+    assert calls == [] and seen == [], calls
+    assert json.loads((work / "past/new-1/sent.json").read_text())[0] == "explore p"
+
+    # An xdg-hinted step: nothing is rendered, the candidate needs a fixture client.
+    hinted = {**EXPLORED, "commands": ["xdg-hinted fixture-diff-1 1 1 2 2 0", "x", "q"]}
+    pc.replay = scripted(lambda c: outcome("crashed", S) if "x" in c and "q" in c and c[0].startswith("xdg") else outcome("survived"),
+                         lambda c: outcome("survived"), [])
+    pc.run_script, seen = script_runs({"head": [], "base": []})
+    row = pc.minimise(hinted, JUDGED, BASE, HEAD, work / "hinted", float("inf"), n=1, timeout=13)
+    assert (row["repro"], row["length"], row["minimised"]) == ("needs-fixture", 3, True), row
+    assert seen == [] and not (work / "hinted/new-1/repro.sh").exists()
+
+    # minimise_all(): head-side new judgements only, new-<n> numbered by seed, one row each.
+    calls = []
+    pc.replay = scripted(head_rule, base_rule, calls)
+    pc.run_script = lambda binary, *rest: outcome("crashed", S) if binary == HEAD else outcome("survived")
+    out = work / "all"
+    out.mkdir()
+    rows = [{**EXPLORED, "seed": seed} for seed in (40, 37, 50)] + [{**EXPLORED, "side": "base", "seed": 41}]
+    judged = [{**JUDGED, "seed": 40}, {**JUDGED, "seed": 37}, {**JUDGED, "seed": 50, "outcome": "blocked"},
+              {**JUDGED, "side": "base", "seed": 41, "head_key": None, "base_key": S}]
+    cfg = {"timeout": 13}
+    done = pc.minimise_all(rows, judged, BASE, HEAD, out, cfg, jobs=2)
+    lines = [json.loads(line) for line in (out / "results.jsonl").read_text().splitlines()]
+    assert sorted((row["seed"], row["n"]) for row in lines) == [(37, 1), (40, 2)], lines
+    assert {row["repro"] for row in done} == {"verified"}
+    assert set(lines[0]) == {"phase", "side", "seed", "n", "key", "length", "minimised", "repro",
+                             "fallback", "partial", "counts", "dir"}, lines[0]
+    # A minimisation that raises is still reported (unminimised, with the error).
+    pc.replay = lambda *args: (_ for _ in ()).throw(OSError("disk full"))
+    row = pc.minimise_task((EXPLORED, JUDGED, BASE, HEAD, work / "broken", float("inf"), 4, 13))
+    assert (row["repro"], row["n"], row["length"]) == ("unminimised", 4, 5) and "OSError" in row["error"]
+
+    # --replay: one replay of a commands.json, outcome step and key printed.
+    calls = []
+    pc.replay = scripted(head_rule, base_rule, calls)
+    (work / "c.json").write_text(json.dumps({"commands": ["x", "q"], "outputs": 2, "key": S}))
+    stdout = io.StringIO()
+    with contextlib.redirect_stdout(stdout):
+        code = pc.main(["--replay", str(work / "c.json"), "--binary", str(HEAD), "--timeout", "9",
+                        "--out", str(work / "rep")])
+    assert code == 1 and calls == [("head", ["x", "q"], "replay.log", 2, 9)], calls
+    assert stdout.getvalue().startswith(f"crashed; step 3; key {S}; log {work / 'rep/replay.log'}"), stdout.getvalue()
+    pc.replay = lambda *args: {**outcome("survived"), **pc.new_record()}
+    with contextlib.redirect_stdout(io.StringIO()) as stdout:
+        assert pc.main(["--replay", str(work / "c.json"), "--binary", str(HEAD)]) == 0
+    assert stdout.getvalue().startswith("survived; step None; key None"), stdout.getvalue()
+    try:
+        with contextlib.redirect_stderr(io.StringIO()):
+            pc.main(["--replay", str(work / "c.json")])
+    except SystemExit as error:
+        assert error.code == 2
+    else:
+        raise AssertionError("--replay without --binary accepted")
+    pc.replay, pc.run_script = real_replay, real_run_script
+
+    # run_script(): the script runs against the sway replay would start, with SWAYSOCK,
+    # without WAYLAND_DISPLAY/DISPLAY, swaymsg's build directory first on PATH; then grace,
+    # liveness and the signature of the sway log.
+    build = work / "build"
+    (build / "sway").mkdir(parents=True)
+    (build / "swaymsg").mkdir()
+    (build / "sway/sway").write_text("")
+    probe = work / "probe.sh"
+    probe.write_text('echo "sock=$SWAYSOCK"\necho "path=$PATH"\necho "wl=${WAYLAND_DISPLAY-unset}"\n'
+                     'echo "asan=$ASAN_OPTIONS"\n')
+    scenarios = []
+    fake = Fake()
+    fake.env = {"ASAN_OPTIONS": "detect_leaks=0", "PATH": "/usr/bin:/bin", "WAYLAND_DISPLAY": "leak"}
+    install(fake)
+    patched = runner.differential_adapter
+    runner.differential_adapter = lambda *a: scenarios.append(a[3]) or patched(*a)
+    pc.REPRO_GRACE = 0
+    result = pc.run_script(build / "sway/sway", probe, 2, work / "s/repro-head-1.log", 9)
+    assert result["outcome"] == "survived" and result["signature"] is None, result
+    assert fake.stopped and fake.args.timeout == 9 and fake.args.binary == build / "sway/sway"
+    assert scenarios == [{"outputs": 2, "output_layout": pc.v3.TWO_OUTPUT_LAYOUT}], scenarios
+    printed = (work / "s/repro-head-1.out").read_text().splitlines()
+    assert printed[0] == f"sock={fake.socket}", printed
+    assert printed[1].startswith(f"path={build / 'swaymsg'}:"), printed
+    assert printed[2:] == ["wl=unset", "asan=detect_leaks=0"], printed
+    # A sway that died while the script ran: crashed, signed from its log.
+    fake = Logging(ASAN_LOG)
+    fake.env, fake.dead, fake.process.code = {}, False, 1
+    install(fake)
+    result = pc.run_script(build / "sway/sway", probe, 1, work / "s/repro-base-1.log", 9)
+    assert (result["outcome"], result["step"]) == ("crashed", None), result
+    assert result["signature"]["key"].startswith("SEGV: view_is_visible"), result
+    runner.differential_adapter = real_adapter
+
+# render_repro(): one swaymsg per step, shell-quoted; launched windows get a second to map.
+HEADER = {"base": {"binary": "/b/sway", "git_head": "1652c54b0000", "dirty": False, "asan": True},
+          "head": {"binary": "/h/sway", "git_head": None, "dirty": None, "asan": False},
+          "key": S, "seed": 64}
+sent = ["exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'",
+        "[con_id=5] focus", "rename workspace to it's", "move container to output HEADLESS-2"]
+script = pc.render_repro(sent, 2, HEADER)
+body = [line for line in script.splitlines() if line and not line.startswith("#")]
+assert script.startswith("#!/bin/sh\n# Generated by pr-check from seed 64"), script
+assert S in script and "/b/sway (git 1652c54b, clean, ASan)" in script, script
+assert "/h/sway (git unknown, -, no ASan)" in script, script
+assert "two headless 1280x720 outputs" in script and "WLR_HEADLESS_OUTPUTS=2" in script, script
+assert "#   output HEADLESS-2 mode 1280x720 position 0 0\n" in script, script
+assert "#   focus output HEADLESS-2\n" in script, script
+assert "swaymsg 'output * mode --custom 1280x720@60Hz'" in script
+assert body == [
+    "swaymsg 'exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c '\"'\"'sleep 300'\"'\"''",
+    "sleep 1", "swaymsg '[con_id=5] focus'", "swaymsg 'rename workspace to it'\"'\"'s'",
+    "swaymsg 'move container to output HEADLESS-2'"], body
+# Each swaymsg line hands sway exactly the sent text.
+words = [subprocess.run(["sh", "-c", line.replace("swaymsg ", "printf %s ", 1)], capture_output=True,
+                        text=True, check=True).stdout for line in body if line.startswith("swaymsg")]
+assert words == sent, words
+one = pc.render_repro(["nop"], 1, HEADER)
+assert "one headless 1280x720 output" in one and "WLR_HEADLESS_OUTPUTS=1" in one
+assert "position" not in one and one.endswith("\nswaymsg nop\n"), one
+assert pc.render_repro(["nop", "xdg-hinted fixture-diff-2 100 100 200 200 0"], 1, HEADER) is None
+
+# plan_budget(): offsets from the start; exploration stops starting seeds at 60%, split
+# evenly between head and base with --also-base, which also caps base seeds.
+assert pc.plan_budget(15, 0, 4) == {"run": 900, "head_explore": 540, "base_explore": None,
+                                    "base_seeds": 0, "judge": 360, "jobs": 4}
+assert pc.plan_budget(10, 40, 4) == {"run": 600, "head_explore": 180, "base_explore": 360,
+                                     "base_seeds": 40, "judge": 240, "jobs": 4}
+assert pc.plan_budget(0.5, 1, 1)["head_explore"] == 9
+for bad in ((0, 0, 1), (-1, 0, 1), (1, -1, 1), (1, 0, 0)):
+    try:
+        pc.plan_budget(*bad)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError(f"plan_budget accepted {bad}")
+# minimise_deadline(): an even share of the time left, at least 60 s, never past the run.
+assert pc.minimise_deadline(100, 400, 3) == 200
+assert pc.minimise_deadline(100, 400, 10) == 160  # 30 s share, raised to 60 s
+assert pc.minimise_deadline(100, 130, 1) == 130   # capped at the run deadline
+assert pc.minimise_deadline(100, pc.math.inf, 2) == pc.math.inf
+
+# render_report() from a canned results.jsonl: every outcome, pre-existing deduped by key
+# over both sides, harness counted once per explored seed.
+P, B = "SEGV: shared < x", "SEGV: base_only < y"
+RUN = {"out": "out", "jobs": 4, "seeds": None, "also_base": 40, "hinted_disabled": None,
+       "foot_missing": False, "startup": {"base": None, "head": None},
+       "base": {"git_head": "1652c54b0123", "dirty": False, "asan": True},
+       "head": {"git_head": "17cdc7dbabcd", "dirty": True, "asan": True}}
+
+
+def explored_row(side, seed, outcome="survived", key=None, step=None, commands=("nop",)):
+    return {"phase": "explore", "side": side, "seed": seed, "outputs": 1, "commands": list(commands),
+            "outcome": outcome, "step": step, "error": "boom" if outcome == "harness" else None,
+            "signature": {"key": key} if key else None}
+
+
+def judged_row(side, seed, outcome, key, explorer, other, steps=(4, 4)):
+    other_side = "base" if side == "head" else "head"
+    keys = {side: [key if o == "crashed" else None for o in explorer],
+            other_side: [key if o == "crashed" else None for o in other]}
+    outcomes = {side: list(explorer), other_side: list(other)}
+    return {"phase": "judge", "side": side, "seed": seed, "outcome": outcome, f"{side}_key": key,
+            **{f"{label}_{field}": value for label in ("head", "base") for field, value in
+               (("outcomes", outcomes[label]), ("keys", keys[label]),
+                ("steps", [s if o == "crashed" else None for o, s in zip(outcomes[label], steps)]))}}
+
+
+C2, OK2 = ["crashed"] * 2, ["survived"] * 2
+CANNED = [explored_row("head", seed) for seed in range(30)] + [
+    explored_row("head", 30, "crashed", S, 4, ["exec foot", "split h", "kill"]),
+    explored_row("head", 31, "crashed", P, 4),
+    explored_row("head", 32, "crashed", T, 4),
+    explored_row("head", 33, "harness"),
+    *[explored_row("base", seed) for seed in range(34, 38)],
+    explored_row("base", 38, "crashed", P, 4),
+    explored_row("base", 39, "crashed", B, 2),
+    judged_row("head", 30, "new", S, C2, OK2),
+    judged_row("head", 31, "pre-existing", P, C2, C2),
+    judged_row("head", 32, "unconfirmed", T, ["crashed", "survived"], OK2),
+    judged_row("base", 38, "pre-existing", P, C2, C2),
+    judged_row("base", 39, "fixed", B, C2, OK2, (2, 2)),
+    {"phase": "minimise", "side": "head", "seed": 30, "n": 1, "key": S, "length": 2,
+     "minimised": True, "repro": "verified", "fallback": None, "counts": None, "dir": "new-1"},
+]
+with tempfile.TemporaryDirectory(prefix="pc-report-") as work:
+    work = Path(work)
+    (work / "results.jsonl").write_text("".join(json.dumps(row) + "\n" for row in CANNED))
+    rows = pc.load_rows(work)
+    report = pc.render_report(RUN, rows, 602.4)
+    assert report == """\
+pr-check: base 1652c54b clean ASan, head 17cdc7db dirty ASan
+explored 34 seeds (head), 6 (base), 10m02s, 4 jobs; hinted windows enabled
+NEW in head: 1
+  1. SEGV: a < b < c
+     head 2/2, base 0/2; repro.sh verified (2 commands): out/new-1/
+pre-existing 1, fixed 1, blocked 0, unconfirmed 1, harness 1. Details: out/report.txt
+""", report
+    summary = pc.summarise(rows)
+    assert summary["pre_existing_keys"] == [P] and summary["harness_seeds"] == [("head", 33)]
+    assert pc.exit_code(RUN, summary) == 1
+    # report.txt: the same head, then every listing; a new crash lists its minimised list.
+    (work / "new-1").mkdir()
+    (work / "new-1/commands.json").write_text(json.dumps({"commands": ["split h", "kill"]}))
+    details = pc.render_report({**RUN, "out": str(work)}, rows, 602.4, details=True)
+    assert "\n== new (1) ==\n  head seed 30 (1 outputs, explore crashed at step 4): SEGV: a < b < c\n" \
+        "     head 2/2: crashed at step 4: SEGV: a < b < c, crashed at step 4: SEGV: a < b < c\n" \
+        "     base 0/2: survived, survived\n" in details, details
+    assert "     commands (2), replay with --replay:\n       1. split h\n       2. kill\n" in details
+    assert "\n== fixed (1) ==\n  base seed 39 (1 outputs, explore crashed at step 2): " \
+        f"{B}\n     base 2/2: " in details, details
+    assert "     head 0/2: survived, survived\n" in details
+    assert details.count("== pre-existing (2) ==") == 1 and "  base seed 38 " in details
+    assert "\n== harness seeds (1) ==\n  head seed 33 explore at step None: boom\n" in details
+    # Variants: no ASan, disabled hints, --seeds, a minimise out of time, unjudged.
+    variant = {**RUN, "base": {**RUN["base"], "asan": False}, "head": {"git_head": None,
+               "dirty": None, "asan": False}, "hinted_disabled": "wayland-scanner",
+               "seeds": 34, "also_base": 0}
+    late = [row if row.get("phase") != "minimise" else {**row, "repro": "unminimised",
+            "minimised": False, "length": 3} for row in rows]
+    late.append(judged_row("head", 29, "unjudged", T, [None, None], [None, None]))
+    report = pc.render_report(variant, late, 59)
+    assert report.splitlines()[:4] == [
+        "pr-check: base 1652c54b clean no ASan, head unknown - no ASan",
+        f"warning: base and head are {pc.NO_ASAN}",
+        "explored 34 seeds (head), 0m59s, 4 jobs; hinted windows disabled: wayland-scanner not found",
+        "--seeds 34: fixed exploration size, no wall limit (--minutes ignored)"], report
+    assert "     head 2/2, base 0/2; no repro.sh, out of time (unminimised, full list) " \
+        "(3 commands): out/new-1/\n" in report, report
+    assert "1 crashes unjudged: rerun with a larger --minutes\n  head seed 29: " in report, report
+    assert pc.render_report({**RUN, "head": {**RUN["head"], "asan": False}}, rows, 1).splitlines()[1] \
+        == f"warning: head is {pc.NO_ASAN}"
+
+# exit_code(): each rule; harness (2) takes precedence over new (1).
+def code_of(rows, **run):
+    return pc.exit_code({**RUN, **run}, pc.summarise(rows))
+
+
+survivors = [explored_row("head", seed) for seed in range(40)]
+assert code_of(survivors) == 0
+assert code_of([]) == 2  # nothing explored
+assert code_of(survivors, foot_missing=True) == 2
+assert code_of(survivors, startup={"base": "harness: startup failed: x", "head": None}) == 2
+new_one = [explored_row("head", 40, "crashed", S, 3), judged_row("head", 40, "new", S, C2, OK2)]
+assert code_of(survivors + new_one) == 1
+unjudged = [explored_row("head", 40, "crashed", S, 3),
+            judged_row("head", 40, "unjudged", S, [None] * 2, [None] * 2)]
+assert code_of(survivors + unjudged) == 1
+# Fixed, pre-existing, blocked and unconfirmed never fail the run.
+for outcome in ("fixed", "pre-existing", "blocked", "unconfirmed"):
+    side = "base" if outcome == "fixed" else "head"
+    rows = survivors + [explored_row(side, 40, "crashed", S, 3), judged_row(side, 40, outcome, S, C2, OK2)]
+    assert code_of(rows) == 0, outcome
+# 2 of 41 seeds harness is under 5%; 3 of 41 is over, and beats a new crash. A seed whose
+# explore and judgement were both harness counts once; a judge harness counts too.
+two = [explored_row("head", 41, "harness"), explored_row("base", 42, "harness")]
+assert code_of(survivors[:-1] + two) == 0 and code_of(survivors[:-1] + two + new_one) == 1
+judge_harness = [explored_row("head", 43, "crashed", S, 3),
+                 judged_row("head", 43, "harness", S, ["harness", "crashed"], OK2)]
+assert code_of(survivors[:-2] + two + judge_harness + new_one) == 2
+assert pc.summarise(two + [judged_row("head", 41, "harness", S, C2, OK2)])["harness_seeds"] == \
+    [("head", 41), ("base", 42)]
+# A harness replay is kept although the deadline then makes the judgement unjudged: the
+# reviewer's fake (one explored crashed seed, a harness replay that passes the deadline).
+clock = {"now": 0.0}
+real_time, real_replay = pc.time, pc.replay
+pc.time = type("Clock", (), {"monotonic": staticmethod(lambda: clock["now"])})
+
+
+def harness_then_late(binary, commands, outputs, out_log, timeout):
+    clock["now"] += 10
+    return {"outcome": "harness", "step": None, "error": "killed", "exit_code": 137,
+            "signature": None, **pc.new_record()}
+
+
+pc.replay = harness_then_late
+crashed_seed = explored_row("head", 7, "crashed", S, 1)
+with tempfile.TemporaryDirectory(prefix="pc-harness-") as work:
+    late_judged = pc.judge(crashed_seed, HEAD, BASE, Path(work), 11, deadline=5)
+pc.time, pc.replay = real_time, real_replay
+assert late_judged["outcome"] == "unjudged" and late_judged["head_outcomes"] == ["harness", None], late_judged
+summary = pc.summarise([crashed_seed, late_judged])
+assert summary["harness_seeds"] == [("head", 7)] and pc.exit_code(RUN, summary) == 2, summary
+details = pc.report_details(summary, "out")
+assert "  head seed 7 judge (unjudged): head ['harness', None], base [None, None]" in details, details
+# A minimise replay or script run that was harness counts too, once per seed.
+minimised_harness = {"phase": "minimise", "side": "head", "seed": 40, "n": 1, "key": S,
+                     "length": 1, "minimised": True, "repro": "verified", "fallback": None,
+                     "partial": None, "counts": {"harness": 1}, "dir": "new-1"}
+assert code_of(survivors[:-2] + two + new_one + [minimised_harness]) == 2
+assert pc.summarise(new_one + [minimised_harness])["harness_seeds"] == [("head", 40)]
+assert "  head seed 40 minimise: 1 harness replays or script runs" in \
+    pc.report_details(pc.summarise(new_one + [minimised_harness]), "out")
+# The reviewer's case through minimise_task: the first head probe is harness and passes the
+# deadline, then writing the full list raises PermissionError. The error row keeps the
+# counts so far, so the seed is a harness seed and the run exits 2.
+clock = {"now": 0.0}
+real_time, real_replay = pc.time, pc.replay
+pc.time = type("Clock", (), {"monotonic": staticmethod(lambda: clock["now"])})
+pc.replay = harness_then_late
+seed_9 = explored_row("head", 9, "crashed", S, 2, commands=("a", "b"))
+judged_9 = judged_row("head", 9, "new", S, C2, OK2)
+with tempfile.TemporaryDirectory(prefix="pc-harness-") as work:
+    locked = Path(work) / "new-1"
+    locked.mkdir()
+    locked.chmod(0o500)
+    try:
+        failed = pc.minimise_task((seed_9, judged_9, BASE, HEAD, Path(work), 5, 1, 11))
+    finally:
+        locked.chmod(0o700)
+pc.time, pc.replay = real_time, real_replay
+assert "PermissionError" in failed["error"], failed
+assert (failed["counts"]["probes"], failed["counts"]["probe_harness"],
+        failed["counts"]["harness"]) == (1, 1, 1), failed
+summary = pc.summarise([seed_9, judged_9, failed])
+assert summary["harness_seeds"] == [("head", 9)] and pc.exit_code(RUN, summary) == 2, summary
+
+# main(): no startup check starts once the run's deadline has passed; exit 2, and --minutes
+# must be at least 1.
+clock = {"now": 0.0}
+started = []
+
+
+def slow_preflight(binary, out, timeout, side):
+    started.append(side)
+    clock["now"] += 61
+    return None
+
+
+real_preflight, real_explore = pc.preflight, pc.explore
+pc.preflight, pc.explore = slow_preflight, lambda *args: (_ for _ in ()).throw(AssertionError)
+pc.time = type("Clock", (), {"monotonic": staticmethod(lambda: clock["now"])})
+with tempfile.TemporaryDirectory(prefix="pc-pre-") as work:
+    with contextlib.redirect_stdout(io.StringIO()) as stdout:
+        code = pc.main(["--base", str(HEAD), "--head", str(HEAD), "--out", f"{work}/o",
+                        "--minutes", "1"])
+    assert json.loads(Path(work, "o/run.json").read_text())["preflight_expired"] is True
+pc.time, pc.preflight, pc.explore = real_time, real_preflight, real_explore
+assert code == 2 and started == ["base"], (code, started)
+assert "error: budget exhausted during preflight" in stdout.getvalue(), stdout.getvalue()
+for minutes in ("0.5", "0", "-3", "nan", "x"):
+    with tempfile.TemporaryDirectory(prefix="pc-min-arg-") as work:
+        with contextlib.redirect_stderr(io.StringIO()) as stderr:
+            try:
+                pc.main(["--base", str(HEAD), "--head", str(HEAD), "--out", f"{work}/o",
+                         "--minutes", minutes])
+            except SystemExit as error:
+                assert error.code == 2
+            else:
+                raise AssertionError(f"--minutes {minutes} accepted")
+    assert "argument --minutes: " in stderr.getvalue(), stderr.getvalue()
+
+print("pr-check self-test passed")

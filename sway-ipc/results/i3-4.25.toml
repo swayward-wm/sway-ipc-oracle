@@ -7,7 +7,7 @@
 compositor = "i3"
 version = "4.25-25-g9be3249a"
 commit = "9be3249ac5b377ed3270e36bca83df53d8023337"
-inputs = "2c49b3d8fff94564eaa30e009083f4d77166713386dffeeacbab5ba2b145aa0a"
+inputs = "0e812a9b8f7e029f9af6295f9b5e5f5a9db10ef531ef0e6f229f10c8e0765a54"
 date = "2026-10-21"
 normalization = "sway-ipc/normalize.toml"
 normalization_rules = ["runtime-identifiers", "focus-by-child-position", "rectangle-semantics", "backend-output-reference", "backend-output-properties", "backend-output-capabilities", "version-runtime-identity", "backend-output-name", "floating-rect-run-variance", "tree-rect-tolerance", "floating-percent-run-variance", "floating-descendant-percent-run-variance", "hidden-scratchpad-descendant-rect", "hidden-scratchpad-descendant-percent", "tree-percent-tolerance", "focus-child-position-comparison", "backend-mode-array-length"]

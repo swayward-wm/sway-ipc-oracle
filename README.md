@@ -12,6 +12,8 @@ published figure from a pinned container.
 
 **[See the results for each compositor →](docs/results.md)**
 
+For sway developers: check a PR for new crashes with [pr-check](docs/pr-check.md).
+
 ## What it is
 
 Sway ships no conformance suite, and i3's test suite only targets i3 on X11.
@@ -32,6 +34,9 @@ The oracle came out of [swayward](https://github.com/swayward-wm/swayward),
 which has the same maintainer, and swayward is its first adopter: swayward's
 CI pins this repository. Nothing here depends on swayward, and every
 compositor is measured by the same rules.
+
+The oracle was built with heavy AI assistance. A human maintains it and
+reviews every change.
 
 ## Why it is useful
 

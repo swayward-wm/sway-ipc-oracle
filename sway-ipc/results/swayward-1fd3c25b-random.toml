@@ -6,7 +6,7 @@
 compositor = "swayward"
 version = "swayward beta1 (1fd3c25b)"
 commit = "1fd3c25b1fca4cabc412e7fcfc5f9248f295b7dc"
-inputs = "919c94ff505553158f60205eda8ee18b9ddc138cb72465799bec95d4d6adacb9"
+inputs = "011bc06f9dfea936f942eaf12997d21cd88d07894aa37e28c87eb60b0513ff4c"
 date = "2026-10-21"
 normalization = "sway-ipc/normalize.toml"
 normalization_rules = ["runtime-identifiers", "focus-by-child-position", "rectangle-semantics", "backend-output-reference", "backend-output-properties", "backend-output-capabilities", "version-runtime-identity", "backend-output-name", "floating-rect-run-variance", "tree-rect-tolerance", "floating-percent-run-variance", "floating-descendant-percent-run-variance", "hidden-scratchpad-descendant-rect", "hidden-scratchpad-descendant-percent", "tree-percent-tolerance", "focus-child-position-comparison", "backend-mode-array-length"]

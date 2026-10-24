@@ -1,0 +1,158 @@
+#!/usr/bin/env python3
+"""An unpinned SwayAdapter measures an arbitrary binary; pinned adapters keep every check.
+
+No compositor is started: the pin check, the wrapper, the sanitizer
+environment and binary_provenance are exercised directly, with the
+systemd-run probe monkeypatched.
+"""
+
+import argparse
+import importlib.machinery
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.dont_write_bytecode = True
+os.environ.pop("UBSAN_OPTIONS", None)
+runner = importlib.machinery.SourceFileLoader(
+    "sway_ipc_run", str(ROOT / "contrib/sway-ipc-run")
+).load_module()
+
+
+def adapter(run_dir, unpinned=None, env_asan=None):
+    args = argparse.Namespace(binary=Path("/nonexistent/sway"), timeout=30)
+    if unpinned is not None:
+        args.unpinned = unpinned
+    saved = os.environ.pop("ASAN_OPTIONS", None)
+    if env_asan is not None:
+        os.environ["ASAN_OPTIONS"] = env_asan
+    try:
+        return runner.SwayAdapter(args, run_dir)
+    finally:
+        os.environ.pop("ASAN_OPTIONS", None)
+        if saved is not None:
+            os.environ["ASAN_OPTIONS"] = saved
+
+
+def raises(function, *arguments):
+    try:
+        function(*arguments)
+    except RuntimeError:
+        return True
+    return False
+
+
+def set_container(value):
+    if value is None:
+        os.environ.pop("ORACLE_CONTAINER", None)
+    else:
+        os.environ["ORACLE_CONTAINER"] = value
+
+
+def git(repo, *arguments):
+    subprocess.run(["git", "-C", repo, *arguments], check=True, capture_output=True)
+
+
+with tempfile.TemporaryDirectory(prefix="oracle-unpinned-", dir="/tmp") as work:
+    run_dir = Path(work)
+    target = json.loads((runner.FIXTURES / "schema-version.json").read_text())
+    wrong = {"human_readable": "sway version 0.0-not-the-pin"}
+    right = {"human_readable": f"sway version {target['version']}"}
+
+    # Pin check: pinned (attribute absent or False) still rejects a wrong build.
+    for pinned in (adapter(run_dir), adapter(run_dir, unpinned=False)):
+        assert not pinned.unpinned
+        assert raises(pinned.check_started_build, wrong), "pinned accepted a wrong commit"
+        assert pinned.check_started_build(right) is right
+    loose = adapter(run_dir, unpinned=True)
+    assert loose.check_started_build(wrong) is wrong
+    # Unpinned returns before the schema-version lookup.
+    original_details = runner.SwayAdapter.version_details
+    runner.SwayAdapter.version_details = staticmethod(
+        lambda reply: (_ for _ in ()).throw(AssertionError("version_details called")))
+    assert loose.check_started_build(wrong) is wrong
+    runner.SwayAdapter.version_details = original_details
+
+    # Wrapper precedence.
+    saved_container = os.environ.get("ORACLE_CONTAINER")
+    probes = []
+    for probe in (True, False):
+        runner.systemd_scope_available = lambda probe=probe: probes.append(probe) or probe
+        for container in (None, "1"):
+            set_container(container)
+            for unpinned in (None, False, True):
+                command = adapter(run_dir, unpinned=unpinned).wrapped(["sway"])
+                systemd = command[0] == "systemd-run"
+                assert command[command.index("timeout"):] == ["timeout", "--kill-after=5", "30", "sway"]
+                if container == "1":
+                    expected = False
+                elif not unpinned:
+                    expected = True
+                else:
+                    expected = probe
+                assert systemd == expected, (probe, container, unpinned, command)
+    set_container(saved_container)
+    assert probes, "unpinned wrapper never consulted the probe"
+
+    # The real probe is cached and returns a bool.
+    real = importlib.machinery.SourceFileLoader(
+        "sway_ipc_run_probe", str(ROOT / "contrib/sway-ipc-run")
+    ).load_module()
+    calls = []
+    original_run = real.subprocess.run
+    def fake_run(command, **kwargs):
+        calls.append(command)
+        return subprocess.CompletedProcess(command, 0)
+    real.subprocess.run = fake_run
+    assert real.systemd_scope_available() is True
+    assert real.systemd_scope_available() is True
+    assert calls == [["systemd-run", "--user", "--scope", "--quiet", "true"]], calls
+    real.systemd_scope_available.cache_clear()
+    def missing(command, **kwargs):
+        raise FileNotFoundError(command[0])
+    real.subprocess.run = missing
+    assert real.systemd_scope_available() is False
+    real.subprocess.run = original_run
+
+    # Sanitizer environment defaults apply to unpinned adapters only, never overriding.
+    assert adapter(run_dir, unpinned=True).env["ASAN_OPTIONS"] == "detect_leaks=0"
+    assert adapter(run_dir, unpinned=True).env["UBSAN_OPTIONS"] == "halt_on_error=0:print_stacktrace=1"
+    assert adapter(run_dir, unpinned=True, env_asan="abort_on_error=1").env["ASAN_OPTIONS"] == "abort_on_error=1"
+    assert "ASAN_OPTIONS" not in adapter(run_dir).env
+    assert adapter(run_dir, unpinned=False, env_asan="x=1").env["ASAN_OPTIONS"] == "x=1"
+
+    # binary_provenance: clean checkout, dirty checkout, outside any checkout.
+    repo = run_dir / "src"
+    (repo / "build/sway").mkdir(parents=True)
+    binary = repo / "build/sway/sway"
+    binary.write_bytes(b"\x7fELF...__asan_init...")
+    (repo / ".gitignore").write_text("build/\n")
+    git(repo, "init", "-q")
+    git(repo, "add", ".gitignore")
+    git(repo, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "init")
+    head = subprocess.check_output(["git", "-C", repo, "rev-parse", "HEAD"], text=True).strip()
+    clean = runner.binary_provenance(binary)
+    assert clean == {"binary": str(binary.resolve()), "git_head": head, "dirty": False, "asan": True}, clean
+    (repo / "change.c").write_text("int x;\n")
+    dirty = runner.binary_provenance(binary)
+    assert dirty["git_head"] == head and dirty["dirty"] is True, dirty
+    loose_binary = run_dir / "plain" / "sway"
+    loose_binary.parent.mkdir()
+    loose_binary.write_bytes(b"\x7fELF no sanitizer")
+    outside = runner.binary_provenance(loose_binary)
+    assert outside == {"binary": str(loose_binary.resolve()), "git_head": None, "dirty": None, "asan": False}, outside
+
+    # Missing git never raises.
+    original_check_output = runner.subprocess.check_output
+    def no_git(*args, **kwargs):
+        raise FileNotFoundError("git")
+    runner.subprocess.check_output = no_git
+    nogit = runner.binary_provenance(binary)
+    runner.subprocess.check_output = original_check_output
+    assert nogit["git_head"] is None and nogit["dirty"] is None and nogit["asan"] is True, nogit
+
+print("sway-ipc-unpinned: ok")

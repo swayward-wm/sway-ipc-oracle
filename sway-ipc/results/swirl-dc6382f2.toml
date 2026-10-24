@@ -7,7 +7,7 @@
 compositor = "swirl"
 version = "1.13-dev"
 commit = "dc6382f2ba80280759de6959b770ccb225d4d673"
-inputs = "ca792e8d239efa5584b0c4b8038d1e78053cc91fe238797725085d14ad0cdf53"
+inputs = "fedf133d05f5707ebba62dc67742f2683987d972b540c81a7fef365a67d1ee8e"
 date = "2026-10-22"
 normalization = "sway-ipc/normalize.toml"
 normalization_rules = ["runtime-identifiers", "focus-by-child-position", "rectangle-semantics", "backend-output-reference", "backend-output-properties", "backend-output-capabilities", "version-runtime-identity", "backend-output-name", "floating-rect-run-variance", "tree-rect-tolerance", "floating-percent-run-variance", "floating-descendant-percent-run-variance", "hidden-scratchpad-descendant-rect", "hidden-scratchpad-descendant-percent", "tree-percent-tolerance", "focus-child-position-comparison", "backend-mode-array-length"]

@@ -1,0 +1,79 @@
+pr-check: base 17cdc7db clean ASan, head 1652c54b clean ASan
+explored 300 seeds (head), 9m21s, 4 jobs; hinted windows enabled
+--seeds 300: fixed exploration size, no wall limit (--minutes ignored)
+NEW in head: 5
+  1. SEGV: view_is_visible < transaction_commit < transaction_commit_pending
+     head 2/2, base 0/2; repro.sh verified (9 commands): /w/prcheck-gate-3/new-1/
+  2. SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     head 2/2, base 0/2; repro.sh verified (6 commands): /w/prcheck-gate-3/new-2/
+  3. SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     head 2/2, base 0/2; repro.sh verified (6 commands): /w/prcheck-gate-3/new-3/
+  4. SEGV: container_swap < cmd_swap < execute_command
+     head 2/2, base 0/2; repro.sh verified (8 commands): /w/prcheck-gate-3/new-4/
+  5. SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     head 2/2, base 0/2; repro.sh verified (8 commands): /w/prcheck-gate-3/new-5/
+pre-existing 0, fixed 0, blocked 0, unconfirmed 0, harness 0. Details: /w/prcheck-gate-3/report.txt
+
+== new (5) ==
+  head seed 37 (1 outputs, explore crashed at step 40): SEGV: view_is_visible < transaction_commit < transaction_commit_pending
+     head 2/2: crashed at step 40: SEGV: view_is_visible < transaction_commit < transaction_commit_pending, crashed at step 40: SEGV: view_is_visible < transaction_commit < transaction_commit_pending
+     base 0/2: survived, survived
+     repro.sh verified (9 commands): /w/prcheck-gate-3/new-1/
+     commands (9), replay with --replay:
+       1. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       2. focus parent
+       3. floating enable
+       4. exec foot --app-id=fixture-diff-7 --title=fixture-diff-7 sh -c 'sleep 300'
+       5. focus parent; mark z
+       6. split v
+       7. move container to workspace 2
+       8. fullscreen toggle global
+       9. move scratchpad
+  head seed 64 (1 outputs, explore crashed at step 22): SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     head 2/2: crashed at step 22: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen, crashed at step 22: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     base 0/2: survived, survived
+     repro.sh verified (6 commands): /w/prcheck-gate-3/new-2/
+     commands (6), replay with --replay:
+       1. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       3. floating enable
+       4. fullscreen enable
+       5. split toggle
+       6. move container to workspace prev
+  head seed 67 (1 outputs, explore crashed at step 18): SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     head 2/2: crashed at step 18: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen, crashed at step 18: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     base 0/2: survived, survived
+     repro.sh verified (6 commands): /w/prcheck-gate-3/new-3/
+     commands (6), replay with --replay:
+       1. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       3. [app_id="^fixture-diff-[23]$"] floating enable
+       4. fullscreen toggle
+       5. focus parent; split v
+       6. move container to workspace prev
+  head seed 69 (1 outputs, explore crashed at step 38): SEGV: container_swap < cmd_swap < execute_command
+     head 2/2: crashed at step 38: SEGV: container_swap < cmd_swap < execute_command, crashed at step 38: SEGV: container_swap < cmd_swap < execute_command
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /w/prcheck-gate-3/new-4/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       2. floating enable
+       3. fullscreen enable
+       4. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       5. split toggle
+       6. move scratchpad
+       7. [tiling] mark --add tiled
+       8. swap container with mark tiled
+  head seed 282 (1 outputs, explore crashed at step 32): SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     head 2/2: crashed at step 32: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen, crashed at step 32: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /w/prcheck-gate-3/new-5/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       2. move container to workspace 3
+       3. [app_id="fixture-diff-1"] focus
+       4. floating enable
+       5. fullscreen toggle
+       6. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       7. split v
+       8. move --no-auto-back-and-forth container to workspace 3

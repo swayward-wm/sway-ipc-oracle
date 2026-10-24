@@ -1,0 +1,1182 @@
+#!/usr/bin/env python3
+"""Base-vs-head sway crash check: reports crashes that are new in head.
+
+Both binaries are first started once (preflight). Phase 1 runs the random-v3
+generator against head alone, one fresh sway per seed, and records each
+seed's commands (symbolic, resolved and as sent), its settled observations
+and its outcome; --also-base N then explores up to N more seeds (numbered
+after head's) with base as the explorer. Phase 2 judges every crashed seed:
+its symbolic list is replayed twice on its explorer and twice on the other
+binary and classified new, pre-existing, blocked, unconfirmed or harness (see
+classify()); for base-explored seeds "new" is reported as "fixed". Phase 3
+minimises every new crash, renders the minimised list as repro.sh and runs
+that script twice on head and twice on base (see minimise()).
+
+Budget (see plan_budget()): --minutes M is the whole run's wall time.
+Exploration starts no seed after 60% of it (head and base 30% each with
+--also-base); judging and minimising get the rest. A candidate not judged by
+the end is "unjudged"; a new one out of time is unminimised and reported
+with its full explored list (its best partial reduction, if any, goes to
+best.json). --minutes is at least 1; the budget is checked before each
+binary's startup check. --seeds N explores exactly N head seeds with no wall
+limit and ignores --minutes.
+
+The report goes to stdout and, with per-crash listings, to out/report.txt.
+Exit 2: a binary failed to start, foot is missing, the budget ran out during
+preflight, no seed was explored or more than 5% of explored seeds had a
+harness run (explore, any judge replay or any minimise replay or script run);
+else 1: a new or an unjudged crash; else 0.
+Under --out:
+
+  run.json                          binaries' measured provenance, argv, start, budget
+  results.jsonl                     one row per finished seed, judgement or minimisation, appended as it ends
+  report.txt                        the report with every crash's listing
+  preflight/<side>.log              the startup check's compositor log
+  seeds/<side>-<seed>/explore.log   the compositor log
+  seeds/<side>-<seed>/observations.jsonl  one settled observation per step
+  seeds/<side>-<seed>/judge-<head|base>-<1|2>.log  the replays' compositor logs
+  seeds/head-<seed>/{min-<k>,final}-*.log  minimisation probes and the final check
+  new-<n>/{commands.json,resolved.json,sent.json,signature.txt,repro.sh,repro-*.log}
+  new-<n>/best.json                 an out-of-time candidate's best partial reduction (unverified)
+
+--replay out/new-<n>/commands.json --binary <sway> replays one list once.
+run_sequence() is the per-sequence loop shared by exploration and replay.
+"""
+
+import argparse
+import datetime
+import importlib.machinery
+import itertools
+import json
+import math
+import multiprocessing
+import os
+from pathlib import Path
+import queue
+import re
+import shlex
+import shutil
+import signal
+import subprocess
+import sys
+import tempfile
+import time
+
+ROOT = Path(__file__).resolve().parents[1]
+runner = importlib.machinery.SourceFileLoader(
+    "sway_ipc_run", str(ROOT / "contrib/sway-ipc-run")
+).load_module()
+v3 = runner.sway_ipc_v3
+
+# Exits of the timeout wrapper (124, 137) and a SIGKILL from it or a scope OOM
+# kill: the harness ended sway, sway did not crash. Sway never SIGKILLs itself.
+HARNESS_EXITS = frozenset({124, 137, -signal.SIGKILL})
+SETTLE = 0.3          # grace after the last step: sway crashes a transaction after replying
+FAILURE_SETTLE = 0.5  # grace after a step raised, before deciding whether sway died
+DYING_GRACE = 5.0     # an unresponsive sway may still be writing its ASan report
+
+# The bug type ends before the variable part: " on <address>", ": <details>" or " (pc ...".
+ASAN_ERROR = re.compile(r"^==\d+==ERROR: AddressSanitizer: ([^:(]+?)(?: on |:| \(|$)")
+# A stack frame; unsymbolized frames ("#1 0x... (/lib.so+0x39a)") have no " in <function>".
+ASAN_FRAME = re.compile(r"^\s*#\d+ 0x[0-9a-fA-F]+(?: in (\S+))?(?: (.*))?$")
+DETAIL_LINES = 30
+
+
+def crash_signature(log_text: str, exit_code) -> dict:
+    """Identify the fatal failure in a sway log: {"kind", "frames", "key", "detail"}.
+
+    kind "asan": the last ASan ERROR block is the fatal one (UBSan runs with
+    halt_on_error=0, so its runtime errors never are). frames are the first
+    three in-sway function names of that block's stack, or the first three
+    symbolized of any path if none is in sway (an unsymbolized frame is part
+    of the stack but names nothing); no line numbers, so the key survives source
+    line shifts between base and head. key is "<TYPE>: f1 < f2 < f3".
+    kind "signal": no ASan report; key from exit_code: "signal:<NAME>" for a
+    negative code, "exit:<code>" otherwise, "unresponsive" for None (alive
+    but not answering IPC). frames are empty. detail is the 30 lines from the
+    ASan block, or the last 30 log lines.
+    """
+    lines = log_text.splitlines()
+    start = next((i for i in range(len(lines) - 1, -1, -1) if ASAN_ERROR.match(lines[i])), None)
+    if start is None:
+        if exit_code is None:
+            key = "unresponsive"
+        elif exit_code < 0:
+            try:
+                key = f"signal:{signal.Signals(-exit_code).name}"
+            except ValueError:
+                key = f"signal:{-exit_code}"
+        else:
+            key = f"exit:{exit_code}"
+        return {"kind": "signal", "frames": [], "key": key,
+                "detail": "\n".join(lines[-DETAIL_LINES:])}
+    bug = ASAN_ERROR.match(lines[start]).group(1)
+    stack = []  # (function or None, path) of the first stack after the ERROR line
+    for line in lines[start + 1:]:
+        frame = ASAN_FRAME.match(line)
+        if frame:
+            stack.append((frame.group(1), frame.group(2) or ""))
+        elif stack:
+            break
+    named = [(func, path) for func, path in stack if func]
+    in_sway = [func for func, path in named if "/sway/" in path or path.startswith("../sway/")]
+    frames = (in_sway or [func for func, _ in named])[:3]
+    return {"kind": "asan", "frames": frames, "key": f"{bug}: {' < '.join(frames)}",
+            "detail": "\n".join(lines[start:start + DETAIL_LINES])}
+
+
+class Generated:
+    """v3 commands chosen online from the settled state of the compositor being driven."""
+    def __init__(self, gen, steps):
+        self.gen, self.steps, self.prelude = gen, steps, gen.prelude()
+
+    def next(self, step, state):
+        if step > self.steps:
+            return None
+        if step <= len(self.prelude):
+            return self.prelude[step - 1]
+        return self.gen.next(v3.features(state["tree"], state["workspaces"]), step)
+
+    def observe(self, text, observation):
+        self.gen.observe_reply(text, observation["command"])
+
+
+class Fixed:
+    """A recorded symbolic list, replayed as is (tokens resolve against the live tree)."""
+    def __init__(self, commands):
+        self.commands = list(commands)
+
+    def next(self, step, state):
+        return self.commands[step - 1] if step <= len(self.commands) else None
+
+    def observe(self, text, observation):
+        pass
+
+
+def layout_for(outputs):
+    return {"outputs": 2, "output_layout": v3.TWO_OUTPUT_LAYOUT} if outputs == 2 else None
+
+
+def new_record():
+    return {"commands": [], "resolved": [], "sent": []}
+
+
+def run_steps(adapter, source, record, observed=None):
+    """Drive one started adapter until source is exhausted; raise on the first failing step.
+
+    Every step is resolved before it is executed, and its symbolic, resolved
+    and sent texts are appended to record first, so after a raise
+    len(record["commands"]) is the step that failed (a failure while
+    resolving step k leaves k-1: nothing of step k reached sway).
+    observed(step, observation) is called for every settled step.
+    """
+    state = {request: runner.ipc(adapter.socket, request) for request in ("tree", "workspaces")}
+    step = 1
+    while (text := source.next(step, state)) is not None:
+        resolved = (v3.resolve_con_tokens(runner.ipc(adapter.socket, "tree"), text)
+                    if "@con:" in text else text)
+        record["commands"].append(text)
+        record["resolved"].append(resolved)
+        record["sent"].append(adapter.translate_command(resolved))
+        state = runner.random_observation(adapter, resolved)
+        source.observe(text, state)
+        if observed is not None:
+            observed(step, state)
+        step += 1
+
+
+def liveness(adapter, settle):
+    """(dead, exit_code) after settle seconds; exit_code is None for an unresponsive sway."""
+    time.sleep(settle)
+    code = adapter.process.poll() if adapter.process else None
+    if code is not None:
+        return True, code
+    try:
+        runner.ipc(adapter.socket, "version")
+        return False, None
+    except (OSError, RuntimeError, ValueError):
+        return True, runner.exited_code(adapter, grace=DYING_GRACE)
+
+
+def foot_missing():
+    return shutil.which("foot") is None
+
+
+def run_sequence(binary, layout, source, record, log_path, timeout, observed=None):
+    """Start one fresh unpinned sway, run source on it and classify the outcome.
+
+    Returns {"outcome": "survived"|"crashed"|"harness", "step", "error",
+    "exit_code"}. crashed: sway exited (any code but HARNESS_EXITS) or stopped
+    answering IPC; step is the step after which the death was seen. harness:
+    startup failed, a step failed while sway stayed alive, or the wrapper
+    killed sway. record fills in place (see run_steps). The log is kept.
+    """
+    return run_on_sway(binary, layout, lambda adapter: run_steps(adapter, source, record, observed),
+                       log_path, timeout, SETTLE, lambda: len(record["commands"]))
+
+
+def run_on_sway(binary, layout, drive, log_path, timeout, settle, step=lambda: None):
+    """Start one fresh unpinned sway, call drive(adapter) and classify the outcome.
+
+    The setup and outcome rules of run_sequence; settle is the grace after
+    drive returns, step() names the step a crash or failure was seen at.
+    """
+    def result(outcome, step=None, error=None, exit_code=None):
+        return {"outcome": outcome, "step": step, "error": error, "exit_code": exit_code}
+
+    if foot_missing():
+        return result("harness", error="missing foot")
+    args = argparse.Namespace(binary=Path(binary), timeout=timeout, unpinned=True)
+    try:
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        log = open(log_path, "w")
+    except OSError as error:
+        return result("harness", error=f"could not open the log: {type(error).__name__}: {error}")
+    # A short run directory: the Wayland socket path must stay under 100 bytes.
+    with log, tempfile.TemporaryDirectory(prefix="pc-", dir="/tmp") as run_dir:
+        adapter = None
+        try:
+            try:
+                adapter = runner.differential_adapter("sway", args, Path(run_dir), layout)
+                adapter.start(log)
+                reply = adapter.set_differential_mode()
+                if not reply or not reply[0].get("success"):
+                    raise RuntimeError(f"could not set the output mode: {reply}")
+            except Exception as error:
+                return result("harness", error=f"startup failed: {error}")
+            failure = None
+            try:
+                drive(adapter)
+            except Exception as error:
+                failure = f"{type(error).__name__}: {error}"
+            dead, code = liveness(adapter, FAILURE_SETTLE if failure else settle)
+            if dead and code in HARNESS_EXITS:
+                return result("harness", step(), failure or f"killed by the harness (exit {code})", code)
+            if dead:
+                return result("crashed", step(), failure, code)
+            if failure:
+                return result("harness", step(), failure)
+            return result("survived")
+        finally:
+            if adapter is not None:
+                adapter.stop()
+
+
+def explore_seed(binary: Path, seed: int, steps: int, out: Path, cfg: dict,
+                 side: str = "head") -> dict:
+    """Explore one v3 seed on binary; return its results.jsonl row (log relative to out)."""
+    seed_dir = out / "seeds" / f"{side}-{seed}"
+    seed_dir.mkdir(parents=True, exist_ok=True)
+    log = seed_dir / "explore.log"
+    gen = v3.V3Generator(seed, cfg["vocabulary"], cfg["recipes"], "auto", steps)
+    record = new_record()
+    with open(seed_dir / "observations.jsonl", "w") as observations:
+        def observed(step, state):
+            observations.write(json.dumps(observation_line(step, state)) + "\n")
+            observations.flush()
+        outcome = run_sequence(binary, gen.scenario(), Generated(gen, steps), record, log,
+                               cfg["timeout"], observed)
+    return {"phase": "explore", "side": side, "seed": seed, "outputs": gen.outputs,
+            **record, **outcome, "signature": signature_of(outcome, log),
+            "log": str(log.relative_to(out))}
+
+
+def observation_line(step, state):
+    """One observations.jsonl entry: the settled state after step."""
+    return {"step": step, "reply": state["command"], "tree": state["tree"],
+            "workspaces": state["workspaces"]}
+
+
+def signature_of(outcome, log):
+    """crash_signature of a crashed run_sequence outcome's log, else None.
+
+    run_sequence took exit_code before stopping sway and closed the log after.
+    """
+    if outcome["outcome"] != "crashed":
+        return None
+    return crash_signature(log.read_text(errors="replace"), outcome["exit_code"])
+
+
+def replay(binary: Path, commands: list, outputs: int, out_log: Path, timeout: int,
+           keep_observations: bool = False) -> dict:
+    """Replay a recorded symbolic list once on a fresh sway (the exploring setup and loop).
+
+    Returns run_sequence's outcome, step, error and exit_code, plus signature
+    (crashed only) and the commands, resolved and sent records of this replay.
+    keep_observations adds "observations": the observations.jsonl entries
+    explore would have written for this run, one per settled step.
+    """
+    record = new_record()
+    observations = []
+    observed = ((lambda step, state: observations.append(observation_line(step, state)))
+                if keep_observations else None)
+    outcome = run_sequence(binary, layout_for(outputs), Fixed(commands), record, out_log, timeout,
+                           observed)
+    result = {**outcome, "signature": signature_of(outcome, out_log), **record}
+    if keep_observations:
+        result["observations"] = observations
+    return result
+
+
+def crash_key(result):
+    return result["signature"]["key"] if result["outcome"] == "crashed" else None
+
+
+def classify(key, explorer, other):
+    """Outcome of a candidate with explore signature key, from 2 replays per side; first match wins.
+
+    harness: any replay is harness. unconfirmed: the explorer did not crash
+    with key in both replays. With H the explorer's earliest step for key:
+    blocked: the other side crashed at a step before H, with another key, or
+    in only one replay (its crash hides or muddles the explorer's).
+    pre-existing: the other side crashed with key in both, at steps >= H.
+    new: the other side survived both.
+    """
+    if any(result["outcome"] == "harness" for result in explorer + other):
+        return "harness"
+    confirmed = [result["step"] for result in explorer if crash_key(result) == key]
+    if len(confirmed) < len(explorer):
+        return "unconfirmed"
+    first = min(confirmed)
+    crashed = [result for result in other if result["outcome"] == "crashed"]
+    if not crashed:
+        return "new"
+    if len(crashed) < len(other) or any(result["step"] < first or crash_key(result) != key
+                                        for result in crashed):
+        return "blocked"
+    return "pre-existing"
+
+
+JUDGE_REPLAYS = 2
+
+
+def judge(row, explorer_binary, other_binary, out, timeout, replays=JUDGE_REPLAYS,
+          deadline=math.inf):
+    """Judge a crashed explore row: replay its commands on the explorer, then the other binary.
+
+    The row's side names the explorer ("head" or "base"); the other binary is
+    the other side. Returns the results.jsonl judge row (see judge_row). A
+    replay that raises stops the judgement: the row is harness with error set
+    and keeps the replays completed before it. Every replay first checks the
+    deadline: once time.monotonic() > deadline the row is "unjudged" with the
+    replays completed so far, so at most the replay in flight overruns.
+    """
+    side = row.get("side", "head")
+    other_side = "base" if side == "head" else "head"
+    seed_dir = out / "seeds" / f"{side}-{row['seed']}"
+    results = {side: [], other_side: []}
+    error = None
+    try:
+        for label, binary in ((side, explorer_binary), (other_side, other_binary)):
+            for n in range(1, replays + 1):
+                if time.monotonic() > deadline:
+                    return judge_row(row, results, replays, unjudged=True)
+                results[label].append(replay(binary, row["commands"], row["outputs"],
+                                             seed_dir / f"judge-{label}-{n}.log", timeout))
+    except Exception as exc:
+        error = f"{type(exc).__name__}: {exc}"
+    return judge_row(row, results, replays, error)
+
+
+def judge_row(row, results, replays, error=None, unjudged=False):
+    """The judge row for row from results ({side: completed replays}); one schema always.
+
+    outcome is unjudged when unjudged is set, harness when error is set, else
+    classify, with "new" renamed "fixed" for a base-explored row (base
+    crashes, head survives). "<explorer>_key" is
+    the explore signature key. Per side, outcomes, keys (None unless crashed)
+    and steps hold one entry per replay, None for a replay that raised or did
+    not run. error is present only when set.
+    """
+    side = row.get("side", "head")
+    other_side = "base" if side == "head" else "head"
+    key = (row.get("signature") or {}).get("key")
+    outcome = ("unjudged" if unjudged else "harness" if error
+               else classify(key, results[side], results[other_side]))
+    if side == "base" and outcome == "new":
+        outcome = "fixed"
+    judged = {"phase": "judge", "side": side, "seed": row["seed"], "outcome": outcome,
+              f"{side}_key": key}
+    for label in ("head", "base"):
+        done = results[label]
+        missing = [None] * (replays - len(done))
+        judged[f"{label}_outcomes"] = [result["outcome"] for result in done] + missing
+        judged[f"{label}_keys"] = [crash_key(result) for result in done] + missing
+        judged[f"{label}_steps"] = [result["step"] for result in done] + missing
+    if error:
+        judged["error"] = error
+    return judged
+
+
+class _Deadline(Exception):
+    """The minimise deadline passed; raised by the predicate to stop minimize_commands."""
+
+
+VERIFY_RUNS = 2
+REPRO_GRACE = 1.0  # after repro.sh exits, as after a replay's last step but for a whole script
+REPRO_STATES = ("verified", "unverified", "needs-fixture", "unminimised")
+
+
+def tally(results, key):
+    """Counts of runs per outcome; crashed_key is a crash with key, crashed_other any other."""
+    counts = {"runs": len(results), "crashed_key": 0, "crashed_other": 0, "survived": 0,
+              "harness": 0}
+    for result in results:
+        if result["outcome"] == "crashed":
+            counts["crashed_key" if crash_key(result) == key else "crashed_other"] += 1
+        else:
+            counts[result["outcome"]] += 1
+    return counts
+
+
+def reproduced(head_counts, base_counts):
+    """Head crashed with the key in every run and base survived every run."""
+    return (head_counts["crashed_key"] == head_counts["runs"] > 0
+            and base_counts["survived"] == base_counts["runs"] > 0)
+
+
+def run_script(binary, script, outputs, log_path, timeout):
+    """Run a repro.sh once against a fresh sway started as replay starts it.
+
+    The script gets the adapter's environment (sanitizer defaults, no
+    WAYLAND_DISPLAY or DISPLAY), SWAYSOCK of that sway and the swaymsg next
+    to the binary's build (<binary dir>/../swaymsg) first on PATH; its output
+    goes to log_path with suffix .out. After it exits: REPRO_GRACE, then the
+    same liveness check and signature as replay. Returns run_sequence's
+    outcome fields plus signature; step is always None.
+    """
+    binary = Path(binary)
+
+    def drive(adapter):
+        env = {**adapter.env, "SWAYSOCK": str(adapter.socket),
+               "PATH": f"{binary.parent.parent / 'swaymsg'}{os.pathsep}{os.environ.get('PATH', '')}"}
+        for name in ("WAYLAND_DISPLAY", "DISPLAY"):
+            env.pop(name, None)
+        with open(log_path.with_suffix(".out"), "w") as output:
+            subprocess.run(["sh", str(script)], env=env, stdout=output, stderr=subprocess.STDOUT,
+                           timeout=timeout, check=False)
+
+    outcome = run_on_sway(binary, layout_for(outputs), drive, log_path, timeout, REPRO_GRACE)
+    return {**outcome, "signature": signature_of(outcome, log_path)}
+
+
+def describe(provenance):
+    """'<binary> (git <head8>, clean|dirty, ASan|no ASan)' for a repro.sh header."""
+    git = provenance.get("git_head")
+    state = {True: "dirty", False: "clean"}.get(provenance.get("dirty"), "-")
+    asan = "ASan" if provenance.get("asan") else "no ASan"
+    return f"{provenance.get('binary')} (git {git[:8] if git else 'unknown'}, {state}, {asan})"
+
+
+def sway_config(outputs):
+    """The config text replay's sway is started with for this output count."""
+    # differential_adapter's sway setup without its factory, which tests replace.
+    adapter = runner.SwayAdapter(argparse.Namespace(binary=Path("sway"), timeout=0, unpinned=True),
+                                 Path("/tmp"), layout_for(outputs))
+    adapter.config_text = runner.DIFFERENTIAL_CONFIGS["sway"]
+    return adapter.rendered_config()
+
+
+def render_repro(sent: list, outputs: int, header: dict):
+    """A POSIX sh repro.sh for the sent commands of a replay, or None if one needs a fixture client.
+
+    header: {"base", "head": binary provenance, "key": the signature key,
+    "seed"}. The script starts nothing: it drives the sway named by SWAYSOCK
+    with one swaymsg per step, and sleeps 1 s after each launched window so
+    it maps. Its comment says how to start a sway set up as pr-check sets one
+    up. xdg-hinted steps open a test client that is not a plain shell command.
+    """
+    if any(text.startswith("xdg-hinted ") for text in sent):
+        return None
+    layout = ("two headless 1280x720 outputs side by side" if outputs == 2
+              else "one headless 1280x720 output")
+    lines = [
+        "#!/bin/sh",
+        f"# Generated by pr-check from seed {header['seed']}: head crashes with",
+        f"#   {header['key']}",
+        "# and base survives.",
+        f"#   base: {describe(header['base'])}",
+        f"#   head: {describe(header['head'])}",
+        "#",
+        "# Run it against a fresh sway set up as pr-check sets one up:",
+        f"# {layout}, no windows yet (the con_ids below are those of a",
+        "# fresh sway), and swaymsg from the same build first on PATH. For example:",
+        "#",
+        "#   d=$(mktemp -d)",
+        "#   cat >\"$d/config\" <<'EOF'",
+        *(f"#   {line}" for line in sway_config(outputs).splitlines()),
+        "#   EOF",
+        "#   unset WAYLAND_DISPLAY DISPLAY",
+        f"#   export XDG_RUNTIME_DIR=\"$d\" SWAYSOCK=\"$d/ipc.sock\" WLR_BACKENDS=headless WLR_HEADLESS_OUTPUTS={outputs}",
+        "#   export ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=0:print_stacktrace=1",
+        "#   path/to/build/sway/sway -c \"$d/config\" >\"$d/log\" 2>&1 & pid=$!",
+        "#   while [ ! -S \"$SWAYSOCK\" ]; do sleep 0.1; done",
+        "#   swaymsg 'output * mode --custom 1280x720@60Hz'",
+        "#   sh repro.sh; sleep 1",
+        "#   kill -0 $pid && echo survived || { echo crashed; grep -m1 SUMMARY \"$d/log\"; }",
+        "",
+    ]
+    for text in sent:
+        lines.append(f"swaymsg {shlex.quote(text)}")
+        if text.startswith("exec foot"):
+            lines.append("sleep 1")
+    return "\n".join(lines) + "\n"
+
+
+def minimise(row, judged, base, head, out, deadline, *, n, timeout, counts=None):
+    """Minimise a new candidate, render its repro.sh and verify the script; return its row.
+
+    Delta-debugs row's commands with the predicate: one head replay crashed
+    with key S (the judge's head_key), then one base replay survived (base
+    is skipped when head did not). Harness replays count as not reproduced.
+    The list is then replayed VERIFY_RUNS x head (key S each) and
+    VERIFY_RUNS x base (survived each), the "reduced" check; if that fails
+    the full list is checked the same way, the "fallback" check (row
+    "fallback" says why). Each check has its own logs and its counts in
+    counts.replay.<label> (null if it did not run). The last head replay
+    with key S gives resolved.json and sent.json, sent is rendered to
+    repro.sh, and the script is run VERIFY_RUNS x on head and on base:
+    "verified" if head crashed with S and base survived every time, else
+    "unverified"; "needs-fixture" if the list has an xdg-hinted step.
+    Every replay and script run first checks the deadline: once
+    time.monotonic() > deadline it raises _Deadline instead of starting, so
+    at most the one replay in flight overruns. The candidate then ends
+    "unminimised" with the full explored list (and the explore record's
+    resolved and sent) and nothing further is started; counts of a check cut
+    short are not recorded and no repro.sh is kept. If an accepted probe
+    shortened the list and no fallback started, that best list so far goes
+    to best.json (unverified) and the row's "partial" is its length, else
+    None. counts.harness counts every harness replay and script run,
+    including those of a check cut short. counts (the row's, filled in as
+    replays finish) may be passed in so a caller keeps it if minimise raises.
+    Writes out/new-<n>/{commands.json, resolved.json, sent.json,
+    signature.txt, repro.sh?, best.json?, repro-*.log}; replay logs go to
+    out/seeds/head-<seed>/{min-<k>-{head,base},final-<label>-{head,base}-<i>}.log.
+    """
+    key = judged["head_key"]
+    outputs = row["outputs"]
+    seed_dir = out / "seeds" / f"head-{row['seed']}"
+    new_dir = out / f"new-{n}"
+    new_dir.mkdir(parents=True, exist_ok=True)
+    original = list(row["commands"])
+    best = {"commands": original, "head": None}
+    if counts is None:
+        counts = new_counts()
+
+    def guarded(run, *args):
+        if time.monotonic() > deadline:
+            raise _Deadline
+        result = run(*args)
+        counts["harness"] += result["outcome"] == "harness"
+        return result
+
+    def reproduces(candidate):
+        k = counts["probes"] + 1
+        result = guarded(replay, head, candidate, outputs, seed_dir / f"min-{k}-head.log", timeout)
+        counts["probes"] = k
+        harness, ok = result["outcome"] == "harness", False
+        if crash_key(result) == key:
+            other = guarded(replay, base, candidate, outputs, seed_dir / f"min-{k}-base.log", timeout)
+            harness, ok = other["outcome"] == "harness", other["outcome"] == "survived"
+        counts["probe_harness"] += harness
+        if ok:
+            best.update(commands=list(candidate), head=result)
+        return ok
+
+    def final_check(commands, label):
+        heads = [guarded(replay, head, commands, outputs,
+                         seed_dir / f"final-{label}-head-{i}.log", timeout)
+                 for i in range(1, VERIFY_RUNS + 1)]
+        bases = ([guarded(replay, base, commands, outputs,
+                          seed_dir / f"final-{label}-base-{i}.log", timeout)
+                  for i in range(1, VERIFY_RUNS + 1)]
+                 if all(crash_key(result) == key for result in heads) else [])
+        counts["replay"][label] = check = {"head": tally(heads, key), "base": tally(bases, key)}
+        return check, next((r for r in reversed(heads) if crash_key(r) == key), None)
+
+    def write_list(commands, last_head):
+        record = last_head or row  # the explore record when no head replay of this list crashed with S
+        signature = (last_head or {}).get("signature") or row.get("signature") or {}
+        (new_dir / "commands.json").write_text(json.dumps(
+            {"commands": commands, "outputs": outputs, "key": key}, indent=2) + "\n")
+        (new_dir / "resolved.json").write_text(json.dumps(record["resolved"], indent=2) + "\n")
+        (new_dir / "sent.json").write_text(json.dumps(record["sent"], indent=2) + "\n")
+        (new_dir / "signature.txt").write_text(f"{key}\n\n{signature.get('detail', '')}\n")
+        return record
+
+    minimised, fallback, commands, partial = True, None, original, None
+    try:
+        runner.minimize_commands(original, reproduces)
+        commands = best["commands"]
+        check, final_head = final_check(commands, "reduced")
+        if not reproduced(check["head"], check["base"]) and commands != original:
+            fallback = (f"the minimised list ({len(commands)} commands) did not reproduce "
+                        f"(head {check['head']}, base {check['base']}); using the full list")
+            minimised, commands = False, original
+            check, final_head = final_check(commands, "fallback")
+        if not reproduced(check["head"], check["base"]) and fallback is None:
+            fallback = "the final list did not reproduce; repro.sh is rendered from it anyway"
+        last_head = final_head or (best["head"] if commands == best["commands"] else None)
+        record = write_list(commands, last_head)
+        header = {"base": runner.binary_provenance(base), "head": runner.binary_provenance(head),
+                  "key": key, "seed": row["seed"]}
+        text = render_repro(record["sent"], outputs, header)
+        if text is None:
+            state = "needs-fixture"
+        else:
+            script = new_dir / "repro.sh"
+            script.write_text(text)
+            script.chmod(0o755)
+            runs = {label: [guarded(run_script, binary, script, outputs,
+                                    new_dir / f"repro-{label}-{i}.log", timeout)
+                            for i in range(1, VERIFY_RUNS + 1)]
+                    for label, binary in (("head", head), ("base", base))}
+            counts["script"] = {label: tally(results, key) for label, results in runs.items()}
+            state = ("verified" if reproduced(counts["script"]["head"], counts["script"]["base"])
+                     else "unverified")
+    except _Deadline:
+        # The full list is the report's; a reduction whose reduced check failed is no partial.
+        minimised, state, commands = False, "unminimised", original
+        write_list(original, None)
+        (new_dir / "repro.sh").unlink(missing_ok=True)
+        if not fallback and best["commands"] != original:
+            partial = len(best["commands"])
+            (new_dir / "best.json").write_text(json.dumps(
+                {"commands": best["commands"], "outputs": outputs, "key": key}, indent=2) + "\n")
+    return {"phase": "minimise", "side": "head", "seed": row["seed"], "n": n, "key": key,
+            "length": len(commands), "minimised": minimised, "repro": state,
+            "fallback": fallback, "partial": partial, "counts": counts,
+            "dir": str(new_dir.relative_to(out))}
+
+
+def new_counts():
+    return {"probes": 0, "probe_harness": 0, "replay": {"reduced": None, "fallback": None},
+            "script": None, "harness": 0}
+
+
+def minimise_task(task):
+    """minimise(); if it raises, an unminimised row with the error and the counts so far
+    (so harness replays before the error still count toward the harness share)."""
+    row, judged, base, head, out, deadline, n, timeout = task
+    counts = new_counts()
+    try:
+        return minimise(row, judged, base, head, out, deadline, n=n, timeout=timeout,
+                        counts=counts)
+    except Exception as error:
+        return {"phase": "minimise", "side": "head", "seed": row["seed"], "n": n,
+                "key": judged.get("head_key"), "length": len(row["commands"]),
+                "minimised": False, "repro": "unminimised", "fallback": None,
+                "partial": None, "counts": counts, "dir": f"new-{n}", "error": f"{type(error).__name__}: {error}"}
+
+
+def minimise_deadline(now, run_deadline, remaining):
+    """A new candidate's minimise deadline when it starts with remaining candidates not started."""
+    return min(run_deadline, now + max(60.0, (run_deadline - now) / remaining))
+
+
+def minimise_all(rows, judged, base, head, out, cfg, jobs, run_deadline=math.inf):
+    """Minimise every new head-side judgement in a pool; new-<n> numbered by seed.
+
+    Each candidate's deadline is minimise_deadline() at the moment it starts.
+    """
+    explored = {(row["side"], row["seed"]): row for row in rows}
+    new = sorted((row for row in judged
+                  if row["outcome"] == "new" and row.get("side", "head") == "head"),
+                 key=lambda row: row["seed"])
+
+    def tasks():
+        for n, row in enumerate(new, 1):
+            deadline = minimise_deadline(time.monotonic(), run_deadline, len(new) - n + 1)
+            yield (explored[("head", row["seed"])], row, base, head, out, deadline, n,
+                   cfg["timeout"])
+    return pooled(minimise_task, tasks(), out, cfg, jobs)
+
+
+def replay_main(path, binary, timeout, out):
+    """--replay: replay a commands.json once on binary; exit 0 survived, 1 crashed, 2 harness."""
+    spec = json.loads(Path(path).read_text())
+    out = Path(out) if out else Path(tempfile.mkdtemp(prefix="pr-check-replay-"))
+    log = out / "replay.log"
+    result = replay(binary, spec["commands"], spec["outputs"], log, timeout)
+    key = crash_key(result)
+    print(f"{result['outcome']}; step {result['step']}; key {key}"
+          + (f" (expected {spec['key']})" if spec.get("key") and key != spec["key"] else "")
+          + (f"; error {result['error']}" if result["error"] else "") + f"; log {log}")
+    return {"survived": 0, "crashed": 1}.get(result["outcome"], 2)
+
+
+def missing_fixture_toolchain():
+    """The first missing piece of the hinted fixture client's toolchain, or None.
+
+    The same checks as WaylandAdapter.fixture_client, without compiling.
+    """
+    for tool in ("pkg-config", "wayland-scanner", "cc"):
+        if shutil.which(tool) is None:
+            return tool
+    for package in ("wayland-protocols", "wayland-client"):
+        if subprocess.run(["pkg-config", "--exists", package], check=False).returncode:
+            return package
+    return None
+
+
+def make_cfg(timeout):
+    """(cfg, hinted_disabled): the shared run config; hinted windows off if the toolchain is missing."""
+    vocabulary, recipes = v3.load_v3()
+    missing = missing_fixture_toolchain()
+    if missing:
+        vocabulary = {**vocabulary, "hinted_fraction": 0}
+    return {"timeout": timeout, "vocabulary": vocabulary, "recipes": recipes}, missing
+
+
+CFG = None
+
+
+def init_worker(cfg):
+    global CFG
+    CFG = cfg
+    # Ctrl-C reaches the parent, which terminates the pool; SIGTERM then unwinds
+    # the worker through run_sequence's finally, so its sway is stopped.
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))
+
+
+def explore_task(task):
+    binary, seed, steps, out, side = task
+    try:
+        return explore_seed(binary, seed, steps, out, CFG, side)
+    except Exception as error:
+        return {"phase": "explore", "side": side, "seed": seed, "outputs": None,
+                **new_record(), "outcome": "harness", "step": None,
+                "error": f"{type(error).__name__}: {error}", "exit_code": None,
+                "signature": None,
+                "log": str(Path("seeds", f"{side}-{seed}", "explore.log"))}
+
+
+def judge_task(task):
+    row, explorer_binary, other_binary, out, deadline = task
+    try:
+        return judge(row, explorer_binary, other_binary, out, CFG["timeout"], deadline=deadline)
+    except Exception as error:
+        return judge_row(row, {"head": [], "base": []}, JUDGE_REPLAYS,
+                         f"{type(error).__name__}: {error}")
+
+
+def append_row(out, row):
+    with open(out / "results.jsonl", "a") as results:
+        results.write(json.dumps(row) + "\n")
+        results.flush()
+
+
+def pooled(task, tasks, out, cfg, jobs, deadline=math.inf):
+    """Run task over tasks in a pool of jobs workers; append each row as it finishes.
+
+    tasks is any iterable, possibly endless. The next task is drawn only when
+    a worker is free and time.monotonic() < deadline, so a generator computes
+    a task's arguments as it starts, and no task starts after the deadline.
+    """
+    rows, tasks, end = [], iter(tasks), object()
+
+    def draw():
+        return next(tasks, end) if time.monotonic() < deadline else end
+
+    pending = draw()
+    if pending is end:
+        return rows
+    done = queue.SimpleQueue()
+    # fork: workers inherit the loaded runner (pr-check is not an importable module).
+    with multiprocessing.get_context("fork").Pool(jobs, init_worker, (cfg,)) as pool:
+        running = 0
+        while True:
+            while pending is not end and running < jobs:
+                pool.apply_async(task, (pending,), callback=done.put, error_callback=done.put)
+                running += 1
+                pending = draw() if running < jobs else None
+            if not running:
+                break
+            row = done.get()
+            running -= 1
+            if isinstance(row, BaseException):
+                raise row
+            append_row(out, row)
+            rows.append(row)
+            if pending is None:
+                pending = draw()
+        # Let idle workers exit on their own; the with-exit's terminate() (SIGTERM) is
+        # for Ctrl-C and would hit workers already in their atexit handlers.
+        pool.close()
+        pool.join()
+    return rows
+
+
+def explore(binary, seeds, steps, out, cfg, jobs, side="head", deadline=math.inf):
+    """Explore seeds (possibly endless) in a pool, none started after deadline; one row per seed."""
+    return pooled(explore_task, ((binary, seed, steps, out, side) for seed in seeds),
+                  out, cfg, jobs, deadline)
+
+
+def judge_all(rows, base, head, out, cfg, jobs, deadline=math.inf):
+    """Judge every crashed explore row in a pool, head-explored first; one row per candidate.
+
+    A row is replayed on its side's binary, then the other's (see judge).
+    """
+    binaries = {"head": head, "base": base}
+    crashed = sorted((row for row in rows if row["outcome"] == "crashed"),
+                     key=lambda row: (row["side"] != "head", row["seed"]))
+    tasks = [(row, binaries[row["side"]], binaries["base" if row["side"] == "head" else "head"],
+              out, deadline) for row in crashed]
+    return pooled(judge_task, tasks, out, cfg, jobs)
+
+
+JUDGE_OUTCOMES = ("new", "fixed", "pre-existing", "blocked", "unconfirmed", "harness", "unjudged")
+EXPLORE_SHARE = 0.6   # of --minutes: no seed starts after it
+HARNESS_SHARE = 0.05  # more explored seeds than this with a harness outcome: exit 2
+NO_ASAN = ("not built with -Db_sanitize=address,undefined; crash signatures are signals "
+           "only and shared crashes are weak evidence")
+REPRO_TEXT = {"verified": "verified", "unverified": "unverified",
+              "needs-fixture": "needs fixture client"}
+
+
+def plan_budget(minutes, also_base, jobs):
+    """Offsets in seconds from the run's start for --minutes M (pure; the caller adds start).
+
+    run: the whole budget, after which nothing new is judged and minimising
+    stops. head_explore: no head seed starts after it; base_explore: no base
+    seed starts after it (None without --also-base). Exploration ends at
+    EXPLORE_SHARE of run, split evenly between head and base when
+    also_base > 0; base_seeds caps the base seeds. judge: the seconds left
+    for judging and minimising if exploration uses its share. jobs: workers
+    per phase.
+    """
+    if minutes <= 0 or also_base < 0 or jobs < 1:
+        raise ValueError(f"bad budget: minutes {minutes}, also_base {also_base}, jobs {jobs}")
+    run = 60.0 * minutes
+    explore_end = EXPLORE_SHARE * run
+    return {"run": run,
+            "head_explore": explore_end / 2 if also_base else explore_end,
+            "base_explore": explore_end if also_base else None,
+            "base_seeds": also_base, "judge": run - explore_end, "jobs": jobs}
+
+
+def explorer_key(row):
+    return row.get(f"{row.get('side', 'head')}_key")
+
+
+def summarise(rows):
+    """Counts and listings of a run's results.jsonl rows (explore, judge, minimise).
+
+    Pre-existing counts distinct keys over both sides. harness counts unique
+    explored seeds (side, seed) with a harness run (see harness_runs).
+    """
+    explored = [row for row in rows if row["phase"] == "explore"]
+    judged = [row for row in rows if row["phase"] == "judge"]
+    by = {outcome: sorted((row for row in judged if row["outcome"] == outcome),
+                          key=lambda row: (row["side"] != "head", row["seed"]))
+          for outcome in JUDGE_OUTCOMES}
+    harness = {(row["side"], row["seed"]) for row in rows if harness_runs(row)}
+    return {
+        "explored": {side: sum(row["side"] == side for row in explored) for side in ("head", "base")},
+        "seeds": len(explored),
+        "by": by,
+        "pre_existing_keys": sorted({explorer_key(row) or "" for row in by["pre-existing"]}),
+        "harness_seeds": sorted(harness, key=lambda item: (item[0] != "head", item[1])),
+        "explore": {(row["side"], row["seed"]): row for row in explored},
+        "minimised": {row["seed"]: row for row in rows if row["phase"] == "minimise"},
+    }
+
+
+def harness_runs(row):
+    """A row's harness runs: its explore outcome, judge replay outcomes (also of an
+    unjudged row) or outcome, or a minimise row's harness replays and script runs."""
+    if row["phase"] == "judge":
+        outcomes = row["head_outcomes"] + row["base_outcomes"]
+        return outcomes.count("harness") or int(row["outcome"] == "harness")
+    if row["phase"] == "minimise":
+        return (row.get("counts") or {}).get("harness", 0)
+    return int(row["outcome"] == "harness")
+
+
+def harness_exceeded(summary):
+    return len(summary["harness_seeds"]) > HARNESS_SHARE * summary["seeds"]
+
+
+def exit_code(run, summary):
+    """2: a binary failed to start, foot is missing, the budget ran out during preflight,
+    no seed explored or harness over 5% (first); 1: any new or unjudged crash; 0: otherwise."""
+    if (run.get("foot_missing") or run.get("preflight_expired")
+            or any((run.get("startup") or {}).values())):
+        return 2
+    if summary["seeds"] == 0 or harness_exceeded(summary):
+        return 2
+    return 1 if summary["by"]["new"] or summary["by"]["unjudged"] else 0
+
+
+def describe_short(provenance):
+    """'<git_head[:8]|unknown> <clean|dirty|-> <ASan|no ASan>' for the report."""
+    git = provenance.get("git_head")
+    state = {True: "dirty", False: "clean"}.get(provenance.get("dirty"), "-")
+    return f"{git[:8] if git else 'unknown'} {state} {'ASan' if provenance.get('asan') else 'no ASan'}"
+
+
+def wall_text(seconds):
+    seconds = int(round(seconds))
+    return f"{seconds // 60}m{seconds % 60:02d}s"
+
+
+def tally_text(outcomes, keys, key):
+    """'<crashed with key>/<runs>' for an explorer, '<crashed>/<runs>' when key is None."""
+    runs = [outcome for outcome in outcomes if outcome is not None]
+    hits = (sum(k == key for k in keys) if key is not None
+            else sum(outcome == "crashed" for outcome in runs))
+    return f"{hits}/{len(outcomes)}"
+
+
+def new_listing(out, judged, minimised):
+    """(repro text, command count, path) of a new head crash for the report."""
+    key = judged["head_key"]
+    head = tally_text(judged["head_outcomes"], judged["head_keys"], key)
+    base = tally_text(judged["base_outcomes"], judged["base_keys"], None)
+    if minimised is None:
+        return f"head {head}, base {base}; not minimised", None
+    path = f"{Path(out) / minimised['dir']}/"
+    if minimised["repro"] in REPRO_TEXT:
+        repro = f"repro.sh {REPRO_TEXT[minimised['repro']]}"
+    elif minimised.get("error"):
+        repro = f"no repro.sh, minimising failed: {minimised['error']}"
+    else:
+        repro = "no repro.sh, out of time (unminimised, full list)"
+    partial = (f" (best partial reduction: {minimised['partial']} commands in best.json, unverified)"
+               if minimised.get("partial") else "")
+    return (f"head {head}, base {base}; {repro} ({minimised['length']} commands){partial}: {path}",
+            path)
+
+
+def render_report(run, rows, wall, details=False):
+    """The report text for run (run.json) and rows (results.jsonl); details adds every listing."""
+    summary = summarise(rows)
+    by, out = summary["by"], run["out"]
+    lines = [f"pr-check: base {describe_short(run['base'])}, head {describe_short(run['head'])}"]
+    no_asan = [side for side in ("base", "head") if not run[side].get("asan")]
+    if no_asan:
+        lines.append(f"warning: {' and '.join(no_asan)} {'is' if len(no_asan) == 1 else 'are'} "
+                     f"{NO_ASAN}")
+    for side in ("base", "head"):
+        error = (run.get("startup") or {}).get(side)
+        if error:
+            lines.append(f"error: {side} failed to start: {error}")
+    if run.get("foot_missing"):
+        lines.append("error: foot is not installed; pr-check needs it for windows")
+    if run.get("preflight_expired"):
+        lines.append("error: budget exhausted during preflight; rerun with a larger --minutes")
+    hinted = run.get("hinted_disabled")
+    lines.append(f"explored {summary['explored']['head']} seeds (head)"
+                 + (f", {summary['explored']['base']} (base)" if run.get("also_base") else "")
+                 + f", {wall_text(wall)}, {run['jobs']} jobs; hinted windows "
+                 + (f"disabled: {hinted} not found" if hinted else "enabled"))
+    if run.get("seeds") is not None:
+        lines.append(f"--seeds {run['seeds']}: fixed exploration size, no wall limit "
+                     "(--minutes ignored)")
+    if summary["seeds"] == 0:
+        lines.append("error: no seeds explored")
+    elif harness_exceeded(summary):
+        lines.append(f"error: {len(summary['harness_seeds'])} of {summary['seeds']} seeds had a "
+                     f"harness outcome, over {HARNESS_SHARE:.0%}; the run is not a result")
+    lines.append(f"NEW in head: {len(by['new'])}")
+    for i, row in enumerate(by["new"], 1):
+        text, _ = new_listing(out, row, summary["minimised"].get(row["seed"]))
+        lines += [f"  {i}. {row['head_key']}", f"     {text}"]
+    if by["unjudged"]:
+        lines.append(f"{len(by['unjudged'])} crashes unjudged: rerun with a larger --minutes")
+        lines += [f"  {row['side']} seed {row['seed']}: {explorer_key(row)}" for row in by["unjudged"]]
+    lines.append(f"pre-existing {len(summary['pre_existing_keys'])}, fixed {len(by['fixed'])}, "
+                 f"blocked {len(by['blocked'])}, unconfirmed {len(by['unconfirmed'])}, "
+                 f"harness {len(summary['harness_seeds'])}. Details: {Path(out) / 'report.txt'}")
+    if details:
+        lines += report_details(summary, out)
+    return "\n".join(lines) + "\n"
+
+
+def listed_commands(commands):
+    return [f"       {i}. {text}" for i, text in enumerate(commands, 1)]
+
+
+def report_details(summary, out):
+    """report.txt's listings: every judged crash with its replays and commands, every harness seed."""
+    by, lines = summary["by"], []
+    for outcome in JUDGE_OUTCOMES:
+        if not by[outcome]:
+            continue
+        lines += ["", f"== {outcome} ({len(by[outcome])}) =="]
+        for row in by[outcome]:
+            side, other = row["side"], "base" if row["side"] == "head" else "head"
+            explored = summary["explore"].get((side, row["seed"]), {})
+            key = explorer_key(row)
+            lines.append(f"  {side} seed {row['seed']} ({explored.get('outputs')} outputs, "
+                         f"explore crashed at step {explored.get('step')}): {key}")
+            for label, label_key in ((side, key), (other, None)):
+                keys = row[f"{label}_keys"]
+                runs = ", ".join(f"{o}" + (f" at step {s}: {k}" if o == "crashed" else "")
+                                 for o, s, k in zip(row[f"{label}_outcomes"],
+                                                    row[f"{label}_steps"], keys))
+                lines.append(f"     {label} {tally_text(row[f'{label}_outcomes'], keys, label_key)}: {runs}")
+            if row.get("error"):
+                lines.append(f"     error: {row['error']}")
+            commands = explored.get("commands", [])
+            minimised = summary["minimised"].get(row["seed"]) if outcome == "new" else None
+            if minimised is not None:
+                text, path = new_listing(out, row, minimised)
+                lines.append(f"     {text.split('; ', 1)[1]}")
+                if minimised.get("fallback"):
+                    lines.append(f"     note: {minimised['fallback']}")
+                try:
+                    commands = json.loads((Path(out) / minimised["dir"] / "commands.json")
+                                          .read_text())["commands"]
+                except (OSError, ValueError, KeyError):
+                    lines.append("     (commands.json unreadable; the explored list follows)")
+            lines.append(f"     commands ({len(commands)}), replay with --replay:")
+            lines += listed_commands(commands)
+    if summary["harness_seeds"]:
+        lines += ["", f"== harness seeds ({len(summary['harness_seeds'])}) =="]
+        judged = {(row["side"], row["seed"]): row for outcome in JUDGE_OUTCOMES
+                  for row in by[outcome]}
+        for side, seed in summary["harness_seeds"]:
+            explored = summary["explore"].get((side, seed), {})
+            row = judged.get((side, seed))
+            minimised = summary["minimised"].get(seed) if side == "head" else None
+            if explored.get("outcome") == "harness":
+                lines.append(f"  {side} seed {seed} explore at step {explored.get('step')}: "
+                             f"{explored.get('error')}")
+            if row is not None and harness_runs(row):
+                lines.append(f"  {side} seed {seed} judge ({row['outcome']}): head "
+                             f"{row['head_outcomes']}, base {row['base_outcomes']}" +
+                             (f"; {row['error']}" if row.get("error") else ""))
+            if minimised is not None and harness_runs(minimised):
+                lines.append(f"  {side} seed {seed} minimise: {harness_runs(minimised)} harness "
+                             f"replays or script runs")
+    return lines
+
+
+def preflight(binary, out, timeout, side):
+    """None if binary starts and answers IPC on a fresh sway, else why not."""
+    result = run_sequence(binary, None, Fixed([]), new_record(),
+                          out / "preflight" / f"{side}.log", timeout)
+    if result["outcome"] == "survived":
+        return None
+    return f"{result['outcome']}: {result['error'] or 'exit ' + str(result['exit_code'])}"
+
+
+def executable(text):
+    """An existing executable file, made absolute so env/timeout never search PATH."""
+    path = Path(text)
+    if not path.is_file() or not os.access(path, os.X_OK):
+        raise argparse.ArgumentTypeError(f"not an executable file: {text}")
+    return path.resolve()
+
+
+def minutes_arg(text):
+    """--minutes: a number of at least 1."""
+    try:
+        value = float(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"not a number: {text}") from None
+    if not value >= 1:
+        raise argparse.ArgumentTypeError(f"must be at least 1, got {text}")
+    return value
+
+
+def load_rows(out):
+    with open(Path(out) / "results.jsonl") as results:
+        return [json.loads(line) for line in results if line.strip()]
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    parser.add_argument("--base", type=executable, help="base sway binary")
+    parser.add_argument("--head", type=executable, help="head sway binary")
+    parser.add_argument("--out", type=Path,
+                        help="output directory (new or empty; with --replay, default a new tempdir)")
+    parser.add_argument("--minutes", type=minutes_arg, default=15,
+                        help="wall minutes for the whole run, at least 1 (ignored with --seeds)")
+    parser.add_argument("--seeds", type=int, default=None,
+                        help="explore exactly this many head seeds, with no wall limit")
+    parser.add_argument("--also-base", type=int, default=0, metavar="N",
+                        help="explore up to N more seeds with base as the explorer (fixed crashes)")
+    parser.add_argument("--seed", type=int, default=0, help="first seed")
+    parser.add_argument("--steps", type=int, default=40, help="commands per seed")
+    parser.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 1) // 4))
+    parser.add_argument("--timeout", type=int, default=60,
+                        help="wall seconds for one compositor run")
+    parser.add_argument("--replay", type=Path, metavar="COMMANDS_JSON",
+                        help="replay an out/new-<n>/commands.json once on --binary and print the outcome")
+    parser.add_argument("--binary", type=executable, help="sway binary for --replay")
+    args = parser.parse_args(argv)
+    if args.replay:
+        if not args.binary:
+            parser.error("--replay needs --binary")
+        return replay_main(args.replay, args.binary, args.timeout, args.out)
+    missing = [f"--{name}" for name in ("base", "head", "out") if getattr(args, name) is None]
+    if missing:
+        parser.error(f"the following arguments are required: {', '.join(missing)}")
+    if args.out.exists() and (not args.out.is_dir() or any(args.out.iterdir())):
+        parser.error(f"--out must be a new or empty directory: {args.out}")
+    if args.seeds is not None and args.seeds < 0:
+        parser.error("--seeds must be >= 0")
+    try:
+        plan = plan_budget(args.minutes, args.also_base, args.jobs) if args.seeds is None else None
+    except ValueError as error:
+        parser.error(str(error))
+    start = time.monotonic()
+    args.out.mkdir(parents=True, exist_ok=True)
+    (args.out / "results.jsonl").touch()
+    cfg, hinted_disabled = make_cfg(args.timeout)
+    run = {
+        "argv": sys.argv if argv is None else ["pr-check", *argv],
+        "start": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
+        "out": str(args.out), "jobs": args.jobs, "seeds": args.seeds, "also_base": args.also_base,
+        "minutes": None if plan is None else args.minutes, "budget": plan,
+        "base": runner.binary_provenance(args.base),
+        "head": runner.binary_provenance(args.head),
+        "hinted_disabled": hinted_disabled,
+        "foot_missing": foot_missing(), "startup": {}, "preflight_expired": False,
+    }
+
+    def at(offset):
+        return math.inf if plan is None or offset is None else start + offset
+
+    if not run["foot_missing"]:
+        # One startup check at a time, none started after the run's deadline.
+        for side, binary in (("base", args.base), ("head", args.head)):
+            if time.monotonic() > at(plan and plan["run"]):
+                run["preflight_expired"] = True
+                break
+            run["startup"][side] = preflight(binary, args.out, args.timeout, side)
+    (args.out / "run.json").write_text(json.dumps(run, indent=2) + "\n")
+
+    if (not run["foot_missing"] and not run["preflight_expired"]
+            and not any(run["startup"].values())):
+        if plan is None:
+            head_seeds = range(args.seed, args.seed + args.seeds)
+        else:
+            head_seeds = itertools.count(args.seed)
+        try:
+            rows = explore(args.head, head_seeds, args.steps, args.out, cfg, args.jobs, "head",
+                           at(plan and plan["head_explore"]))
+            if args.also_base:
+                first = args.seed + len(rows)
+                rows += explore(args.base, range(first, first + args.also_base), args.steps,
+                                args.out, cfg, args.jobs, "base", at(plan and plan["base_explore"]))
+            judged = judge_all(rows, args.base, args.head, args.out, cfg, args.jobs,
+                               at(plan and plan["run"]))
+            minimise_all(rows, judged, args.base, args.head, args.out, cfg, args.jobs,
+                         at(plan and plan["run"]))
+        except KeyboardInterrupt:
+            print(f"interrupted; finished rows are in {args.out / 'results.jsonl'}", file=sys.stderr)
+            return 130
+    rows = load_rows(args.out)
+    wall = time.monotonic() - start
+    (args.out / "report.txt").write_text(render_report(run, rows, wall, details=True))
+    sys.stdout.write(render_report(run, rows, wall))
+    return exit_code(run, summarise(rows))
+
+
+if __name__ == "__main__":
+    sys.exit(main())
