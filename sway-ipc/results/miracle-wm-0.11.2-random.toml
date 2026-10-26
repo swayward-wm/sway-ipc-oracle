@@ -6,7 +6,7 @@
 compositor = "miracle-wm"
 version = "0.9.1"
 commit = "2df22b0e959f44e2e8cb91060f7f53c2ae8347a2"
-inputs = "d32fb9851ee37950b85943ba28548fc917b0a34cb82057ad04e33aa1410e14f0"
+inputs = "47f3c343bca756e42ada9f5ad5f0300b4dddb011f2ed6124e0edfa06e00dfedb"
 date = "2026-10-22"
 normalization = "sway-ipc/normalize.toml"
 normalization_rules = ["runtime-identifiers", "focus-by-child-position", "rectangle-semantics", "backend-output-reference", "backend-output-properties", "backend-output-capabilities", "version-runtime-identity", "backend-output-name", "floating-rect-run-variance", "tree-rect-tolerance", "floating-percent-run-variance", "floating-descendant-percent-run-variance", "hidden-scratchpad-descendant-rect", "hidden-scratchpad-descendant-percent", "tree-percent-tolerance", "focus-child-position-comparison", "backend-mode-array-length"]

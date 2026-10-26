@@ -6,7 +6,7 @@
 compositor = "swayfx"
 version = "0.6-fd71a6bd (Oct 18 2026, branch 'HEAD')"
 commit = "fd71a6bdc061bd633b488ae7b83e8a6981d22f86"
-inputs = "2febf0300a049961847dd305c703ec0aa7e41fdf8d6a3171c2ec3591184f5c6c"
+inputs = "fc1c272f5b8a34f73ace65684e288770da62228c2227c2b03ccc96e9ba29692f"
 date = "2026-10-21"
 normalization = "sway-ipc/normalize.toml"
 normalization_rules = ["runtime-identifiers", "focus-by-child-position", "rectangle-semantics", "backend-output-reference", "backend-output-properties", "backend-output-capabilities", "version-runtime-identity", "backend-output-name", "floating-rect-run-variance", "tree-rect-tolerance", "floating-percent-run-variance", "floating-descendant-percent-run-variance", "hidden-scratchpad-descendant-rect", "hidden-scratchpad-descendant-percent", "tree-percent-tolerance", "focus-child-position-comparison", "backend-mode-array-length", "swayfx-version-original-version", "swayfx-output-layer-shell-surfaces"]

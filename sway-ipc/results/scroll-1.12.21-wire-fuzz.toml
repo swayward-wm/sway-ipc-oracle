@@ -6,7 +6,7 @@
 compositor = "scroll"
 version = "1.13-dev-f80c5820 (Oct 10 2026, branch 'HEAD')"
 commit = "f80c5820c0eebaad586f0008faecfe3ae62c307a"
-inputs = "db2011f13caa0668e09a980ba07c7b4dbc420457ad0f95411669418f9920554c"
+inputs = "0f03b7b2c3ada5a10a87585aac8f3ff8b6d2d34133f1eb665d9bf9881ed971fa"
 date = "2026-10-10"
 corpus = "wire-fuzz"
 seed = 0

@@ -1,21 +1,69 @@
 # Contributor tools
 
-This directory contains the repository's executable maintenance tools. `contrib/validate` checks this inventory, the result files, and the fixture schema.
+## Check a change or choose a runner
 
-| Script | Purpose and inputs or outputs | Who runs it | Why it remains separate |
-|---|---|---|---|
-| `check-sway-fixture-schema` | Compares the checked-in fixture fields with the serializer fields in the pinned sway checkout. It takes the checkout path and reports mismatches. | CI through `validate`; maintainers after updating sway fixtures | This source-level schema check needs a sway checkout. The scenario runner only observes IPC output. |
-| `coverage-report` | Validates one `i3/results/<snapshot>.toml` file or prints its summary, gaps, or JSON representation. | CI through `validate`; contributors who classify i3 results | This is a read-only result validator. `i3-suite-run` executes compositors and rewrites result files. |
-| `foreign-toplevel-request.c` | Sends one wlr foreign-toplevel request (`set_minimized`, `unset_minimized`, `set_maximized`, `unset_maximized`) to the toplevel with a given app_id, then exits after the compositor has handled it. `sway-ipc-run` compiles it against the protocol XML vendored from the pinned wlroots in `protocols/`. | The sway IPC runner for `foreign_toplevel:` scenario actions | Taskbar requests have no IPC equivalent, and this protocol input must be identical for sway and swayward. |
-| `i3-suite-run` | Runs the unchanged vendored i3 suite against i3, sway, or swayward and writes `i3/results/<snapshot>.toml` (names from `pins.toml`). It also owns the TAP parser and its self-test. | Maintainers who refresh i3-suite evidence; CI runs only `--self-test` | It requires the i3 test harness and compositor adapters. The sway IPC runner uses data-driven Wayland scenarios instead. |
-| `i3_buckets.py` | Sorts every assertion of each pinned i3-suite snapshot into one bucket (P, S, N-i3, N-x11-all, N-x11-sway, N-harness, N-gap) from the committed results, classifications, `i3/unstable.toml` and `i3/abort-causes/`, and renders each `docs/results.md` block's i3-suite region. `--write docs/results.md` rewrites those regions. | `readme-snapshots` through `validate`; maintainers after a result or classification changes | The bucket rules are interpretation, not measurement, so they stay out of the runners and the result validator. |
-| `pr-check` | Checks a sway change for crashes; [docs/pr-check.md](../docs/pr-check.md) is the user guide. Given a base and a head sway binary, it explores random-v3 command sequences on head, one fresh compositor per seed, and writes `run.json` (measured provenance of both binaries), `results.jsonl` (one row per seed: symbolic, resolved and sent commands, outcome survived, crashed or harness) and per-seed logs and settled observations under `--out`. Each crashed seed is then replayed twice on head and twice on base and judged new, pre-existing, blocked, unconfirmed or harness, or unjudged if the budget ran out (one `results.jsonl` row each). Each new crash is delta-debugged (head crashes with the same signature, base survives) into `new-<n>/`: rendered as a swaymsg `repro.sh` and the script run twice on each binary (verified or unverified), or no script when a step needs the fixture client (needs-fixture) or time ran out (unminimised); `--replay new-<n>/commands.json --binary <sway>` replays one list. `--also-base N` explores N more seeds with base as the explorer, judged the same way with sides swapped (base-only crashes are fixed). `--minutes M` (default 15, at least 1) is the whole run's wall budget (exploration starts no seed after 60%; a new crash out of time is reported with its full explored list, its best partial reduction in `best.json`), `--seeds N` a fixed exploration size instead. The report goes to stdout and, with every crash's listing, to `report.txt`; exit 2 for a harness failure (a binary does not start, foot missing, the budget ran out during preflight, no seed explored, over 5% of seeds with any harness run), else 1 for any new or unjudged crash, else 0. | Sway contributors checking a branch before review | It drives unpinned binaries the user built and reports per side; `sway-ipc-run` measures pinned builds for the recorded results. |
-| `provenance.py` | Lists the tracked inputs of each result file and hashes their contents into the result's `inputs` field. `--restamp RESULT...` rewrites that field after a change that cannot affect measurements. | The runners when they write a result; `validate`; maintainers restamping | It is shared by both runners and `validate`, which must agree on one definition of a result's inputs. |
-| `regenerate-rc` | Runs the release-candidate regeneration for one swayward commit: repins swayward, builds the image, recaptures the i3-derived corpus from sway, and regenerates every `pending.toml` result plus every swayward result, one unit at a time, two runs each, in 4 GiB zero-swap containers; state and events rows that differ between the runs install as unstable. Its units cover every `pins.toml` snapshot compositor (i3, sway, swayward, SwayFX, scroll, miracle-wm and swirl); SwayFX containers get `--device /dev/dri/renderD128`. It installs agreeing results, empties their `pending.toml` entries, and writes `target/rc/<sha8>/evidence.log`. `--dry-run` checks the prerequisites and prints the unit plan. | The maintainer once per milestone (T4) | It drives Podman from the host and composes `validate reproduce`, `i3-suite-run` and `sway-ipc-run` runs. `validate reproduce` runs one snapshot inside one container. |
-| `sway-ipc-run` | Runs, captures, or compares sway IPC scenarios. It reads scenario and normalization TOML and writes fixtures or result TOML. | Maintainers who refresh fixtures; contributors investigating protocol differences | It owns compositor lifecycle and raw sway IPC. The i3-suite runner owns the upstream Perl suite and TAP results. |
-| `xdg-toplevel-fixture.c` | Maps an xdg toplevel with specified minimum and maximum sizes and an optional parent. `sway-ipc-run` compiles it with the pinned Wayland development packages. | The sway IPC runner for default-floating scenarios | Foot cannot set xdg-shell size hints or a parent, and this protocol input must be identical for sway and swayward. |
-| `sway_ipc_v3.py` | The random-v3 generator: reads stable state features from one sway `get_tree`/`get_workspaces`, then picks the next command from `sway-ipc/random-v3/vocabulary.json` (weights, state multipliers, preconditions) and `recipes.json` (precondition builders ending in trigger commands). It also resolves symbolic `@con:` ids per compositor. | `sway-ipc-run differential` and `random --capture` with `--generator v3`; `fuzz-self-test` | The generator is pure state-to-command logic with its own self-test, kept apart from compositor lifecycle and IPC in `sway-ipc-run`. |
-| `sway_ipc_triage.py` | Checks that every sway-IPC corpus of the pinned swayward snapshot (state, events, random, i3-derived, command fuzz, wire fuzz) has a result and a classification file, that classifications name only measured mismatches, and reports the untriaged count per corpus, with its unstable rows. | `validate`; `tests/sway-ipc-triage` | It is imported by both `validate` and its negative test, which deletes each result and classification in turn. |
-| `validate` | Runs all repository checks, self-tests, inventory checks, and the pinned sway schema comparison. Its `reproduce` mode regenerates result files inside the pinned container. | CI and contributors before pushing or refreshing evidence | This is the single check and reproduction entry point. Folding domain logic into it would duplicate the tools that contributors also run directly. |
+```sh
+./contrib/validate
+```
 
-`contrib/tests/` contains tests called only by `validate`, and `contrib/protocols/` holds Wayland protocol XML vendored unchanged from the pinned wlroots; neither is part of the executable tool inventory. Python bytecode and other generated files do not belong in `contrib/`.
+For a first run, use the [quickstart](../docs/start.md). Before changing
+measurements or classifications, read the [contribution rules](../CONTRIBUTING.md).
+
+The tables list every file directly in `contrib/` except this README;
+validation checks the inventory.
+
+## Measure a compositor or check a sway PR
+
+| Script | Purpose and inputs or outputs | Who runs it | Why separate |
+| --- | --- | --- | --- |
+| `i3-suite-run` | Runs the unchanged i3 suite against i3, sway or swayward; writes `i3/results/<snapshot>.toml`, named by `pins.toml`. Owns the TAP parser and its self-test. | Maintainers refreshing evidence; CI runs only `--self-test` | Uses the upstream Perl harness and adapters, rather than Wayland scenario data. |
+| `sway-ipc-run` | Runs, captures or compares IPC scenarios; reads scenario and normalization TOML, writes fixtures or result TOML. See [running](../docs/running.md). | Maintainers refreshing fixtures; contributors investigating differences | Owns compositor lifecycle and raw IPC, separate from the i3 suite. |
+| `pr-check` | Explores random-v3 command sequences on a user's head sway build, replays crashes on head and base, and reduces new crashes. See the [options, reports and limits](../docs/pr-check.md). | Sway contributors checking a branch | Uses unpinned binaries and reports per side, rather than measuring published pins. |
+| `regenerate-rc` | Repins one swayward commit, builds the image, recaptures i3-derived inputs, and refreshes pending and swayward results. See [release-candidate regeneration](../docs/reproducing.md#release-candidate-regeneration) for dry runs, two-run agreement, unstable rows and `target/rc/<sha8>/evidence.log`. | Maintainer once per milestone (T4) | Drives Podman on the host and composes runners; `validate reproduce` runs one snapshot inside a container. |
+
+### Inspect pr-check's machine-readable output
+
+`run.json` records measured provenance of both binaries. `results.jsonl` has
+one row per explored seed: symbolic, resolved and sent commands, and the outcome
+(`survived`, `crashed` or `harness`). Per-seed directories hold logs and settled observations.
+
+Each crashed seed adds a judgment row after two replays on each side: new,
+pre-existing, blocked, unconfirmed or harness; unjudged if the budget ran out.
+Base-explored seeds use the same rules with sides swapped; base-only crashes are fixed.
+
+New crashes go in `new-<n>/`. Script states include `needs-fixture` (a step
+needs the fixture client) and `unminimised` (out of time). See
+[how to read the report](../docs/pr-check.md#reading-the-report) for the other states.
+
+With `--diffs`, each survived head seed is also replayed once on base. First
+behaviour differences are grouped by causing command (the subcommand for a
+reply difference) and path, and one seed per group is minimised into
+`diff-<n>/` with the exact first-difference path as the predicate. They never change the exit code.
+
+## Review results or check their inputs
+
+| Script | Purpose and inputs or outputs | Who runs it | Why separate |
+| --- | --- | --- | --- |
+| `coverage-report` | Checks one `i3/results/<snapshot>.toml` or prints its summary, gaps or JSON. | CI through `validate`; contributors classifying results | Read-only validation; `i3-suite-run` executes compositors and writes measurements. |
+| `i3_buckets.py` | Partitions assertions into [buckets](../docs/glossary.md) using results, classifications, `i3/unstable.toml` and `i3/abort-causes/`; renders the generated i3-suite regions in `docs/results.md`, and the per-request tables of each sway IPC state result. | `readme-snapshots` through `validate`; maintainers after result or classification edits | Interpretation stays outside runners and raw-result validation. Use the [review command](../CONTRIBUTING.md#review-an-i3-result). |
+| `provenance.py` | Lists tracked result inputs and hashes their contents into `inputs`. See [when restamping is allowed](../CONTRIBUTING.md#resolve-a-stale-input-hash). | Both runners, `validate`; maintainers restamping | All three share one definition of inputs. |
+| `sway_ipc_triage.py` | Checks result and classification coverage for every sway-IPC corpus of pinned swayward (state, events, random, i3-derived, command fuzz, wire fuzz); rejects classifications of unmeasured mismatches and reports untriaged counts and unstable rows. | `validate`; `tests/sway-ipc-triage` | Shared with its negative test, which deletes each result and classification in turn. |
+| `check-sway-fixture-schema` | Takes a pinned sway checkout; compares its serializer fields with checked-in fixture fields and reports mismatches. | CI through `validate`; maintainers updating fixtures | Needs source; the scenario runner observes only IPC. |
+| `validate` | Checks results, fixture schema, inventories and self-tests; `reproduce` regenerates snapshots in the pinned container. | CI and contributors before pushing or refreshing evidence | One entry point, using domain checks that contributors can also run directly. |
+
+## Work on generators or fixture clients
+
+| File | Purpose and inputs or outputs | Who uses it | Why separate |
+| --- | --- | --- | --- |
+| `sway_ipc_v3.py` | Generates commands from stable tree/workspace features, vocabulary weights, state multipliers, preconditions and recipes in `sway-ipc/random-v3/`; resolves symbolic `@con:` IDs per compositor. | `sway-ipc-run differential`, `random --capture --generator v3`; `fuzz-self-test` | Pure state-to-command logic with its own self-test, separate from lifecycle and IPC. |
+| `foreign-toplevel-request.c` | Sends `set_minimized`, `unset_minimized`, `set_maximized` or `unset_maximized` to a toplevel by app_id; exits when handled. The runner compiles it against protocol XML in `protocols/`, vendored from pinned wlroots. | `sway-ipc-run` for `foreign_toplevel:` actions | Taskbar requests have no IPC equivalent; sway and swayward need identical protocol input. |
+| `xdg-toplevel-fixture.c` | Maps an xdg toplevel with minimum/maximum sizes and an optional parent; the runner compiles it with pinned Wayland development packages. | `sway-ipc-run` for default-floating scenarios | Foot cannot set xdg-shell hints or a parent; sway and swayward need identical protocol input. |
+
+Directories are not inventory rows:
+
+- `prcheck/` implements `pr-check`; the script imports it and
+  `prcheck/__init__.py` lists its modules.
+- `tests/` contains tests called only by `validate`.
+- `protocols/` holds Wayland protocol XML vendored unchanged from pinned wlroots.
+
+Do not put Python bytecode or other generated files in `contrib/`.

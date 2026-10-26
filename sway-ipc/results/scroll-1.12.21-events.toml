@@ -7,7 +7,7 @@
 compositor = "scroll"
 version = "1.13-dev-f80c5820 (Oct 18 2026, branch 'HEAD')"
 commit = "f80c5820c0eebaad586f0008faecfe3ae62c307a"
-inputs = "6580ee5de815e84eeca6294efbdcbfe4b1d334e4ed8ceeba5033f9e06b99b5b2"
+inputs = "b15bd94af68f0beecf23df8144dcb28f72368796bad5f1f2ec2670d12845c05f"
 date = "2026-10-21"
 normalization = "sway-ipc/normalize.toml"
 normalization_rules = ["runtime-identifiers", "focus-by-child-position", "rectangle-semantics", "backend-output-reference", "backend-output-properties", "backend-output-capabilities", "version-runtime-identity", "backend-output-name", "floating-rect-run-variance", "tree-rect-tolerance", "floating-percent-run-variance", "floating-descendant-percent-run-variance", "hidden-scratchpad-descendant-rect", "hidden-scratchpad-descendant-percent", "tree-percent-tolerance", "focus-child-position-comparison", "backend-mode-array-length"]

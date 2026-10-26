@@ -34,7 +34,7 @@ files afterwards. Steps, in this order:
    i3/flaky.toml are excluded, and both runs must pass every canary. An
    agreeing unit installs the first run as the committed result and drops its
    pending.toml entry. A disagreeing unit stops the run and installs nothing.
-4. Finish: regenerate the docs/results.md i3-suite blocks and run contrib/validate.
+4. Finish: regenerate the docs/results.md generated regions and run contrib/validate.
 
 Each unit appends one evidence line (unit, runs, wall time, agreement, diff
 lines against the committed result) to target/rc/SHA8/evidence.log. A rerun

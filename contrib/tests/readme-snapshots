@@ -23,15 +23,21 @@ Rules:
   contrib/i3_buckets.py's rendering from the committed results: both
   partitions of the 3,755 assertions (buckets and raw outcome), the review
   line, the comparable view and its asymmetries.
-- Every figure in a generated region ends in † exactly when it is derived from
-  a pending i3 result, checked independently of the generator: the review line
+- Each block with a sway IPC state result holds exactly one generated
+  sway-ipc-state region, equal to contrib/i3_buckets.py's per-request count of
+  that result (render_state); a block without one holds none. Its figures end
+  in † exactly when that result is listed in pending.toml.
+- Every figure in a generated i3-suite region ends in † exactly when it is
+  derived from a pending i3 result, checked independently of the generator: the review line
   reads only the block's own classification; bucket and view figures also read
   pinned sway's result when the block has a `xwm_kill_client_fallback` row; an
   asymmetry figure also reads the other compositor's partition.
-- Prose counts (test files, assertions, i3-derived states, event scenarios
-  and captures, event families, census commands, random and random-v2 seeds
-  and steps)
-  equal the committed data they describe.
+- Corpus rows of the scenario corpora (state, events, i3-derived) add a crash
+  figure when their [run] records one.
+- Prose counts (test files, assertions, i3-derived states, state and event
+  scenarios, captures and probes, state scenario names, event families,
+  census commands, random and random-v2 seeds and steps) equal the committed
+  data they describe.
 """
 import functools
 import json
@@ -98,20 +104,14 @@ def check_combined(text, pins, where):
 
 
 def blocks(text, pins):
-    section = re.search(r"^## Snapshots\n(.*?)(?=^## )", text, re.S | re.M)
-    if not section:
-        fail("docs/results.md has no ## Snapshots section")
-    found = {}
-    parts = re.split(r"^(### .*)$", section.group(1), flags=re.M)
-    for heading, body in zip(parts[1::2], parts[2::2]):
-        found.setdefault(heading, []).append(body)
     result = {}
-    for compositor, name in pins["snapshot"].items():
-        heading = f"### {display(compositor, name, pins[compositor])} (`{pins[compositor][:8]}`)"
-        bodies = found.get(heading, [])
-        if len(bodies) != 1:
-            fail(f"docs/results.md needs exactly one block headed: {heading} (found {len(bodies)})")
-        result[compositor] = bodies[0]
+    for compositor, spans in i3_buckets.blocks(text, pins).items():
+        if len(spans) != 1:
+            name = pins["snapshot"][compositor]
+            fail(f"docs/results.md needs exactly one block headed: "
+                 f"{i3_buckets.heading(compositor, name, pins[compositor])} (found {len(spans)})")
+        start, end = spans[0]
+        result[compositor] = text[start:end]
     return result
 
 
@@ -148,9 +148,10 @@ def sway_ipc_rows(compositor, name, pending, prefix, head):
     mismatch = "differs" if compositor == "i3" else "mismatch"
     rows = []
     for corpus, suffix, keys in (
-        ("sway IPC state", "", ("match", mismatch, "unstable", "not_applicable")),
-        ("events", "-events", ("match", mismatch, "unstable", "not_applicable")),
-        ("i3-derived", "-i3-derived", ("match", mismatch, "unstable", "not_applicable")),
+        # Scenario corpora report crash only when a crash row exists.
+        ("sway IPC state", "", ("match", mismatch, "unstable", "not_applicable", "crash?")),
+        ("events", "-events", ("match", mismatch, "unstable", "not_applicable", "crash?")),
+        ("i3-derived", "-i3-derived", ("match", mismatch, "unstable", "not_applicable", "crash?")),
         ("random", "-random", ("match", mismatch, "unstable", "not_applicable", "crash")),
         ("random-v2", "-random-v2", ("match", mismatch, "unstable", "not_applicable")),
         ("command fuzz", "-command-fuzz", ("match", mismatch, "not_applicable", "crash", "hang")),
@@ -161,6 +162,7 @@ def sway_ipc_rows(compositor, name, pending, prefix, head):
             rows.append((corpus, None, None))
             continue
         run = tomllib.load(open(ROOT / path, "rb"))["run"]
+        keys = [k.rstrip("?") for k in keys if not k.endswith("?") or k.rstrip("?") in run]
         rows.append((corpus, [(run.get(k, 0), k.replace("_", " ")) for k in keys], path))
     expected = list(head)
     for corpus, figures, path in rows:
@@ -173,7 +175,7 @@ def sway_ipc_rows(compositor, name, pending, prefix, head):
     return expected
 
 
-def check_block(compositor, name, body, pending, generated, prefix=""):
+def check_block(compositor, name, body, pending, generated, state, prefix=""):
     expected = corpus_rows(compositor, name, pending, prefix)[0]
     rows = [row for table in tables(body) for _, row in table]
     for row in expected:
@@ -184,6 +186,23 @@ def check_block(compositor, name, body, pending, generated, prefix=""):
         fail(f"docs/results.md block for {name}: the generated i3-suite region (buckets, review line, "
              "comparable view, asymmetries) differs from the committed results; run "
              "contrib/i3_buckets.py --write docs/results.md")
+    if i3_buckets.state_regions(body) != ([state] if state else []):
+        fail(f"docs/results.md block for {name}: the generated sway-ipc-state region (state result "
+             "by request) differs from the committed results; run "
+             "contrib/i3_buckets.py --write docs/results.md")
+
+
+def check_state_marks(compositor, name, region, pending):
+    """Every per-request figure carries † exactly when the block's state result is pending."""
+    stale = i3_buckets.state_path(name) in pending
+    for line in region.splitlines():
+        if not line.startswith("| `"):
+            continue
+        for figure in re.findall(FIGURE, line.split(" | ", 1)[1]):
+            if figure.endswith("†") != stale:
+                want = "needs" if stale else "must not carry"
+                fail(f"docs/results.md block for {name}: state-by-request figure {figure} {want} † "
+                     f"(derived from {i3_buckets.state_path(name)})")
 
 
 FIGURE = r"(?<![\w.,-])\d[\d,]*†?(?![\w.])"
@@ -236,6 +255,9 @@ def prose_counts():
     scenarios = tomllib.load(open(ROOT / "sway-ipc/scenarios.toml", "rb"))["scenario"]
     events = [s for s in scenarios if "events" in s.get("corpora", ["state", "events"])]
     captures = sum(a.startswith("capture:") for s in events for a in s["actions"])
+    state = [s for s in scenarios if "state" in s.get("corpora", ["state", "events"])]
+    state_captures = {a.split(":")[1] for s in state for a in s["actions"] if a.startswith("capture:")}
+    state_probes = {a.split(":")[1] for s in state for a in s["actions"] if a.startswith("probe:")}
     derived = json.loads((ROOT / "sway-ipc/i3-derived/scenarios.json").read_text())["scenarios"]
     census = tomllib.load(open(ROOT / "sway-ipc/command-coverage.toml", "rb"))["command"]
     random = json.loads((ROOT / "sway-ipc/random/sequences.json").read_text())
@@ -251,6 +273,10 @@ def prose_counts():
         (r"the same (\S+) i3-suite\s+assertions", count(sum(e["assertions"] for e in files.values()))),
         (r"replays (\S+) distinct states", count(len(derived))),
         (r"\*\*Events\*\* replays (\S+) scenarios", count(len(events))),
+        (r"\*\*Sway IPC state\*\* replays (\S+) scenarios", count(len(state))),
+        (r"scenarios \((\S+) captures, \S+ probes\)", count(len(state_captures))),
+        (r"captures, (\S+) probes\)", count(len(state_probes))),
+        (r"names (\S+) scenarios", count(len(state_captures | state_probes))),
         (r"scenarios \((\S+) captures\)", count(captures)),
         (r"all\s+(\S+) sway event\s+families", words.get(families, str(families))),
         (r"sway 1\.12's (\S+) top-level\s+commands", count(len(census))),
@@ -316,8 +342,18 @@ def check(path, pending=None):
     for compositor, body in blocks(text, pins).items():
         for region in i3_buckets.regions(body):
             check_marks(compositor, region, pins, pending)
+        name = pins["snapshot"][compositor]
+        for region in i3_buckets.state_regions(body):
+            check_state_marks(compositor, name, region, pending)
         generated = i3_buckets.render_region(compositor, pins, snaps) if compositor in snaps else None
-        check_block(compositor, pins["snapshot"][compositor], body, pending, generated, prefix)
+        state = (i3_buckets.render_state(compositor, name, pending)
+                 if compositor in i3_buckets.state_compositors(pins) else None)
+        check_block(compositor, name, body, pending, generated, state, prefix)
+    # A generated region outside every compositor block is never regenerated.
+    if len(i3_buckets.regions(text)) != len(snaps):
+        fail(f"{path}: {len(i3_buckets.regions(text))} i3-suite regions, expected {len(snaps)} (one per block)")
+    if len(i3_buckets.state_regions(text)) != len(i3_buckets.state_compositors(pins)):
+        fail(f"{path}: stray or missing sway-ipc-state region outside the compositor blocks")
 
 
 if sys.argv[1:] == ["--self-test"]:
@@ -337,7 +373,14 @@ if sys.argv[1:] == ["--self-test"]:
              ("- 86 N-x11-all", "- 85 N-x11-all"),
              ("| 3,754 | 1 | 0 | 0 | 0 | 0 | 0 |", "| 3,754 | 1 | 0 | 0 | 0 | 0 | 0† |"),
              ("replays 416 distinct states", "replays 401 distinct states"),
-             ("replays 36 scenarios", "replays 38 scenarios")]
+             ("replays 36 scenarios", "replays 38 scenarios"),
+             # sway-ipc-state regions: a count, a dagger, a dropped row.
+             ("| `GET_TREE` | 0 | 446 | 32 | 0 | 4 |", "| `GET_TREE` | 0 | 447 | 32 | 0 | 4 |"),
+             ("| `GET_VERSION` | 440 | 0 | 0 | 479 |", "| `GET_VERSION` | 440† | 0 | 0 | 479 |"),
+             ("| `GET_TREE` | 476 | 6 | 0 | 0 |\n", "")]
+    # A copy of a generated region outside the compositor blocks must fail.
+    stray = i3_buckets.state_regions(readme)[0]
+    edits.append(("### How to read a block\n", "### How to read a block\n\n" + stray + "\n"))
     with tempfile.TemporaryDirectory() as work:
         for old, new in edits:
             if readme.count(old) != 1:
@@ -362,9 +405,7 @@ if sys.argv[1:] == ["--self-test"]:
         fail(f"self-test assumes {sway_i3} and {swayward_i3} are fresh; update the edge case")
     edge_pending = pending | {swayward_i3}
     _, snaps = i3_buckets.snapshots(edge_pending)
-    edge = readme
-    for old, compositor in zip(i3_buckets.regions(readme), snaps):
-        edge = edge.replace(old, i3_buckets.render_region(compositor, pins, snaps), 1)
+    edge = i3_buckets.rewrite(readme, pins, snaps, pending)
     corpus = f"24 flaky | [i3 suite](../{swayward_i3})"
     if edge.count(corpus) != 1:
         fail(f"self-test edit target is not unique in {RESULTS.name}: {corpus!r}")
@@ -373,6 +414,65 @@ if sys.argv[1:] == ["--self-test"]:
         edited = Path(work, "docs", "results.md"); edited.parent.mkdir(exist_ok=True)
         edited.write_text(edge)
         check(edited, edge_pending)
+    # A pending state result: its per-request figures all carry †, and the
+    # block is accepted only with them.
+    state = i3_buckets.state_path(pins["snapshot"]["miracle-wm"])
+    if state in pending:
+        fail(f"self-test assumes {state} is fresh; update the edge case")
+    state_pending = pending | {state}
+    fresh = i3_buckets.render_state("miracle-wm", pins["snapshot"]["miracle-wm"], pending)
+    stale = i3_buckets.render_state("miracle-wm", pins["snapshot"]["miracle-wm"], state_pending)
+    row = f"32 crash | [sway IPC state](../{state})"
+    if readme.count(fresh) != 1 or readme.count(row) != 1 or "| `GET_TREE` | 0† | 446† | 32† | 0† | 4† |" not in stale:
+        fail("self-test: miracle-wm's sway-ipc-state region or corpus row not found as expected")
+    marked = readme.replace(fresh, stale).replace(row, row.replace(" crash", " crash†", 1))
+    with tempfile.TemporaryDirectory() as work:
+        edited = Path(work, "docs", "results.md"); edited.parent.mkdir(exist_ok=True)
+        edited.write_text(marked)
+        check(edited, state_pending)
+        edited.write_text(marked.replace("| `GET_TREE` | 0† | 446†", "| `GET_TREE` | 0† | 446", 1))
+        try:
+            check(edited, state_pending)
+        except SystemExit:
+            pass
+        else:
+            fail("edge case: a pending state figure without † was accepted")
+    # --write places each region in its own block. Where two blocks hold
+    # identical state tables, change only the second one's result: the
+    # rewrite must update the second block and leave the first alone.
+    state_names = {c: pins["snapshot"][c] for c in i3_buckets.state_compositors(pins)}
+    tables = {c: i3_buckets.render_state(c, n, pending) for c, n in state_names.items()}
+    order = list(state_names)
+    pairs = [(a, b) for i, a in enumerate(order) for b in order[i + 1:] if tables[a] == tables[b]]
+    if not pairs:
+        fail("self-test assumes two blocks with identical sway-ipc-state tables; update the case")
+    load = i3_buckets.load
+    _, fresh_snaps = i3_buckets.snapshots(pending)
+    for first, second in pairs:
+        target = i3_buckets.state_path(state_names[second])
+
+        def changed(path, target=target):
+            data = load(path)
+            if path == target:
+                row = next(r for r in data["result"] if r["verdict"] == "match")
+                row["verdict"] = "mismatch"
+                data["run"]["match"] -= 1
+                data["run"]["mismatch"] += 1
+            return data
+
+        i3_buckets.load = changed
+        try:
+            want = {c: i3_buckets.render_state(c, state_names[c], pending) for c in (first, second)}
+            rewritten = i3_buckets.rewrite(readme, pins, fresh_snaps, pending)
+        finally:
+            i3_buckets.load = load
+        if want[first] == want[second]:
+            fail(f"self-test: changing {target} did not change {second}'s table")
+        got = blocks(rewritten, pins)
+        for c in (first, second):
+            if i3_buckets.state_regions(got[c]) != [want[c]]:
+                fail(f"--write misplaced a sway-ipc-state region: changed {second}'s result only, "
+                     f"and {c}'s block does not hold its own table")
     sway_region = i3_buckets.regions(blocks(edge, pins)["sway"])[0]
     if "†" not in sway_region or "| 1,517 |" not in sway_region:
         fail("edge case: sway's block should mix marked and unmarked figures")
