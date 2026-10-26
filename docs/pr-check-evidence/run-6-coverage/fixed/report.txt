@@ -1,0 +1,5 @@
+pr-check: base 1652c54b clean ASan, head 17cdc7db clean ASan
+explored 300 seeds (head), 5m12s, 4 jobs; hinted windows enabled
+--seeds 300: fixed exploration size, no wall limit (--minutes ignored)
+NEW in head: 0
+pre-existing 0, fixed 0, blocked 0, unconfirmed 0, harness 0. Details: /out/cov-fixed/report.txt

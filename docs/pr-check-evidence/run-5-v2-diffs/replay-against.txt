@@ -1,0 +1,32 @@
+differ; step 8 (fullscreen toggle; move scratchpad): .tree.nodes[0].nodes[0].floating_nodes[0].nodes[1].fullscreen_mode: head 0, base 1; logs <scratch>/oracle-review/worker-7/replays4/g1-fixed-vs-master-1
+g1 fixed-vs-master 1 exit 1
+same; logs <scratch>/oracle-review/worker-7/replays4/g1-master-vs-master-1
+g1 master-vs-master 1 exit 0
+differ; step 8 (fullscreen toggle; move scratchpad): .tree.nodes[0].nodes[0].floating_nodes[0].nodes[1].fullscreen_mode: head 0, base 1; logs <scratch>/oracle-review/worker-7/replays4/g1-fixed-vs-master-2
+g1 fixed-vs-master 2 exit 1
+same; logs <scratch>/oracle-review/worker-7/replays4/g1-master-vs-master-2
+g1 master-vs-master 2 exit 0
+differ; step 8 (fullscreen toggle; move scratchpad): .tree.nodes[0].nodes[0].floating_nodes[0].nodes[1].fullscreen_mode: head 0, base 1; logs <scratch>/oracle-review/worker-7/replays4/g1-fixed-vs-master-3
+g1 fixed-vs-master 3 exit 1
+same; logs <scratch>/oracle-review/worker-7/replays4/g1-master-vs-master-3
+g1 master-vs-master 3 exit 0
+same; logs <scratch>/oracle-review/worker-7/replays4/g2-fixed-vs-master-1
+g2 fixed-vs-master 1 exit 0
+differ; step 28 (floating enable): .tree.nodes[1].nodes[1].floating_nodes[0].percent: head 0.3987630208333333, base 0.9083615451388888; logs <scratch>/oracle-review/worker-7/replays4/g2-master-vs-master-1
+g2 master-vs-master 1 exit 1
+differ; step 28 (floating enable): .tree.nodes[1].nodes[1].floating_nodes[0].percent: head 0.9083615451388888, base 0.3987630208333333 (expected .tree.nodes[1].nodes[1].floating_nodes[0].percent: 0.3987630208333333 != 0.9083615451388888); logs <scratch>/oracle-review/worker-7/replays4/g2-fixed-vs-master-2
+g2 fixed-vs-master 2 exit 1
+same; logs <scratch>/oracle-review/worker-7/replays4/g2-master-vs-master-2
+g2 master-vs-master 2 exit 0
+differ; step 28 (floating enable): .tree.nodes[1].nodes[1].floating_nodes[0].percent: head 0.9083615451388888, base 0.3987630208333333 (expected .tree.nodes[1].nodes[1].floating_nodes[0].percent: 0.3987630208333333 != 0.9083615451388888); logs <scratch>/oracle-review/worker-7/replays4/g2-fixed-vs-master-3
+g2 fixed-vs-master 3 exit 1
+same; logs <scratch>/oracle-review/worker-7/replays4/g2-master-vs-master-3
+g2 master-vs-master 3 exit 0
+same; logs <scratch>/oracle-review/worker-7/replays4/g2-fixed-vs-master-4
+g2 fixed-vs-master 4 exit 0
+differ; step 28 (floating enable): .tree.nodes[1].nodes[1].floating_nodes[0].percent: head 0.9083615451388888, base 0.3987630208333333 (expected .tree.nodes[1].nodes[1].floating_nodes[0].percent: 0.3987630208333333 != 0.9083615451388888); logs <scratch>/oracle-review/worker-7/replays4/g2-master-vs-master-4
+g2 master-vs-master 4 exit 1
+differ; step 28 (floating enable): .tree.nodes[1].nodes[1].floating_nodes[0].percent: head 0.9083615451388888, base 0.3987630208333333 (expected .tree.nodes[1].nodes[1].floating_nodes[0].percent: 0.3987630208333333 != 0.9083615451388888); logs <scratch>/oracle-review/worker-7/replays4/g2-fixed-vs-master-5
+g2 fixed-vs-master 5 exit 1
+same; logs <scratch>/oracle-review/worker-7/replays4/g2-master-vs-master-5
+g2 master-vs-master 5 exit 0

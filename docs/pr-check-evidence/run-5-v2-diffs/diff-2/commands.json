@@ -1,0 +1,40 @@
+{
+  "commands": [
+    "force_display_urgency_hint 0 ms",
+    "exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'",
+    "mark m",
+    "layout tabbed",
+    "layout splith",
+    "exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'",
+    "exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'",
+    "exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'",
+    "workspace 2",
+    "smart_borders on",
+    "focus right",
+    "swap container with mark m",
+    "layout toggle all",
+    "exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'",
+    "exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'",
+    "layout stacking",
+    "exec foot --app-id=fixture-diff-7 --title=fixture-diff-7 sh -c 'sleep 300'",
+    "split v",
+    "exec foot --app-id=fixture-diff-8 --title=fixture-diff-8 sh -c 'sleep 300'",
+    "layout tabbed",
+    "focus parent",
+    "split h",
+    "exec foot --app-id=fixture-diff-9 --title=fixture-diff-9 sh -c 'sleep 300'",
+    "exec foot --app-id=fixture-diff-10 --title=fixture-diff-10 sh -c 'sleep 300'",
+    "kill",
+    "focus parent; kill",
+    "resize grow width 10 px or 5 ppt",
+    "floating enable"
+  ],
+  "outputs": 1,
+  "difference": {
+    "step": 28,
+    "command": "floating enable",
+    "path": ".tree.nodes[1].nodes[1].floating_nodes[0].percent",
+    "head": 0.3987630208333333,
+    "base": 0.9083615451388888
+  }
+}

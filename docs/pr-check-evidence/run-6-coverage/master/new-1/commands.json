@@ -1,0 +1,14 @@
+{
+  "commands": [
+    "exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'",
+    "exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'",
+    "floating enable",
+    "splith",
+    "mark m",
+    "move scratchpad",
+    "floating enable",
+    "move container to mark m"
+  ],
+  "outputs": 1,
+  "key": "SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container"
+}

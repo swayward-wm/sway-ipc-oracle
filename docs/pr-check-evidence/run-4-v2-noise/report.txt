@@ -1,0 +1,178 @@
+pr-check: base 1652c54b clean ASan, head 1652c54b clean ASan
+explored 300 seeds (head), 17m37s, 4 jobs; hinted windows enabled
+--seeds 300: fixed exploration size, no wall limit (--minutes ignored)
+NEW in head: 0
+pre-existing 3, fixed 0, blocked 0, unconfirmed 0, harness 0. Details: /out/noise4/report.txt
+behaviour differences: 0 of 295 compared seeds in 0 groups (same 295, base crashed 0, harness 0)
+
+== pre-existing (5) ==
+  head seed 37 (1 outputs, explore crashed at step 40): SEGV: view_is_visible < transaction_commit < transaction_commit_pending
+     head 2/2: crashed at step 40: SEGV: view_is_visible < transaction_commit < transaction_commit_pending, crashed at step 40: SEGV: view_is_visible < transaction_commit < transaction_commit_pending
+     base 2/2: crashed at step 40: SEGV: view_is_visible < transaction_commit < transaction_commit_pending, crashed at step 40: SEGV: view_is_visible < transaction_commit < transaction_commit_pending
+     commands (40), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       4. splitv
+       5. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       6. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       7. no_focus [app_id="fixture-diff-5"]
+       8. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       9. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       10. focus parent
+       11. floating enable
+       12. exec foot --app-id=fixture-diff-7 --title=fixture-diff-7 sh -c 'sleep 300'
+       13. focus child
+       14. focus parent; mark z
+       15. split v
+       16. move container to workspace 2
+       17. hide_edge_borders both
+       18. [floating] border pixel 4
+       19. move container to workspace 3
+       20. [shell="xdg_shell"] mark --add x
+       21. exec foot --app-id=fixture-diff-8 --title=fixture-diff-8 sh -c 'sleep 300'
+       22. [app_id=nomatch] kill
+       23. workspace_auto_back_and_forth yes
+       24. [app_id=nomatch] kill
+       25. layout stacking
+       26. fullscreen toggle global
+       27. layout tabbed
+       28. workspace next
+       29. splitt
+       30. bar mode hide
+       31. split h
+       32. layout toggle splitv tabbed
+       33. layout tabbed
+       34. no_focus [app_id="fixture-diff-9"]
+       35. exec foot --app-id=fixture-diff-9 --title=fixture-diff-9 sh -c 'sleep 300'
+       36. kill
+       37. split toggle
+       38. floating enable
+       39. sticky enable
+       40. move scratchpad
+  head seed 64 (1 outputs, explore crashed at step 22): SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     head 2/2: crashed at step 22: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen, crashed at step 22: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     base 2/2: crashed at step 22: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen, crashed at step 22: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     commands (22), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. smart_gaps on
+       3. no_focus [app_id="fixture-diff-1"]
+       4. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       5. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       6. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       7. focus prev
+       8. layout stacking
+       9. focus next
+       10. kill
+       11. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       12. focus prev sibling
+       13. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       14. layout toggle
+       15. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       16. smart_borders no_gaps
+       17. floating enable
+       18. layout toggle splitv tabbed
+       19. fullscreen enable
+       20. split toggle
+       21. layout stacking
+       22. move container to workspace prev
+  head seed 67 (1 outputs, explore crashed at step 18): SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     head 2/2: crashed at step 18: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen, crashed at step 18: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     base 2/2: crashed at step 18: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen, crashed at step 18: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     commands (18), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       4. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       5. [app_id="^fixture-diff-"] urgent enable
+       6. [urgent=latest] focus
+       7. resize set width 30 ppt height 40 ppt
+       8. split h
+       9. [app_id="^fixture-diff-[23]$"] floating enable
+       10. splith
+       11. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       12. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       13. fullscreen toggle
+       14. focus parent; split v
+       15. layout stacking
+       16. splitt
+       17. layout default
+       18. move container to workspace prev
+  head seed 69 (1 outputs, explore crashed at step 38): SEGV: container_swap < cmd_swap < execute_command
+     head 2/2: crashed at step 38: SEGV: container_swap < cmd_swap < execute_command, crashed at step 38: SEGV: container_swap < cmd_swap < execute_command
+     base 2/2: crashed at step 38: SEGV: container_swap < cmd_swap < execute_command, crashed at step 38: SEGV: container_swap < cmd_swap < execute_command
+     commands (38), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. floating enable
+       4. no_focus [app_id="fixture-diff-2"]
+       5. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       6. fullscreen enable
+       7. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       8. split toggle
+       9. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       10. fullscreen disable
+       11. floating enable
+       12. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       13. splith
+       14. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       15. exec foot --app-id=fixture-diff-7 --title=fixture-diff-7 sh -c 'sleep 300'
+       16. layout tabbed
+       17. move scratchpad
+       18. exec foot --app-id=fixture-diff-8 --title=fixture-diff-8 sh -c 'sleep 300'
+       19. layout stacking
+       20. split h
+       21. move left 20 px
+       22. split v
+       23. mark m
+       24. move left
+       25. layout tabbed
+       26. exec foot --app-id=fixture-diff-9 --title=fixture-diff-9 sh -c 'sleep 300'
+       27. focus prev
+       28. hide_edge_borders both
+       29. tiling_drag_threshold 9
+       30. focus next
+       31. move container to mark m
+       32. workspace next_on_output
+       33. splitt
+       34. move container to mark m
+       35. focus prev sibling
+       36. [tiling] mark --add tiled
+       37. floating enable
+       38. swap container with mark tiled
+  head seed 282 (1 outputs, explore crashed at step 32): SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     head 2/2: crashed at step 32: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen, crashed at step 32: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     base 2/2: crashed at step 32: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen, crashed at step 32: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     commands (32), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. layout tabbed
+       4. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       5. layout splith
+       6. workspace back_and_forth
+       7. workspace_auto_back_and_forth yes; workspace 1
+       8. focus_wrapping workspace
+       9. splith
+       10. layout toggle tabbed stacking split
+       11. move container to workspace 3
+       12. layout toggle split
+       13. move container to workspace 3
+       14. titlebar_padding 4 3
+       15. shortcuts_inhibitor enable
+       16. border normal
+       17. sticky toggle
+       18. smart_gaps inverse_outer
+       19. layout toggle splitv tabbed
+       20. gaps inner current set 10
+       21. layout toggle splitv tabbed
+       22. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       23. move down
+       24. [app_id="fixture-diff-1"] focus
+       25. floating enable
+       26. assign [app_id="fixture-diff-4"] workspace 2
+       27. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       28. fullscreen toggle
+       29. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       30. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       31. split v
+       32. move --no-auto-back-and-forth container to workspace 3

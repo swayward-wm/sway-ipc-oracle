@@ -1,0 +1,32 @@
+SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+
+==69323==ERROR: AddressSanitizer: SEGV on unknown address 0x0000000000b8 (pc 0x0000005e6a0f bp 0x7fffd0883de0 sp 0x7fffd0883dd0 T0)
+==69323==The signal is caused by a READ memory access.
+==69323==Hint: address points to the zero page.
+    #0 0x0000005e6a0f in workspace_add_floating ../sway/tree/workspace.c:966
+    #1 0x00000054680b in container_move_to_workspace ../sway/commands/move.c:207
+    #2 0x00000054728e in container_move_to_container ../sway/commands/move.c:248
+    #3 0x00000054ae6d in cmd_move_container ../sway/commands/move.c:577
+    #4 0x00000054f9fc in cmd_move ../sway/commands/move.c:1016
+    #5 0x0000004055ba in execute_command ../sway/commands.c:295
+    #6 0x000000438b6d in ipc_client_handle_command ../sway/ipc-server.c:650
+    #7 0x0000004356f4 in ipc_client_handle_readable ../sway/ipc-server.c:261
+    #8 0x7f01622d6811 in wl_event_loop_dispatch (/lib64/libwayland-server.so.0+0x6811) (BuildId: 1899fd337b2ae594cf1f058c65a004bbfa030c28)
+    #9 0x7f01622d8974 in wl_display_run (/lib64/libwayland-server.so.0+0x8974) (BuildId: 1899fd337b2ae594cf1f058c65a004bbfa030c28)
+    #10 0x00000044fb2e in server_run ../sway/server.c:805
+    #11 0x00000044427e in main ../sway/main.c:395
+    #12 0x7f01605eb680 in __libc_start_call_main (/lib64/libc.so.6+0x3680) (BuildId: 85075e2ae2e13352a1413d41c327dacf6461526c)
+    #13 0x7f01605eb797 in __libc_start_main@GLIBC_2.2.5 (/lib64/libc.so.6+0x3797) (BuildId: 85075e2ae2e13352a1413d41c327dacf6461526c)
+    #14 0x0000004033e4 in _start (/w/sway-master/build/sway/sway+0x4033e4) (BuildId: 07b27c062df0595ffb1721634719912812474b38)
+
+==69323==Register values:
+rax = 0x0000000000000000  rbx = 0x00007b015d4bd800  rcx = 0x00007f01607f77eb  rdx = 0x0000000000000000  
+rdi = 0x0000000000001000  rsi = 0x00007fffd088319c  rbp = 0x00007fffd0883de0  rsp = 0x00007fffd0883dd0  
+ r8 = 0x00007f015ed0254e   r9 = 0x000000000000054e  r10 = 0x0000000000000001  r11 = 0x0000000000000202  
+r12 = 0x00007b015d4bd880  r13 = 0x00000f602ba97b00  r14 = 0x00007c215e7e3940  r15 = 0x00007fffd0883e20  
+AddressSanitizer can not provide additional info.
+SUMMARY: AddressSanitizer: SEGV ../sway/tree/workspace.c:966 in workspace_add_floating
+==69323==ABORTING
+ err: wayland.c:1735: failed to read events from the Wayland socket: Broken pipe
+ err: wayland.c:2417: failed to roundtrip Wayland display: Broken pipe
+ err: wayland.c:2417: failed to roundtrip Wayland display: Broken pipe

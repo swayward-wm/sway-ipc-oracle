@@ -1,0 +1,482 @@
+pr-check: base 17cdc7db clean ASan, head 1652c54b clean ASan
+explored 300 seeds (head), 15m03s, 4 jobs; hinted windows enabled
+--seeds 300: fixed exploration size, no wall limit (--minutes ignored)
+NEW in head: 32
+  1. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-1/
+  2. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-2/
+  3. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-3/
+  4. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-4/
+  5. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (10 commands): /out/cov-master/new-5/
+  6. SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     head 2/2, base 0/2; repro.sh verified (6 commands): /out/cov-master/new-6/
+  7. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-7/
+  8. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-8/
+  9. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (10 commands): /out/cov-master/new-9/
+  10. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (10 commands): /out/cov-master/new-10/
+  11. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-11/
+  12. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-12/
+  13. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-13/
+  14. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-14/
+  15. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-15/
+  16. SEGV: view_is_visible < transaction_commit < transaction_commit_pending
+     head 2/2, base 0/2; repro.sh verified (6 commands): /out/cov-master/new-16/
+  17. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh needs fixture client (6 commands): /out/cov-master/new-17/
+  18. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-18/
+  19. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-19/
+  20. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-20/
+  21. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-21/
+  22. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-22/
+  23. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-23/
+  24. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh needs fixture client (6 commands): /out/cov-master/new-24/
+  25. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-25/
+  26. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-26/
+  27. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-27/
+  28. SEGV: container_swap < cmd_swap < execute_command
+     head 2/2, base 0/2; repro.sh verified (5 commands): /out/cov-master/new-28/
+  29. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-29/
+  30. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-30/
+  31. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-31/
+  32. SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2, base 0/2; repro.sh verified (8 commands): /out/cov-master/new-32/
+pre-existing 0, fixed 0, blocked 0, unconfirmed 0, harness 0. Details: /out/cov-master/report.txt
+
+== new (32) ==
+  head seed 17 (1 outputs, explore crashed at step 10): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 10: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 10: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-1/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       3. floating enable
+       4. splith
+       5. mark m
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m
+  head seed 23 (1 outputs, explore crashed at step 25): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 25: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 25: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-2/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       2. floating enable
+       3. splitt
+       4. mark m
+       5. move scratchpad
+       6. exec foot --app-id=fixture-diff-7 --title=fixture-diff-7 sh -c 'sleep 300'
+       7. floating enable
+       8. move container to mark m
+  head seed 35 (1 outputs, explore crashed at step 11): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-3/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       3. splith
+       4. mark m
+       5. focus parent
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m
+  head seed 44 (1 outputs, explore crashed at step 29): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 29: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 29: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-4/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       3. floating enable
+       4. splitv
+       5. mark m
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m
+  head seed 53 (2 outputs, explore crashed at step 20): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 20: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 20: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (10 commands): /out/cov-master/new-5/
+     commands (10), replay with --replay:
+       1. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       2. focus output right
+       3. workspace next
+       4. floating enable
+       5. splitv
+       6. mark m
+       7. move scratchpad
+       8. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       9. floating enable
+       10. move container to mark m
+  head seed 64 (1 outputs, explore crashed at step 35): SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     head 2/2: crashed at step 35: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen, crashed at step 35: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     base 0/2: survived, survived
+     repro.sh verified (6 commands): /out/cov-master/new-6/
+     commands (6), replay with --replay:
+       1. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       2. floating enable
+       3. fullscreen enable
+       4. exec foot --app-id=fixture-diff-7 --title=fixture-diff-7 sh -c 'sleep 300'
+       5. split toggle
+       6. move container to workspace prev
+  head seed 66 (2 outputs, explore crashed at step 31): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 31: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 31: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-7/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       2. floating enable
+       3. splitt
+       4. mark m
+       5. move scratchpad
+       6. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       7. floating enable
+       8. move container to mark m
+  head seed 68 (1 outputs, explore crashed at step 19): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 19: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 19: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-8/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       3. floating enable
+       4. splith
+       5. mark m
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m
+  head seed 71 (2 outputs, explore crashed at step 19): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 19: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 19: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (10 commands): /out/cov-master/new-9/
+     commands (10), replay with --replay:
+       1. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       2. focus output right
+       3. focus output left
+       4. floating enable
+       5. splith
+       6. mark m
+       7. move scratchpad
+       8. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       9. floating enable
+       10. move container to mark m
+  head seed 89 (2 outputs, explore crashed at step 16): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 16: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 16: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (10 commands): /out/cov-master/new-10/
+     commands (10), replay with --replay:
+       1. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       3. focus output left
+       4. workspace next
+       5. floating enable
+       6. splitt
+       7. mark m
+       8. move scratchpad
+       9. floating enable
+       10. move container to mark m
+  head seed 93 (1 outputs, explore crashed at step 37): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 37: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 37: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-11/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       3. splith
+       4. mark m
+       5. focus parent
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m
+  head seed 107 (2 outputs, explore crashed at step 22): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 22: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 22: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-12/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       3. splitv
+       4. mark m
+       5. focus parent
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m
+  head seed 125 (1 outputs, explore crashed at step 11): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-13/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       3. splith
+       4. mark m
+       5. focus parent
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m
+  head seed 128 (1 outputs, explore crashed at step 16): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 16: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 16: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-14/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       3. splitv
+       4. mark m
+       5. focus parent
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m
+  head seed 143 (1 outputs, explore crashed at step 12): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 12: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 12: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-15/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       3. floating enable
+       4. splitv
+       5. mark m
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m
+  head seed 147 (1 outputs, explore crashed at step 20): SEGV: view_is_visible < transaction_commit < transaction_commit_pending
+     head 2/2: crashed at step 20: SEGV: view_is_visible < transaction_commit < transaction_commit_pending, crashed at step 20: SEGV: view_is_visible < transaction_commit < transaction_commit_pending
+     base 0/2: survived, survived
+     repro.sh verified (6 commands): /out/cov-master/new-16/
+     commands (6), replay with --replay:
+       1. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       2. focus parent
+       3. floating enable
+       4. focus child
+       5. fullscreen toggle global
+       6. move scratchpad
+  head seed 150 (2 outputs, explore crashed at step 39): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 39: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 39: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh needs fixture client (6 commands): /out/cov-master/new-17/
+     commands (6), replay with --replay:
+       1. xdg-hinted fixture-diff-3 400 300 400 300 1
+       2. splitv
+       3. mark m
+       4. move scratchpad
+       5. floating enable
+       6. move container to mark m
+  head seed 151 (1 outputs, explore crashed at step 15): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 15: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 15: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-18/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       2. floating enable
+       3. splitt
+       4. mark m
+       5. move scratchpad
+       6. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       7. floating enable
+       8. move container to mark m
+  head seed 161 (1 outputs, explore crashed at step 9): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 9: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 9: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-19/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       3. floating enable
+       4. splitv
+       5. mark m
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m
+  head seed 162 (1 outputs, explore crashed at step 40): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 40: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 40: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-20/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-7 --title=fixture-diff-7 sh -c 'sleep 300'
+       3. floating enable
+       4. splitt
+       5. mark m
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m
+  head seed 179 (1 outputs, explore crashed at step 9): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 9: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 9: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-21/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       3. floating enable
+       4. splith
+       5. mark m
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m
+  head seed 181 (1 outputs, explore crashed at step 21): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 21: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 21: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-22/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       3. splith
+       4. mark m
+       5. focus parent
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m
+  head seed 197 (1 outputs, explore crashed at step 13): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 13: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 13: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-23/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       3. splitv
+       4. mark m
+       5. focus parent
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m
+  head seed 208 (1 outputs, explore crashed at step 22): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 22: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 22: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh needs fixture client (6 commands): /out/cov-master/new-24/
+     commands (6), replay with --replay:
+       1. xdg-hinted fixture-diff-4 400 300 400 300 1
+       2. splitt
+       3. mark m
+       4. move scratchpad
+       5. floating enable
+       6. move container to mark m
+  head seed 210 (1 outputs, explore crashed at step 18): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 18: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 18: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-25/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       3. splith
+       4. mark m
+       5. focus parent
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m
+  head seed 215 (1 outputs, explore crashed at step 11): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-26/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       3. floating enable
+       4. splitv
+       5. mark m
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m
+  head seed 233 (1 outputs, explore crashed at step 11): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-27/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       3. floating enable
+       4. splitv
+       5. mark m
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m
+  head seed 245 (1 outputs, explore crashed at step 31): SEGV: container_swap < cmd_swap < execute_command
+     head 2/2: crashed at step 31: SEGV: container_swap < cmd_swap < execute_command, crashed at step 31: SEGV: container_swap < cmd_swap < execute_command
+     base 0/2: survived, survived
+     repro.sh verified (5 commands): /out/cov-master/new-28/
+     commands (5), replay with --replay:
+       1. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       2. focus parent; [app_id="fixture-diff-1"] urgent enable
+       3. fullscreen toggle; move scratchpad
+       4. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       5. swap container with con_id @con:fixture-diff-1
+  head seed 246 (1 outputs, explore crashed at step 25): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 25: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 25: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-29/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       3. splitv
+       4. mark m
+       5. focus parent
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m
+  head seed 251 (1 outputs, explore crashed at step 12): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 12: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 12: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-30/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       3. floating enable
+       4. splitt
+       5. mark m
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m
+  head seed 269 (1 outputs, explore crashed at step 11): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-31/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       3. splith
+       4. mark m
+       5. focus parent
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m
+  head seed 287 (1 outputs, explore crashed at step 11): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 0/2: survived, survived
+     repro.sh verified (8 commands): /out/cov-master/new-32/
+     commands (8), replay with --replay:
+       1. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       3. floating enable
+       4. splitt
+       5. mark m
+       6. move scratchpad
+       7. floating enable
+       8. move container to mark m

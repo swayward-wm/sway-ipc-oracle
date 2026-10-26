@@ -1,0 +1,10 @@
+[
+  "exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'",
+  "exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'",
+  "exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'",
+  "focus parent",
+  "floating enable",
+  "focus child",
+  "move container to workspace 2",
+  "fullscreen toggle; move scratchpad"
+]
