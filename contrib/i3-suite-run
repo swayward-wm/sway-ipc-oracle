@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import concurrent.futures
 import datetime
+import json
 import os
 from pathlib import Path
 import re
@@ -20,6 +21,12 @@ import sys
 import tempfile
 import tomllib
 import shlex
+
+
+def toml_string(value: object) -> str:
+    """A TOML basic string, including multi-line compositor --version output."""
+    # JSON escapes every control character TOML forbids except DEL.
+    return json.dumps(str(value), ensure_ascii=False).replace("\x7f", "\\u007f")
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "contrib"))
@@ -128,13 +135,14 @@ def emit(path: Path, compositor: str, version: str, commit: str,
         "# Generated raw result of an unchanged upstream i3 test-suite run.",
         "# Counts use the first unindented TAP plan and first TAP stream.",
         "# pass, skip, fail, and unreached together cover each emitted plan.",
-        "", "[run]", f'compositor = "{compositor}"', f'version = "{version}"',
-        f'commit = "{commit}"', f'i3_suite_commit = "{I3_PIN}"',
+        "", "[run]", f"compositor = {toml_string(compositor)}",
+        f"version = {toml_string(version)}",
+        f"commit = {toml_string(commit)}", f"i3_suite_commit = {toml_string(I3_PIN)}",
         provenance.run_line(path, compositor),
-        f'date = "{datetime.date.today().isoformat()}"',
+        f"date = {toml_string(datetime.date.today().isoformat())}",
     ]
     if environment:
-        lines.append(f'environment = "{environment}"')
+        lines.append(f"environment = {toml_string(environment)}")
     flaky = tomllib.load((ROOT / "i3/flaky.toml").open("rb")).get(compositor, {}).get("files", [])
     unstable = {
         item["file"]: item["assertions"]
@@ -386,6 +394,10 @@ def self_test() -> None:
     echoed = text + text
     assert parse_tap(echoed) == ({1: "pass", 2: "skip", 3: "fail"}, 3)
     assert parse_tap("1..0 # SKIP unavailable\n") == ({}, 0)
+    # beta3 swayward --version printed a second line; [run] must stay valid TOML.
+    for value in ("swayward 1 (abc)\nniri base: 9e72e491", 'say "hi" \\ \t\x01\x7f é'):
+        assert tomllib.loads(f"version = {toml_string(value)}")["version"] == value
+    assert toml_string("4.25-25-g9be3249a") == '"4.25-25-g9be3249a"'
     assert parse_shard("1/1") == (1, 1)
     for invalid in ("0/1", "2/1", "1/0", "bad"):
         try:

@@ -296,6 +296,44 @@ reason = "i3 has no output command; source: i3/src/commands.c command table. Out
 actions = ["window:fixture-1", "command:move workspace to output right", "command:output HEADLESS-2 disable", "capture:disabled_output_evacuation"]
 
 [[scenario]]
+name = "output_toggle"
+outputs = 2
+corpora = ["state"]
+requires = ["sway-command-language"]
+not_applicable = true
+reason = "i3 has no output command; source: i3/src/commands.c command table. Output toggle is a sway extension; source: sway/sway/commands/output/toggle.c."
+actions = ["window:fixture-1", "command:move workspace to output right", "command:output HEADLESS-2 toggle", "capture:output_toggle", "command:output HEADLESS-2 toggle", "capture:output_toggle_reenable"]
+
+# output "Unknown Unknown Unknown" matches every headless output (make/model/serial
+# all Unknown; sway/sway/config/output.c:31-38, sway/sway/desktop/output.c:43-53).
+# Runtime output config is stored under that identifier and applied to each matching
+# output (sway/sway/config/output.c:714-728, 1134-1142). Toggle decides enable/disable
+# from the first match (sway/sway/commands/output/toggle.c:17-30,
+# sway/sway/desktop/output.c:65-72) then stores the same bit for all matches.
+[[scenario]]
+name = "output_identifier_unknown"
+outputs = 2
+corpora = ["state"]
+requires = ["sway-command-language"]
+not_applicable = true
+reason = "i3 has no output command; source: i3/src/commands.c command table. Output scale/toggle by make/model/serial identifier is a sway extension; source: sway/sway/commands/output.c, sway/sway/config/output.c:31-38."
+actions = ["window:fixture-1", "command:output \"Unknown Unknown Unknown\" scale 1.5", "capture:output_identifier_unknown_scale", "command:output \"Unknown Unknown Unknown\" toggle", "capture:output_identifier_unknown_toggle"]
+
+# title_format "" keeps the empty quoted argument (sway/common/stringop.c:92-142)
+# so the handler sets an empty format rather than failing arity. input subcommand
+# lookup is case-insensitive (sway/sway/commands.c:145-149,
+# sway/sway/commands/input.c:42), so XKB_SWITCH_LAYOUT and xkb_switch_layout both
+# resolve to the same handler.
+[[scenario]]
+name = "command_parse_edge_cases"
+outputs = 1
+corpora = ["state"]
+requires = ["sway-command-language"]
+not_applicable = true
+reason = "i3 has no input command; source: i3/src/commands.c command table. Input is a sway extension; source: sway/sway/commands/input.c."
+actions = ["window:fixture-1", "command:title_format \"\"", "capture:command_parse_edge_cases_title_format_empty", "command:input * XKB_SWITCH_LAYOUT next", "capture:command_parse_edge_cases_input_xkb_upper", "command:input * xkb_switch_layout next", "capture:command_parse_edge_cases_input_xkb_lower"]
+
+[[scenario]]
 name = "output_config_live_changes"
 outputs = 2
 corpora = ["state"]

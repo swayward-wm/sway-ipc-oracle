@@ -5,10 +5,10 @@
 
 [run]
 compositor = "swayfx"
-version = "0.6-fd71a6bd (Oct 18 2026, branch 'HEAD')"
+version = "0.6-fd71a6bd (Nov 21 2026, branch 'HEAD')"
 commit = "fd71a6bdc061bd633b488ae7b83e8a6981d22f86"
-inputs = "cd8581df78787816c7a5fcc206496b56b77c456fdd7ad2fceafbec6502c2524d"
-date = "2026-10-20"
+inputs = "0f55144122924840c0c254f2a5465fab041bf4de5ca6728fa31857437d4f0d2d"
+date = "2026-11-22"
 normalization = "sway-ipc/normalize.toml"
 normalization_rules = ["runtime-identifiers", "focus-by-child-position", "rectangle-semantics", "backend-output-reference", "backend-output-properties", "backend-output-capabilities", "version-runtime-identity", "backend-output-name", "floating-rect-run-variance", "tree-rect-tolerance", "floating-percent-run-variance", "floating-descendant-percent-run-variance", "hidden-scratchpad-descendant-rect", "hidden-scratchpad-descendant-percent", "tree-percent-tolerance", "focus-child-position-comparison", "backend-mode-array-length", "swayfx-version-original-version", "swayfx-output-layer-shell-surfaces"]
 scenario_isolation = "fresh compositor per scenario"

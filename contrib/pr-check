@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+"""Base-vs-head sway crash check: reports crashes that are new in head.
+
+A thin entry point: the code is the contrib/prcheck package (its docstring
+lists the modules; prcheck/cli.py's docstring describes a run and its output).
+"""
+
+import sys
+
+sys.dont_write_bytecode = True  # contrib/ stays free of bytecode
+from prcheck.cli import main
+
+if __name__ == "__main__":
+    sys.exit(main())

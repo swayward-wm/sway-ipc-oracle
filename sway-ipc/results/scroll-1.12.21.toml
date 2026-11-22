@@ -5,17 +5,17 @@
 
 [run]
 compositor = "scroll"
-version = "1.13-dev-f80c5820 (Oct 18 2026, branch 'HEAD')"
+version = "1.13-dev-f80c5820 (Nov 21 2026, branch 'HEAD')"
 commit = "f80c5820c0eebaad586f0008faecfe3ae62c307a"
-inputs = "33bc4018e503adc789fe9834f582f7a685fa20207806f72e48ec75460763af84"
-date = "2026-10-21"
+inputs = "616f4002c0bf930054384e2f298c64d8c340357aeda95a84569c23c0e68e9935"
+date = "2026-11-22"
 normalization = "sway-ipc/normalize.toml"
 normalization_rules = ["runtime-identifiers", "focus-by-child-position", "rectangle-semantics", "backend-output-reference", "backend-output-properties", "backend-output-capabilities", "version-runtime-identity", "backend-output-name", "floating-rect-run-variance", "tree-rect-tolerance", "floating-percent-run-variance", "floating-descendant-percent-run-variance", "hidden-scratchpad-descendant-rect", "hidden-scratchpad-descendant-percent", "tree-percent-tolerance", "focus-child-position-comparison", "backend-mode-array-length"]
 scenario_isolation = "fresh compositor per scenario"
 adapted = ["scroll-animations-off"]
-difference_fields = 360
-match = 3657
-mismatch = 1260
+difference_fields = 362
+match = 3712
+mismatch = 1275
 unstable = 0
 not_applicable = 0
 
@@ -3589,6 +3589,370 @@ verdict = "match"
 
 [[result]]
 scenario = "disabled_output_evacuation"
+request = "commands"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle"
+request = "tree"
+verdict = "mismatch"
+differences = ["$tree.layout: 'splith' != 'horizontal'", "$tree.nodes[0].nodes[0].layout: 'splith' != 'horizontal'", "$tree.nodes[1].nodes[0].layout: 'splitv' != 'vertical'", "$tree.nodes[1].nodes[0].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].nodes[0].border: 'normal' != 'none'", "$tree.nodes[1].nodes[0].nodes[0].current_border_width: 2 != 0", "$tree.nodes[1].nodes[0].nodes[0].focused: True != False", "$tree.nodes[1].nodes[0].nodes[0].layout: 'none' != 'horizontal'", "$tree.nodes[1].nodes[0].nodes[0].name: type str != NoneType", "$tree.nodes[1].nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[1].nodes[0].nodes[0].orientation: 'none' != 'horizontal'", "$tree.nodes[1].nodes[0].nodes[0].percent: 1.0 != 0.5", "$tree.nodes[1].nodes[0].representation: 'V[fixture-1]' != 'V[H[fixture-1]]'"]
+
+[[result]]
+scenario = "output_toggle"
+request = "workspaces"
+verdict = "mismatch"
+differences = ["$workspaces[0].layout: 'splitv' != 'vertical'", "$workspaces[0].representation: 'V[fixture-1]' != 'V[H[fixture-1]]'"]
+
+[[result]]
+scenario = "output_toggle"
+request = "outputs"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle"
+request = "binding_modes"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle"
+request = "seats"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle"
+request = "inputs"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle"
+request = "version"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle"
+request = "commands"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "tree"
+verdict = "mismatch"
+differences = ["$tree.layout: 'splith' != 'horizontal'", "$tree.nodes[0].nodes[0].layout: 'splith' != 'horizontal'", "$tree.nodes[1].nodes[0].layout: 'splitv' != 'vertical'", "$tree.nodes[1].nodes[0].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].nodes[0].border: 'normal' != 'none'", "$tree.nodes[1].nodes[0].nodes[0].current_border_width: 2 != 0", "$tree.nodes[1].nodes[0].nodes[0].focused: True != False", "$tree.nodes[1].nodes[0].nodes[0].layout: 'none' != 'horizontal'", "$tree.nodes[1].nodes[0].nodes[0].name: type str != NoneType", "$tree.nodes[1].nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[1].nodes[0].nodes[0].orientation: 'none' != 'horizontal'", "$tree.nodes[1].nodes[0].nodes[0].percent: 1.0 != 0.5", "$tree.nodes[1].nodes[0].representation: 'V[fixture-1]' != 'V[H[fixture-1]]'", "$tree.nodes[2].nodes[0].layout: 'splith' != 'horizontal'"]
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "workspaces"
+verdict = "mismatch"
+differences = ["$workspaces[0].layout: 'splitv' != 'vertical'", "$workspaces[0].representation: 'V[fixture-1]' != 'V[H[fixture-1]]'", "$workspaces[1].layout: 'splith' != 'horizontal'"]
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "outputs"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "binding_modes"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "seats"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "inputs"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "version"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "commands"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "tree"
+verdict = "mismatch"
+differences = ["$tree.layout: 'splith' != 'horizontal'", "$tree.nodes[0].nodes[0].layout: 'splith' != 'horizontal'", "$tree.nodes[1].nodes[0].layout: 'splitv' != 'vertical'", "$tree.nodes[1].nodes[0].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].nodes[0].border: 'normal' != 'none'", "$tree.nodes[1].nodes[0].nodes[0].current_border_width: 2 != 0", "$tree.nodes[1].nodes[0].nodes[0].focused: True != False", "$tree.nodes[1].nodes[0].nodes[0].layout: 'none' != 'horizontal'", "$tree.nodes[1].nodes[0].nodes[0].name: type str != NoneType", "$tree.nodes[1].nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[1].nodes[0].nodes[0].orientation: 'none' != 'horizontal'", "$tree.nodes[1].nodes[0].nodes[0].percent: 1.0 != 0.5", "$tree.nodes[1].nodes[0].representation: 'V[fixture-1]' != 'V[H[fixture-1]]'", "$tree.nodes[1].scale: 1.5 != 1.0", "$tree.nodes[1].scale_filter: 'linear' != 'nearest'", "$tree.nodes[2].nodes[0].layout: 'splith' != 'horizontal'", "$tree.nodes[2].scale: 1.5 != 1.0", "$tree.nodes[2].scale_filter: 'linear' != 'nearest'"]
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "workspaces"
+verdict = "mismatch"
+differences = ["$workspaces[0].layout: 'splitv' != 'vertical'", "$workspaces[0].representation: 'V[fixture-1]' != 'V[H[fixture-1]]'", "$workspaces[1].layout: 'splith' != 'horizontal'"]
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "outputs"
+verdict = "mismatch"
+differences = ["$outputs[0].scale: 1.5 != 1.0", "$outputs[0].scale_filter: 'linear' != 'nearest'", "$outputs[1].scale: 1.5 != 1.0", "$outputs[1].scale_filter: 'linear' != 'nearest'"]
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "binding_modes"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "seats"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "inputs"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "version"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "commands"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "tree"
+verdict = "mismatch"
+differences = ["$tree.layout: 'splith' != 'horizontal'", "$tree.nodes[0].nodes[0].layout: 'splith' != 'horizontal'"]
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "workspaces"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "outputs"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "binding_modes"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "seats"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "inputs"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "version"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "commands"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "tree"
+verdict = "mismatch"
+differences = ["$tree.layout: 'splith' != 'horizontal'", "$tree.nodes[0].nodes[0].layout: 'splith' != 'horizontal'", "$tree.nodes[1].nodes[0].layout: 'splitv' != 'vertical'", "$tree.nodes[1].nodes[0].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].nodes[0].border: 'normal' != 'none'", "$tree.nodes[1].nodes[0].nodes[0].current_border_width: 2 != 0", "$tree.nodes[1].nodes[0].nodes[0].focused: True != False", "$tree.nodes[1].nodes[0].nodes[0].layout: 'none' != 'horizontal'", "$tree.nodes[1].nodes[0].nodes[0].name: type str != NoneType", "$tree.nodes[1].nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[1].nodes[0].nodes[0].orientation: 'none' != 'horizontal'", "$tree.nodes[1].nodes[0].nodes[0].percent: 1.0 != 0.5", "$tree.nodes[1].nodes[0].representation: 'V[fixture-1]' != 'V[H[fixture-1]]'"]
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "workspaces"
+verdict = "mismatch"
+differences = ["$workspaces[0].layout: 'splitv' != 'vertical'", "$workspaces[0].representation: 'V[fixture-1]' != 'V[H[fixture-1]]'"]
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "outputs"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "binding_modes"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "seats"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "inputs"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "version"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "commands"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "tree"
+verdict = "mismatch"
+differences = ["$tree.layout: 'splith' != 'horizontal'", "$tree.nodes[0].nodes[0].layout: 'splith' != 'horizontal'", "$tree.nodes[1].nodes[0].layout: 'splitv' != 'vertical'", "$tree.nodes[1].nodes[0].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].nodes[0].border: 'normal' != 'none'", "$tree.nodes[1].nodes[0].nodes[0].current_border_width: 2 != 0", "$tree.nodes[1].nodes[0].nodes[0].focused: True != False", "$tree.nodes[1].nodes[0].nodes[0].layout: 'none' != 'horizontal'", "$tree.nodes[1].nodes[0].nodes[0].name: type str != NoneType", "$tree.nodes[1].nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[1].nodes[0].nodes[0].orientation: 'none' != 'horizontal'", "$tree.nodes[1].nodes[0].nodes[0].percent: 1.0 != 0.5", "$tree.nodes[1].nodes[0].representation: 'V[fixture-1]' != 'V[H[fixture-1]]'"]
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "workspaces"
+verdict = "mismatch"
+differences = ["$workspaces[0].layout: 'splitv' != 'vertical'", "$workspaces[0].representation: 'V[fixture-1]' != 'V[H[fixture-1]]'"]
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "outputs"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "binding_modes"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "seats"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "inputs"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "version"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "commands"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "tree"
+verdict = "mismatch"
+differences = ["$tree.layout: 'splith' != 'horizontal'", "$tree.nodes[0].nodes[0].layout: 'splith' != 'horizontal'", "$tree.nodes[1].nodes[0].layout: 'splitv' != 'vertical'", "$tree.nodes[1].nodes[0].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].nodes[0].border: 'normal' != 'none'", "$tree.nodes[1].nodes[0].nodes[0].current_border_width: 2 != 0", "$tree.nodes[1].nodes[0].nodes[0].focused: True != False", "$tree.nodes[1].nodes[0].nodes[0].layout: 'none' != 'horizontal'", "$tree.nodes[1].nodes[0].nodes[0].name: type str != NoneType", "$tree.nodes[1].nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[1].nodes[0].nodes[0].orientation: 'none' != 'horizontal'", "$tree.nodes[1].nodes[0].nodes[0].percent: 1.0 != 0.5", "$tree.nodes[1].nodes[0].representation: 'V[fixture-1]' != 'V[H[fixture-1]]'"]
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "workspaces"
+verdict = "mismatch"
+differences = ["$workspaces[0].layout: 'splitv' != 'vertical'", "$workspaces[0].representation: 'V[fixture-1]' != 'V[H[fixture-1]]'"]
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "outputs"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "binding_modes"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "seats"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "inputs"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "version"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
 request = "commands"
 verdict = "match"
 
@@ -22909,7 +23273,8 @@ verdict = "match"
 [[result]]
 scenario = "global_fullscreen_floated_split_px_resize_up"
 request = "command"
-verdict = "match"
+verdict = "mismatch"
+differences = ["$command[0]: keys differ", "$command[0].success: False != True"]
 
 [[result]]
 scenario = "global_fullscreen_floated_split_px_resize_rejected"

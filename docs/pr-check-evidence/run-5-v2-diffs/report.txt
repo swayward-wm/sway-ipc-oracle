@@ -1,0 +1,66 @@
+pr-check: base 1652c54b clean ASan, head 17cdc7db clean ASan
+explored 300 seeds (head), 31m39s, 4 jobs; hinted windows enabled
+--seeds 300: fixed exploration size, no wall limit (--minutes ignored)
+NEW in head: 0
+pre-existing 0, fixed 0, blocked 0, unconfirmed 0, harness 0. Details: /out/diffs4/report.txt
+behaviour differences: 6 of 300 compared seeds in 2 groups (same 290, base crashed 4, harness 0)
+  1. move scratchpad -> .tree.nodes[].nodes[].floating_nodes[].nodes[]*.fullscreen_mode: 5 seeds (428, 470, 355, 588, 496)
+     head 0, base 1; verified (8 commands): /out/diffs4/diff-1/
+  2. floating enable -> .tree.nodes[].nodes[].floating_nodes[].percent: 1 seed (447)
+     head 0.3987630208333333, base 0.9083615451388888; not reproduced (reduced 0/2, full 1/2): unstable, possibly not caused by head (28 commands): /out/diffs4/diff-2/
+
+== difference group 1: move scratchpad -> .tree.nodes[].nodes[].floating_nodes[].nodes[]*.fullscreen_mode (5) ==
+  head seed 428 step 14 (fullscreen toggle; move scratchpad): .tree.nodes[0].nodes[0].floating_nodes[0].nodes[1].fullscreen_mode: head 0, base 1
+  head seed 470 step 19 (fullscreen toggle; move scratchpad): .tree.nodes[0].nodes[0].floating_nodes[0].nodes[0].fullscreen_mode: head 0, base 1
+  head seed 355 step 21 (move scratchpad): .tree.nodes[0].nodes[0].floating_nodes[0].nodes[0].fullscreen_mode: head 0, base 1
+  head seed 588 step 31 (move scratchpad): .tree.nodes[0].nodes[0].floating_nodes[0].nodes[1].fullscreen_mode: head 0, base 1
+  head seed 496 step 32 (fullscreen toggle; move scratchpad): .tree.nodes[0].nodes[0].floating_nodes[0].nodes[0].nodes[2].fullscreen_mode: head 0, base 1
+     seed 428 minimised: 25 probes; checks reduced 2, fallback None (of 2 each); verified
+     commands (8), replay with --replay ... --against:
+       1. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       2. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       3. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       4. focus parent
+       5. floating enable
+       6. focus child
+       7. move container to workspace 2
+       8. fullscreen toggle; move scratchpad
+
+== difference group 2: floating enable -> .tree.nodes[].nodes[].floating_nodes[].percent (1) ==
+  head seed 447 step 28 (floating enable): .tree.nodes[1].nodes[1].floating_nodes[0].percent: head 0.3987630208333333, base 0.9083615451388888
+     seed 447 minimised: 108 probes; checks reduced 0, fallback 1 (of 2 each); unconfirmed
+     commands (28), replay with --replay ... --against:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. mark m
+       4. layout tabbed
+       5. layout splith
+       6. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       7. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       8. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       9. workspace 2
+       10. smart_borders on
+       11. focus right
+       12. swap container with mark m
+       13. layout toggle all
+       14. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       15. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       16. layout stacking
+       17. exec foot --app-id=fixture-diff-7 --title=fixture-diff-7 sh -c 'sleep 300'
+       18. split v
+       19. exec foot --app-id=fixture-diff-8 --title=fixture-diff-8 sh -c 'sleep 300'
+       20. layout tabbed
+       21. focus parent
+       22. split h
+       23. exec foot --app-id=fixture-diff-9 --title=fixture-diff-9 sh -c 'sleep 300'
+       24. exec foot --app-id=fixture-diff-10 --title=fixture-diff-10 sh -c 'sleep 300'
+       25. kill
+       26. focus parent; kill
+       27. resize grow width 10 px or 5 ppt
+       28. floating enable
+
+== seeds not compared (4) ==
+  head seed 320: base replay crashed at step 24; RuntimeError: IPC connection closed before reply
+  head seed 433: base replay crashed at step 32; RuntimeError: IPC connection closed before reply
+  head seed 456: base replay crashed at step 39; RuntimeError: IPC connection closed before reply
+  head seed 502: base replay crashed at step 39; RuntimeError: IPC connection closed before reply

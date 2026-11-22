@@ -7,7 +7,7 @@ compositor = "i3"
 version = "4.25-25-g9be3249a"
 commit = "9be3249ac5b377ed3270e36bca83df53d8023337"
 i3_suite_commit = "9be3249ac5b377ed3270e36bca83df53d8023337"
-inputs = "b1df1536128cdc7cb9a7c1bad6efc0691ee28133143a3239aea10235a779da9e"
+inputs = "8b90f39026f760730ba827efcc786aa0efc90194e4f946a8b40b4a2dfc480c78"
 date = "2026-09-28"
 environment = "Xvfb with i3's complete-run.pl"
 

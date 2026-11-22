@@ -1,116 +1,141 @@
 # miracle-wm adapter
 
-`MiracleAdapter` in `contrib/sway-ipc-run` measures miracle-wm 0.11.2
-(`miracle-wm-0.11.2`, commit pinned in `pins.toml`). miracle-wm is a Mir
-compositor, not a wlroots one. It speaks i3/sway IPC and a subset of sway's
-command language. The adapter shares the foot and `xdg-toplevel-fixture`
-clients, the memory cap and the wall-time limit with the other Wayland
-adapters. Everything else below is specific to miracle-wm.
+`MiracleAdapter` measures miracle-wm 0.11.2 (`miracle-wm-0.11.2`, pinned in
+`pins.toml`). It uses Mir, not wlroots, and implements i3/sway IPC plus a
+subset of sway commands. Source paths below refer to pinned miracle-wm unless
+explicitly labeled Mir 2.26.
 
-## Headless start
+## Run a first check
 
-These flags start miracle-wm headless, the same way its own end-to-end harness
-does (`e2e/conftest.py:59`):
+From a regular oracle clone, with the [pinned image](../../docs/reproducing.md) built:
 
 ```sh
-miracle-wm --config RUN/config.yaml --display-config-path RUN/display.yaml \
-  --platform-display-libs=mir:virtual --platform-input-lib=mir:stub-input \
-  --enable-x11 false --virtual-output=WxH [--virtual-output=WxH ...]
+OUT="${OUT:-$PWD/target/miracle-wm}"
+mkdir -p "$OUT/tmp"
+podman run --rm --memory 4g --memory-swap 4g --security-opt label=disable \
+  -v "$PWD:/oracle:ro" -v "$OUT:/out" sway-ipc-oracle bash -c \
+  'export TMPDIR=/out/tmp; ./contrib/sway-ipc-run command-fuzz --compositor miracle-wm \
+    --binary "$MIRACLE_WM_BINARY" --out /out/command-fuzz.toml' > "$OUT/run.log" 2>&1 &
+PID=$!; wait "$PID"; echo "$?"
 ```
 
-- `mir:stub-input` ships in Fedora's `mir-test-tools` package, not in
-  `mir-server-libs`. Without it, miracle-wm logs its IPC socket path, then
-  exits with status 1 and prints no error.
-- `--enable-x11 false` turns off Xwayland. It is on by default
-  (`src/main.cpp:268`), and Mir aborts with "Cannot execute Xwayland" if
-  `/usr/bin/Xwayland` is missing. The oracle opens only Wayland clients.
-- The IPC socket path comes from `MIRACLESOCK`
-  (`src/ipc_connection_manager.cpp:134-137`). The adapter sets it to the
-  run's private `ipc.sock` and removes any ambient `MIRACLESOCK`.
-  `XDG_RUNTIME_DIR` and `XDG_CONFIG_HOME` point into the run directory.
-- miracle-wm prints GLib "G_IS_DBUS_CONNECTION" criticals on start and exit
-  because the container has no session bus. They are harmless.
+[Read exit codes](../../docs/ci.md#run-a-corpus) and
+[run other corpora](../../docs/ci.md#pick-the-corpora), using
+`MIRACLE_WM_BINARY` inside the image. Use one 4 GiB, zero-swap container per
+command. Mir falls back to software buffers in this container
+([Mir 2.26 buffer allocator](https://github.com/canonical/mir/blob/v2.26.0/src/platforms/renderer-generic-egl/buffer_allocator.cpp#L215-L231));
+no render node is needed.
 
-## Translations
+## Check the headless setup
 
-Each rule applies to every row, so each miracle-wm result records all three
-once in its `[run]` table:
-`adapted = ["miracle-config-yaml", "miracle-outputs-virtual", "miracle-reset-client-close"]`.
-No command or reply is rewritten.
+It shares foot, `xdg-toplevel-fixture` and memory/time limits with other
+Wayland adapters. Virtual displays and stub input follow miracle-wm's end-to-end
+harness (`e2e/conftest.py:59`).
 
-| Rule | Translation | Why |
-| --- | --- | --- |
-| `miracle-config-yaml` | The oracle's sway config becomes miracle's YAML config: `border: {size: 2, radius: 0}`, `inner_gaps: {x: 0, y: 0}`, `outer_gaps: {x: 0, y: 0}`, `enable_animations: false` and `workspace_back_and_forth: false`. The random and differential config is the same file. | miracle-wm reads only YAML (`miracle-wm-c/src/config-cpp.cpp:1322-1389`). Its defaults differ from sway's, and those differences would move every rectangle or change command meaning: 10 px inner and outer gaps (`wiki/docs/configuration/inner_gaps.md`, `outer_gaps.md`), 8 px rounded corners (`border.md`), animations on (`enable_animations.md`), and `workspace_back_and_forth` on (`workspace_back_and_forth.md`). sway has no gaps, square corners and no animations, and `workspace_auto_back_and_forth` is off. The 2 px border matches sway's `default_border normal 2` width. |
-| `miracle-outputs-virtual` | Each headless output becomes a `--virtual-output=WxH` (1270x1408 for the state corpus, 1280x720 for random and differential runs, or the scenario's `output_layout` sizes), and their positions go into a display YAML. i3's `fake-N` maps to `Virtual-(N+1)`. With more than one output, the adapter sends `focus output` for the scenario's initial output after start. | miracle-wm has no `output` command (`src/ipc_command.cpp:92-152`), so the sway adapter's runtime `output * mode --custom 1280x720@60Hz` cannot be sent. The outputs start at that size instead, and the adapter checks the size over GET_OUTPUTS. Mir names virtual outputs `Virtual-1` onwards in command-line order and gives workspace 1 to `Virtual-1`. Mir focuses the last output it configures, while sway starts on fake-0's output. |
-| `miracle-reset-client-close` | Between scenarios, `reset()` sends SIGTERM to each fixture window's client (its `pid` from GET_TREE, plus every process of the run whose command line carries `--app-id=fixture-`, since GET_TREE omits scratchpad windows) and waits until GET_TREE shows no fixture window. It then switches to `workspace __fixture_reset` and `workspace 1`, as the sway adapter does. | miracle-wm has no `kill` command (`src/ipc_command.cpp:92-152`; `[app_id=...] kill` replies `Unsupported command type: kill`). The windows close from the client side instead. This is a harness translation of the reset step only. Scenario actions that send `kill` go to miracle-wm unchanged and are measured. |
+| Setting | Reason or requirement |
+| --- | --- |
+| `--platform-display-libs=mir:virtual`, `--platform-input-lib=mir:stub-input` | Stub input needs Fedora's `mir-test-tools`, not just `mir-server-libs`. Without it, the process logs the socket, then exits 1 without an error. |
+| `--enable-x11 false` | miracle-wm enables Xwayland by default (`src/main.cpp:268`); Mir aborts the child process if it cannot execute Xwayland ([Mir 2.26 `xwayland_server.cpp:115-118`](https://github.com/canonical/mir/blob/v2.26.0/src/server/frontend_xwayland/xwayland_server.cpp#L115-L118)). The oracle uses Wayland clients only. |
+| `MIRACLESOCK` | Private `ipc.sock`, replacing the ambient value (`src/ipc_connection_manager.cpp:134-137`). Runtime and config-home directories are private too. |
+| No session bus | GLib `G_IS_DBUS_CONNECTION` criticals at start and exit are harmless. |
 
-Not translated, on purpose:
+## Check the translations
 
-- `default_border normal 2` with a title bar. miracle-wm always uses
-  client-side decorations (`Decorations::always_csd()`, `src/main.cpp`), so it
-  has no server-side title bar to configure.
-- `font monospace 10`. miracle-wm draws no title text.
-- `mode resize { ... }` and the `bindsym` lines. miracle-wm's binding modes are
-  fixed (`default`, `resize`, `dragging`, `moving`, `overview`), and key
-  bindings are not observable over IPC.
-- Commands miracle-wm does not know, such as `splith`, `splitv`, `kill`,
-  `output`, `urgent` and `default_border`. They go to miracle-wm unchanged,
-  and its replies are measured.
+All rows record these three rules once in `[run].adapted`. They change setup
+and cleanup only. Apart from `fake-N` output names (below), no scenario
+command or IPC reply is rewritten.
 
-## Requests it does not implement
+| Rule | What changes |
+| --- | --- |
+| `miracle-config-yaml` | Sway config becomes miracle-wm YAML, shared by state, random and differential runs. |
+| `miracle-outputs-virtual` | Output sizes become `--virtual-output=WxH`; positions go in display YAML. `fake-N` maps to `Virtual-(N+1)`. |
+| `miracle-reset-client-close` | Cleanup closes fixture clients with SIGTERM instead of sending `kill`. |
 
-GET_INPUTS and GET_SEATS have no `case` in `src/ipc_message_handler.cpp`
-(65-260). miracle-wm closes the connection without replying. The adapter does
-not send them, and each capture records `inputs` and `seats` as
-`not applicable`, citing that source. GET_CONFIG and GET_BAR_CONFIG are absent
-too, but the oracle does not capture them. Every other request is sent and
-measured, including SYNC and SEND_TICK, the tick barrier of the events corpus.
+### Match the config premise
 
-## Window synchronisation
+miracle-wm reads only YAML (`miracle-wm-c/src/config-cpp.cpp:1322-1389`). The translated
+config removes default gaps, rounding and animation and disables automatic
+workspace back-and-forth, matching the oracle's sway config:
 
-miracle-wm has no `__i3_scratch` workspace, so GET_TREE omits scratchpad
-windows. The other adapters open a window and wait until GET_TREE shows one
-more fixture window. A window that a `for_window` rule sends to the
-scratchpad would never show up that way. This adapter therefore waits for the
-`window` event with change `new` and the window's app_id. That is the same
-point at which miracle-wm adds the window to its tree.
+| YAML setting | miracle-wm default and source |
+| --- | --- |
+| `border: {size: 2, radius: 0}` | 8 px rounded corners (`wiki/docs/configuration/border.md`); 2 px matches sway's `default_border normal 2`. |
+| `inner_gaps: {x: 0, y: 0}` | 10 px (`wiki/docs/configuration/inner_gaps.md`) |
+| `outer_gaps: {x: 0, y: 0}` | 10 px (`wiki/docs/configuration/outer_gaps.md`) |
+| `enable_animations: false` | On (`wiki/docs/configuration/enable_animations.md`); sway has no animations. |
+| `workspace_back_and_forth: false` | On (`wiki/docs/configuration/workspace_back_and_forth.md`); sway's `workspace_auto_back_and_forth` is off. |
 
-## Foreign toplevel
+These are not translated:
 
-Mir serves `zwlr_foreign_toplevel_manager_v1`, but its toplevel handles carry
-the client's process name (`foot`) as the app_id, not the xdg-toplevel app_id
-(observed: both fixture windows reported `foot`). `foreign-toplevel-request`
-therefore finds no `fixture-*` toplevel and exits with status 1. The adapter
-records that as a failed step reply
-(`{"success": false, "error": "client exited with 1"}`), which the scenario's
-`commands` row measures. It does not abort the run.
+- Title bars: miracle-wm always uses client-side decorations (`Decorations::always_csd()`,
+  `src/main.cpp`), so it cannot express `default_border normal 2` with a title bar.
+- `font monospace 10`: miracle-wm draws no title text.
+- `mode resize` and `bindsym`: modes are fixed (`default`, `resize`, `dragging`,
+  `moving`, `overview`), and key bindings are not observable over IPC.
+- Unsupported scenario commands, including `splith`, `splitv`, `kill`,
+  `output`, `urgent` and `default_border`: their replies are measured unchanged.
 
-## Version
+### Match output size and initial focus
 
-miracle-wm 0.11.2 reports `human_readable` `"0.9.1"`, with major 0, minor 9
-and patch 1. The repository tracks a stale `src/version.h` (from the 0.9.1
-bump, `3983c5f`). It sits beside the generated `build/src/version.h` and
-shadows it (`CMakeLists.txt:124-128`). GET_VERSION carries no commit, so
-`version_details` cannot read the pin from it. `check_started_build` instead
-re-checks the checkout behind the started binary (`require_clean_binary`) each
-time a compositor starts. The results record the version as reported.
+miracle-wm has no `output` command (`src/ipc_command.cpp:92-152`), so sway's runtime
+`output * mode --custom 1280x720@60Hz` cannot be sent. Outputs start at 1270x1408
+for state, 1280x720 for random/differential, or the scenario's `output_layout` sizes.
 
-## Build
+The adapter checks those sizes over GET_OUTPUTS.
 
-The oracle image builds miracle-wm from the pinned commit with CMake, against
-Fedora 44's Mir 2.26 packages (`mir-devel`, `mir-internal-devel`), with
-`-DENABLE_TESTS=OFF -DBUILD_ERROR_REPORTER=OFF -DBUILD_DEBUG_OVERLAY=OFF`
-(`Containerfile`). The build regenerates
-`src/wlr-output-management-unstable-v1_wrapper.{cpp,h}`, which are tracked
-(`protocols/CMakeLists.txt:5-11`). The regenerated files differ only in
-formatting, so the image restores them afterwards to keep the checkout clean.
-`$MIRACLE_WM_BINARY` names the binary. Mir falls back to software buffers in
-the container, so no render node is needed.
+Mir names virtual outputs `Virtual-1` onwards in command-line order
+([Mir 2.26 output naming](https://github.com/canonical/mir/blob/v2.26.0/src/server/graphics/multiplexing_display.cpp#L195-L235),
+[`Virtual` type name](https://github.com/canonical/mir/blob/v2.26.0/src/common/output_type_names.cpp#L22-L49)).
+In the measured headless miracle-wm starts, workspace 1 belongs to `Virtual-1`
+and initial focus is on the last configured output. For multi-output scenarios,
+the adapter sends `focus output` to match sway's initial fake-0 focus.
 
-## Running the snapshots
+### Close fixtures and wait for windows
 
-Each command runs in its own oracle container with
-`--memory 4g --memory-swap 4g`:
+`[app_id=...] kill` replies `Unsupported command type: kill`
+(`src/ipc_command.cpp:92-152`). Cleanup finds fixture PIDs in GET_TREE and this
+run's `--app-id=fixture-` processes, sends SIGTERM, then waits for an empty tree.
+
+It then switches to `workspace __fixture_reset` and `workspace 1`, as sway does.
+
+The process check catches scratchpad clients omitted by GET_TREE: miracle-wm has no
+`__i3_scratch` workspace. When opening a client, the adapter waits for its
+`window::new` event and app_id, when miracle-wm adds it to the tree, rather than a count.
+
+## Read unsupported requests and failed steps
+
+| Request or client | What the adapter records |
+| --- | --- |
+| GET_INPUTS, GET_SEATS | Not sent; captures record `not applicable`. miracle-wm closes without replying: no case in `src/ipc_message_handler.cpp:65-260`. |
+| GET_CONFIG, GET_BAR_CONFIG | Also absent, but the oracle does not capture them. |
+| All other requests | Sent and measured, including SYNC and SEND_TICK (the events tick barrier). |
+| `foreign-toplevel-request` | Mir serves `zwlr_foreign_toplevel_manager_v1` and resolves app_ids through its desktop-file manager ([Mir 2.26 `foreign_toplevel_manager_v1.cpp:400-412`](https://github.com/canonical/mir/blob/v2.26.0/src/server/frontend_wayland/foreign_toplevel_manager_v1.cpp#L400-L412)). In the measured miracle-wm run, both handles reported process name `foot`, not the fixture app_id. The client finds no `fixture-*` handle and exits 1. `commands` measures `{"success": false, "error": "client exited with 1"}`; the run does not abort. |
+
+## Check the build identity
+
+0.11.2 reports GET_VERSION `human_readable` `0.9.1` (major 0, minor 9, patch 1).
+Tracked `src/version.h` from `3983c5f` shadows generated `build/src/version.h`
+(`CMakeLists.txt:124-128`). Results keep the reported version.
+
+GET_VERSION has no commit. `version_details` cannot read the pin;
+`check_started_build` calls `require_clean_binary` on the source checkout
+every time the compositor starts.
+
+The image builds with CMake and Fedora 44 Mir 2.26 (`mir-devel`,
+`mir-internal-devel`), disabling tests, error reporter and debug overlay
+(`-DENABLE_TESTS=OFF -DBUILD_ERROR_REPORTER=OFF -DBUILD_DEBUG_OVERLAY=OFF`).
+
+The build regenerates tracked `src/wlr-output-management-unstable-v1_wrapper.{cpp,h}`
+(`protocols/CMakeLists.txt:5-11`). Changes are formatting only; the image
+restores these files to keep the checkout clean (`Containerfile`).
+
+## Reproduce the snapshot and inspect crashes
+
+Follow [snapshot reproduction](../../docs/reproducing.md) to build the pinned
+image. Run each command below inside its own oracle container with
+`--memory 4g --memory-swap 4g` and a writable `-v "$PWD:/oracle"` mount,
+not the first check's read-only mount. These commands regenerate files under
+`sway-ipc/results/`:
 
 ```sh
 ./contrib/validate reproduce miracle-wm --snapshot sway-ipc
@@ -120,31 +145,38 @@ Each command runs in its own oracle container with
 ./contrib/sway-ipc-run random --compositor miracle-wm --binary "$MIRACLE_WM_BINARY"
 ```
 
-The first command runs the full state corpus (`scenarios.toml`). The committed
-state result keeps only the scenarios of the committed sway 1.12 state result,
-because `contrib/validate` requires every state result to cover them.
+The first command runs full `scenarios.toml`; committed results keep only sway 1.12's selected
+scenarios, as required by `contrib/validate`.
 
-## Crashes
+Crashes mark each remaining capture row `verdict = "crash"`, with the scenario,
+action and exit. The next scenario starts a fresh compositor. Wire-fuzz and
+random record crashes the same way.
 
-A scenario that kills miracle-wm records `verdict = "crash"` for each capture
-row it had left, with the scenario, the action and the exit. The run then
-continues with the next scenario on a fresh compositor. Wire-fuzz and random
-crashes are recorded the same way.
+| Run | Observation |
+| --- | --- |
+| Committed state | 32 crash rows from two scenarios. `workspace_move_to_own_mark_wraps_children` contributes 8 rows, with SIGSEGV at `move container to mark m`. `scratchpad_split_view_close_keeps_group` contributes 24 rows: 8 each under that capture name and its `_hidden` and `_shown` names, with SIGSEGV at `move container to mark ssvc`. |
+| Earlier full-state reruns | `workspace_move_to_own_mark_wraps_children` SIGSEGVs at `move container to mark m` in 3/3 fresh runs. `move_floating_split_to_own_child_mark` crashed at `move container to mark z` in one full run, but not in 3 later fresh runs; its committed rows are not crashes. Both scenarios are in the committed sway 1.12 selection. |
+| Committed command fuzz | 3 crash rows: `[app_id=] exit`, `[oracle_field=value] exit`, and `gaps inner current set 2147483648` stop the process. |
+| Committed wire fuzz | 2 crash rows: invalid JSON in SUBSCRIBE (uncaught `json::parse`, `src/ipc_message_handler.cpp:112`) and invalid UTF-8 in COMMAND stop the process. |
 
-Observed:
+Count the committed state crash rows by capture name (the `_hidden` and
+`_shown` captures belong to the same scratchpad scenario):
 
-- State, in the full `scenarios.toml` run only: the committed state result
-  has no crash rows, because neither scenario below is in the sway 1.12
-  selection. `workspace_move_to_own_mark_wraps_children` SIGSEGVs miracle-wm
-  at `move container to mark m` (3 of 3 fresh runs), so its 8 capture rows
-  are `crash`. In one full run, `move_floating_split_to_own_child_mark` also
-  crashed at `move container to mark z`, but it did not crash in 3 later
-  fresh runs.
-- Command fuzz (committed result, 3 crash rows): `[app_id=] exit` and `[oracle_field=value] exit` stop the
-  compositor, and so does `gaps inner current set 2147483648`.
-- Wire fuzz (committed result, 2 crash rows): a SUBSCRIBE with invalid JSON and a COMMAND with invalid UTF-8
-  end the process. The first is an uncaught `json::parse` in
-  `src/ipc_message_handler.cpp:112`.
+```sh
+python3 - <<'PY'
+from collections import Counter
+import tomllib
 
-miracle-wm has no i3-derived result yet: the i3-derived corpus awaits its sway
-recapture (`pending.toml`).
+with open("sway-ipc/results/miracle-wm-0.11.2.toml", "rb") as stream:
+    result = tomllib.load(stream)
+counts = Counter(row["scenario"] for row in result["result"]
+                 if row["verdict"] == "crash")
+print("crash rows:", sum(counts.values()))
+for capture, count in sorted(counts.items()):
+    print(capture, count)
+PY
+```
+
+There is no [i3-derived](../../docs/results.md#how-to-read-a-block) result yet. The corpus has been
+[recaptured](../../docs/reproducing.md#the-i3-derived-recapture); a miracle-wm replay
+has not been run or committed.

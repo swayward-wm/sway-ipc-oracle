@@ -610,6 +610,8 @@ PYTHONPYCACHEPREFIX="${TMPDIR:-/tmp}/sway-ipc-oracle-pycache" ./contrib/tests/sw
 ./contrib/tests/sway-ipc-short-path
 ./contrib/tests/sway-ipc-regression-scenario
 ./contrib/tests/sway-ipc-crash
+./contrib/tests/sway-ipc-unpinned
+./contrib/tests/pr-check
 ./contrib/tests/sway-ipc-scenario-retry
 ./contrib/tests/readme-snapshots
 ./contrib/tests/readme-snapshots --self-test

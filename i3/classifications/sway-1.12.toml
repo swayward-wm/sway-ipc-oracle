@@ -21,21 +21,29 @@ sway_command_semantics_finding = "Focused pinned sway reruns return different su
 sway_config_include_ipc = "Sway's GET_VERSION reports only the top-level loaded config path, and GET_CONFIG returns only the assembled current config string. It does not expose i3's included_config_file_names or included_configs metadata."
 sway_hidden_scratchpad_floating = "Sway deliberately rejects floating changes on a hidden scratchpad container, while i3 accepts the commands exercised by this regression test."
 sway_focus_workspace_command = "Sway's focus command implements containers, modes, directions, and outputs but not i3's focus workspace form."
+sway_adapter_sync_latency = "The sway adapter replaces i3's I3_SYNC with sway_sync, a settle-poll barrier of about 0.4 s per command (sway/swaycal/Shim.pm:206-235), while i3's sync is immediate. A test whose assertion depends on an interval shorter than that, such as a 500 ms urgency timer, observes the timer already fired; the same test passes with the barrier removed."
 sway_xwayland_maximized_state = "Sway reports every tiled Xwayland view maximized in both dimensions, while i3 varies the EWMH maximized axes with the split layout."
+sway_criteria_vocabulary = "Sway's criteria parser knows no tiling_from or floating_from token and rejects it with \"Token '%s' is not recognized\" (criteria.c token_from_name), in for_window and in command criteria alike. These are i3-only criteria spellings."
+sway_mark_workspace_rejected = "Sway's mark command rejects a workspace target (\"Only containers can have marks\"), because a workspace is not a container, whereas i3 marks the workspace container; i3 assertions that mark a workspace (reached with focus parent) do not apply."
+sway_adapter_scratch_lookup = "The sway adapter's get_ws helper skips the __i3 output, so get_ws('__i3_scratch') returns undef although sway's GET_TREE lists the __i3_scratch workspace with its floating nodes; an assertion read through that helper measures the adapter, not sway."
 
 [[classification]]
 file = "005-floating.t"
 assertion = 9
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_xwayland_geometry_finding"
+reason_verified = true
+citation = "sway/sway/desktop/xwayland.c:262-275; wlroots/xwayland/xwm.c:2364,2419 (c1d38536); i3/src/manage.c:554; i3/t/005-floating.t:38-44"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'i3 mapped it to x=20' got undef, expected 20. The test calls $window->rect in list context and reads ($absolute, $top); X11::XCB 0.25 Window.pm returns the second value (parent geometry) only when the window has a frame parent. i3 reparents each client into its frame (i3/src/manage.c:554), so $top is the frame. Sway's wlroots XWM creates only its own two windows (xwm.c:2364,2419) and never reparents clients (no xcb_reparent_window in wlroots/xwayland), and sway only calls wlr_xwayland_surface_configure on the client (sway/desktop/xwayland.c:262-275), so the window is a direct child of the root, rect returns one value and $top is undef. The measurable difference is X11 geometry structure; no sway source states it as a choice, so it stays a finding."
 
 [[classification]]
 file = "005-floating.t"
 assertion = 10
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_xwayland_geometry_finding"
+reason_verified = true
+citation = "sway/sway/desktop/xwayland.c:262-275; wlroots/xwayland/xwm.c:2364,2419 (c1d38536); i3/src/manage.c:554; i3/t/005-floating.t:38-44"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'i3 mapped it to y=20' got undef, expected 20. The test calls $window->rect in list context and reads ($absolute, $top); X11::XCB 0.25 Window.pm returns the second value (parent geometry) only when the window has a frame parent. i3 reparents each client into its frame (i3/src/manage.c:554), so $top is the frame. Sway's wlroots XWM creates only its own two windows (xwm.c:2364,2419) and never reparents clients (no xcb_reparent_window in wlroots/xwayland), and sway only calls wlr_xwayland_surface_configure on the client (sway/desktop/xwayland.c:262-275), so the window is a direct child of the root, rect returns one value and $top is undef. The measurable difference is X11 geometry structure; no sway source states it as a choice, so it stays a finding."
 
 [[classification]]
 file = "100-fullscreen.t"
@@ -1966,29 +1974,37 @@ reason_verified = true
 file = "129-focus-after-close.t"
 assertion = 3
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands.c:113-143,175-177,274-279; i3/src/commands.c:1727-1744; i3/t/129-focus-after-close.t:29-30"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'split container focused after focus parent' failed (ok() on $nodes->[1]->{focused}, no got/expected in TAP): with both 'open' commands rejected the workspace holds no containers, so $nodes->[1] is undef. Root cause for every failure in this file: open_empty_con sends 'open', and sway answers success=false parse_error=true error=\"Unknown/invalid command 'open'\" (diagnostic rerun printed that reply), because 'open' is absent from sway's runtime handler table (commands.c:113-143) so find_core_handler returns NULL (commands.c:274-279). The id returned by open_empty_con is therefore undef and the file never builds i3's empty-container layout. This is a deliberate missing command that the i3_open_command family describes; the row is kept in sway_command_semantics_finding only because the swayward snapshot labels these rows xwm_kill_client_fallback and mirrors sway's bucket (TRAP T2). FLAG for orchestrator: moving 129:3,4,6,9 to i3_open_command is source-supported but changes swayward's published buckets, and swayward's kill label looks wrong for them (they fail at 'open', before any kill)."
 
 [[classification]]
 file = "129-focus-after-close.t"
 assertion = 4
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands.c:113-143,175-177,274-279; i3/src/commands.c:1727-1744; i3/t/129-focus-after-close.t:29-30"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'different container focused' got undef, expected anything else (isnt(get_focused, $second) with $second undef and no focused container). Root cause for every failure in this file: open_empty_con sends 'open', and sway answers success=false parse_error=true error=\"Unknown/invalid command 'open'\" (diagnostic rerun printed that reply), because 'open' is absent from sway's runtime handler table (commands.c:113-143) so find_core_handler returns NULL (commands.c:274-279). The id returned by open_empty_con is therefore undef and the file never builds i3's empty-container layout. This is a deliberate missing command that the i3_open_command family describes; the row is kept in sway_command_semantics_finding only because the swayward snapshot labels these rows xwm_kill_client_fallback and mirrors sway's bucket (TRAP T2). FLAG for orchestrator: moving 129:3,4,6,9 to i3_open_command is source-supported but changes swayward's published buckets, and swayward's kill label looks wrong for them (they fail at 'open', before any kill)."
 
 [[classification]]
 file = "129-focus-after-close.t"
 assertion = 6
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands.c:113-143,175-177,274-279; i3/src/commands.c:1727-1744; i3/t/129-focus-after-close.t:29-30"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'second container focused' failed (ok() on $nodes->[1]->{nodes}->[0]->{focused}, no got/expected in TAP): there is no nested empty container to be focused. Root cause for every failure in this file: open_empty_con sends 'open', and sway answers success=false parse_error=true error=\"Unknown/invalid command 'open'\" (diagnostic rerun printed that reply), because 'open' is absent from sway's runtime handler table (commands.c:113-143) so find_core_handler returns NULL (commands.c:274-279). The id returned by open_empty_con is therefore undef and the file never builds i3's empty-container layout. This is a deliberate missing command that the i3_open_command family describes; the row is kept in sway_command_semantics_finding only because the swayward snapshot labels these rows xwm_kill_client_fallback and mirrors sway's bucket (TRAP T2). FLAG for orchestrator: moving 129:3,4,6,9 to i3_open_command is source-supported but changes swayward's published buckets, and swayward's kill label looks wrong for them (they fail at 'open', before any kill)."
 
 [[classification]]
 file = "129-focus-after-close.t"
 assertion = 9
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands.c:113-143,175-177,274-279; i3/src/commands.c:1727-1744; i3/t/129-focus-after-close.t:29-30"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'top right container really has focus' got undef, expected '1' ($right is undef so first{} finds no node; the empty containers were never created). Root cause for every failure in this file: open_empty_con sends 'open', and sway answers success=false parse_error=true error=\"Unknown/invalid command 'open'\" (diagnostic rerun printed that reply), because 'open' is absent from sway's runtime handler table (commands.c:113-143) so find_core_handler returns NULL (commands.c:274-279). The id returned by open_empty_con is therefore undef and the file never builds i3's empty-container layout. This is a deliberate missing command that the i3_open_command family describes; the row is kept in sway_command_semantics_finding only because the swayward snapshot labels these rows xwm_kill_client_fallback and mirrors sway's bucket (TRAP T2). FLAG for orchestrator: moving 129:3,4,6,9 to i3_open_command is source-supported but changes swayward's published buckets, and swayward's kill label looks wrong for them (they fail at 'open', before any kill)."
 
 [[classification]]
 file = "129-focus-after-close.t"
@@ -3368,120 +3384,154 @@ reason_verified = true
 file = "141-resize.t"
 assertion = 16
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "sway/sway/ipc-json.c:745-755; sway/sway/tree/arrange.c:83,88; i3/t/141-resize.t:130"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (141-resize.t: 84 assertions, same 17 fails as committed): percent is area ratio of integer pixel rects (ipc-json.c:751-754), rects come from round(fraction*total) with the last child taking the remainder (arrange.c:83,88), so 1/6 and 1/2 of 1280 px are not hit within 1e-6. TAP: |got-expected| 0.000260416666666985 (cmp_float needs < 1e-6) at 141-resize.t line 130."
 
 [[classification]]
 file = "141-resize.t"
 assertion = 17
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "sway/sway/ipc-json.c:745-755; sway/sway/tree/arrange.c:83,88; i3/t/141-resize.t:131"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (141-resize.t: 84 assertions, same 17 fails as committed): percent is area ratio of integer pixel rects (ipc-json.c:751-754), rects come from round(fraction*total) with the last child taking the remainder (arrange.c:83,88), so 1/6 and 1/2 of 1280 px are not hit within 1e-6. TAP: |got-expected| 0.000260416666666985 (cmp_float needs < 1e-6) at 141-resize.t line 131."
 
 [[classification]]
 file = "141-resize.t"
 assertion = 18
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "sway/sway/ipc-json.c:745-755; sway/sway/tree/arrange.c:83,88; i3/t/141-resize.t:132"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (141-resize.t: 84 assertions, same 17 fails as committed): percent is area ratio of integer pixel rects (ipc-json.c:751-754), rects come from round(fraction*total) with the last child taking the remainder (arrange.c:83,88), so 1/6 and 1/2 of 1280 px are not hit within 1e-6. TAP: |got-expected| 0.000260416666666985 (cmp_float needs < 1e-6) at 141-resize.t line 132."
 
 [[classification]]
 file = "141-resize.t"
 assertion = 19
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "sway/sway/ipc-json.c:745-755; sway/sway/tree/arrange.c:83,88; i3/t/141-resize.t:133"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (141-resize.t: 84 assertions, same 17 fails as committed): percent is area ratio of integer pixel rects (ipc-json.c:751-754), rects come from round(fraction*total) with the last child taking the remainder (arrange.c:83,88), so 1/6 and 1/2 of 1280 px are not hit within 1e-6. TAP: |got-expected| 0.000781250000000067 (cmp_float needs < 1e-6) at 141-resize.t line 133."
 
 [[classification]]
 file = "141-resize.t"
 assertion = 20
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "sway/sway/ipc-json.c:745-755; sway/sway/tree/arrange.c:83,88; i3/t/141-resize.t:139"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (141-resize.t: 84 assertions, same 17 fails as committed): percent is area ratio of integer pixel rects (ipc-json.c:751-754), rects come from round(fraction*total) with the last child taking the remainder (arrange.c:83,88), so 1/6 and 1/2 of 1280 px are not hit within 1e-6. TAP: |got-expected| 0.000260416666666985 (cmp_float needs < 1e-6) at 141-resize.t line 139. Height variant: 'resize grow height' is a no-op on a horizontal split, widths unchanged."
 
 [[classification]]
 file = "141-resize.t"
 assertion = 21
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "sway/sway/ipc-json.c:745-755; sway/sway/tree/arrange.c:83,88; i3/t/141-resize.t:140"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (141-resize.t: 84 assertions, same 17 fails as committed): percent is area ratio of integer pixel rects (ipc-json.c:751-754), rects come from round(fraction*total) with the last child taking the remainder (arrange.c:83,88), so 1/6 and 1/2 of 1280 px are not hit within 1e-6. TAP: |got-expected| 0.000260416666666985 (cmp_float needs < 1e-6) at 141-resize.t line 140. Height variant: 'resize grow height' is a no-op on a horizontal split, widths unchanged."
 
 [[classification]]
 file = "141-resize.t"
 assertion = 22
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "sway/sway/ipc-json.c:745-755; sway/sway/tree/arrange.c:83,88; i3/t/141-resize.t:141"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (141-resize.t: 84 assertions, same 17 fails as committed): percent is area ratio of integer pixel rects (ipc-json.c:751-754), rects come from round(fraction*total) with the last child taking the remainder (arrange.c:83,88), so 1/6 and 1/2 of 1280 px are not hit within 1e-6. TAP: |got-expected| 0.000260416666666985 (cmp_float needs < 1e-6) at 141-resize.t line 141. Height variant: 'resize grow height' is a no-op on a horizontal split, widths unchanged."
 
 [[classification]]
 file = "141-resize.t"
 assertion = 23
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "sway/sway/ipc-json.c:745-755; sway/sway/tree/arrange.c:83,88; i3/t/141-resize.t:142"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (141-resize.t: 84 assertions, same 17 fails as committed): percent is area ratio of integer pixel rects (ipc-json.c:751-754), rects come from round(fraction*total) with the last child taking the remainder (arrange.c:83,88), so 1/6 and 1/2 of 1280 px are not hit within 1e-6. TAP: |got-expected| 0.000781250000000067 (cmp_float needs < 1e-6) at 141-resize.t line 142. Height variant: 'resize grow height' is a no-op on a horizontal split, widths unchanged."
 
 [[classification]]
 file = "141-resize.t"
 assertion = 26
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/resize.c:128-135; sway/sway/tree/arrange.c:83,88; i3/t/141-resize.t:174"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (141-resize.t: 84 assertions, same 17 fails as committed): grow width 10px with 4 tiled windows: sway takes 10/1280 of the fraction, spread over the 3 siblings (3.33 px each), on a 1280 px workspace (4 x 320 px) that rounds to 317 px per sibling and the last child takes the remainder, 329 px (+9, derived from the source arithmetic) where i3 gives +10. TAP at line 174: |got-expected| 1, cmp_float needs < 1e-6."
 
 [[classification]]
 file = "141-resize.t"
 assertion = 29
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/resize.c:156-163; sway/sway/tree/arrange.c:169,173; i3/t/141-resize.t:208"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (141-resize.t: 84 assertions, same 17 fails as committed): Same as assertion 26 on the vertical axis: 4 stacked windows, grow height 10px; siblings round, last child takes the remainder, so it grows 9 px not 10. TAP at line 208: |got-expected| 1, cmp_float needs < 1e-6."
 
 [[classification]]
 file = "141-resize.t"
 assertion = 42
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/resize.c:248-270,52-63; sway/sway/tree/container.c:1508-1553; i3/t/141-resize.t:298"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (141-resize.t: 84 assertions, same 17 fails as committed): after 'split h' on the right window, 'resize grow width 10px or 25 ppt' prefers the ppt amount and converts it against the nearest L_HORIZ ancestor, the new 640 px wrapper (resize.c:252-257) = 160 px; container_find_resize_parent then skips the one-child wrapper layers and resizes the 1280 px workspace level (resize.c:52-63), so 160/1280 = 0.125 is applied, not 0.25. TAP at line 298: |got-expected| 0.125 (cmp_float needs < 1e-6)."
 
 [[classification]]
 file = "141-resize.t"
 assertion = 43
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/resize.c:248-270,52-63; sway/sway/tree/container.c:1508-1553; i3/t/141-resize.t:299"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (141-resize.t: 84 assertions, same 17 fails as committed): after 'split h' on the right window, 'resize grow width 10px or 25 ppt' prefers the ppt amount and converts it against the nearest L_HORIZ ancestor, the new 640 px wrapper (resize.c:252-257) = 160 px; container_find_resize_parent then skips the one-child wrapper layers and resizes the 1280 px workspace level (resize.c:52-63), so 160/1280 = 0.125 is applied, not 0.25. TAP at line 299: |got-expected| 0.125 (cmp_float needs < 1e-6)."
 
 [[classification]]
 file = "141-resize.t"
 assertion = 67
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/resize.c:207-208,219-222; i3/t/141-resize.t:377"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (141-resize.t: 84 assertions, same 17 fails as committed): floating 'resize grow width 10px or 10ppt': sway grows an axis-wide resize from the centre (grow_x = -grow_width/2) so x moves; i3 leaves x unchanged. TAP line 377: got 585, expected 590. 'resize grow up/left' anchoring (resize.c:211-215) passes. No doc or rejecting handler establishes this as an i3-incompatibility by design, so it stays a finding."
 
 [[classification]]
 file = "141-resize.t"
 assertion = 71
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/resize.c:207-208,219-222; i3/t/141-resize.t:388"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (141-resize.t: 84 assertions, same 17 fails as committed): floating 'resize shrink width 10px or 10ppt': same centre-anchored change as assertion 67, x moves +5. TAP line 388: got 590, expected 585."
 
 [[classification]]
 file = "141-resize.t"
 assertion = 76
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/resize.c:209-210,219-222; i3/t/141-resize.t:400"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (141-resize.t: 84 assertions, same 17 fails as committed): floating 'resize grow height 10px or 10ppt': sway grows from the centre (grow_y = -grow_height/2), y moves -5; i3 keeps y. TAP line 400: got 348, expected 353."
 
 [[classification]]
 file = "141-resize.t"
 assertion = 80
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/resize.c:209-210,219-222; i3/t/141-resize.t:411"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (141-resize.t: 84 assertions, same 17 fails as committed): floating 'resize shrink height 10px or 10ppt': same centre-anchored change as assertion 76, y moves +5. TAP line 411: got 353, expected 348."
 
 [[classification]]
 file = "141-resize.t"
 assertion = 84
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "sway/sway/ipc-json.c:536-540,672-673,883-893; sway/sway/tree/workspace.c:961-967; i3/t/141-resize.t:424-447"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (141-resize.t: 84 assertions, same 17 fails as committed): the test's get_floating_rect finds a floating node by the 'window' ids of floating_node->{nodes}. Sway lists the view container itself in floating_nodes (workspace_add_floating, no i3-style floating wrapper), its 'window' is on that node and its nodes[] is empty, so the lookup returns undef. TAP line 447: 'Use of uninitialized value in addition', got undef, expected '10'. Assertion 83 passes only because undef == undef; the TAP does not show whether the criteria resize itself worked."
 
 [[classification]]
 file = "143-regress-floating-restart.t"
@@ -4581,15 +4631,19 @@ reason_verified = false
 file = "166-assign.t"
 assertion = 13
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "i3/t/166-assign.t:43-44,48; i3/src/commands.c:1727-1744; sway/sway/commands.c:113-143,274-277; sway/sway/tree/workspace.c:314-331"
+note = "Rerun 2026-10-26 at oracle 8b028185, sway 88869399, image rc-1fd3c25b (fail set identical to the committed result): 'one container on 2' (t/166-assign.t line 44) got 0, expected 1. The test sends the i3-only command 'open' to create an empty container; sway has no 'open' handler and answers Unknown/invalid command (commands.c:113-143, 274-277), so workspace 2 stays empty. Kept in N-gap because swayward's kill-label row 166-assign.t:13 mirrors this bucket (T2); the cause fits family i3_open_command if the orchestrator approves a move."
 
 [[classification]]
 file = "166-assign.t"
 assertion = 15
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "i3/t/166-assign.t:43-44,48; i3/src/commands.c:1727-1744; sway/sway/commands.c:113-143,274-277; sway/sway/tree/workspace.c:314-331"
+note = "Rerun 2026-10-26 at oracle 8b028185, sway 88869399, image rc-1fd3c25b (fail set identical to the committed result): '2 does not exist yet' (t/166-assign.t line 48, ok($target_ws ~~ names)) failed: no TAP got/expected. Cascade of assertion 13: workspace 2 was left empty, so 'workspace <fresh>' destroyed it (workspace_consider_destroy, workspace.c:314-331; log 'Destroying workspace 2'). Kept in N-gap for the same kill/mirror reason (T2)."
 
 [[classification]]
 file = "166-assign.t"
@@ -5176,50 +5230,64 @@ reason_verified = false
 file = "167-workspace_layout.t"
 assertion = 10
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/167-workspace_layout.t:82; sway/sway/tree/view.c:849-871,897-902; sway/sway/tree/workspace.c:939-951,985-995"
+note = "Rerun 2026-10-26 at oracle 8b028185, sway 88869399, image rc-1fd3c25b (fail set identical to the committed result): 'two cons at workspace level after focus parent' (line 82) got 3, expected 2. Sway applies workspace_layout only when a container enters the workspace through workspace_add_tiling/workspace_insert_tiling (workspace.c:948-950, 990-992); a new view is instead inserted as a sibling of the focus-inactive container (view.c:849-871, 898-899) and is never wrapped. After 'focus parent' the two new windows become ws-level siblings of the stacked container instead of one stacked wrapper (rerun tree dump: stacked{a,b}, c, d)."
 
 [[classification]]
 file = "167-workspace_layout.t"
 assertion = 12
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/167-workspace_layout.t:84; sway/sway/tree/view.c:849-871,897-902; sway/sway/tree/workspace.c:939-951,985-995"
+note = "Rerun 2026-10-26 at oracle 8b028185, sway 88869399, image rc-1fd3c25b (fail set identical to the committed result): 'layout stacked' (line 84, content[1]) got 'none', expected 'stacked'. Same cause as assertion 10: Sway applies workspace_layout only when a container enters the workspace through workspace_add_tiling/workspace_insert_tiling (workspace.c:948-950, 990-992); a new view is instead inserted as a sibling of the focus-inactive container (view.c:849-871, 898-899) and is never wrapped. "
 
 [[classification]]
 file = "167-workspace_layout.t"
 assertion = 15
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/167-workspace_layout.t:96; sway/sway/commands/move.c:112-135,395-406; sway/sway/tree/view.c:849-871,897-902; sway/sway/tree/workspace.c:939-951,985-995"
+note = "Rerun 2026-10-26 at oracle 8b028185, sway 88869399, image rc-1fd3c25b (fail set identical to the committed result): 'layout stacked' (line 96, content[1]) got 'none', expected 'stacked'. Cascade of assertion 10: 'move right' left the unwrapped last window in place (tree unchanged), so content[1] is a bare view. Sway applies workspace_layout only when a container enters the workspace through workspace_add_tiling/workspace_insert_tiling (workspace.c:948-950, 990-992); a new view is instead inserted as a sibling of the focus-inactive container (view.c:849-871, 898-899) and is never wrapped. "
 
 [[classification]]
 file = "167-workspace_layout.t"
 assertion = 16
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/167-workspace_layout.t:97; sway/sway/commands/move.c:112-135,395-406; sway/sway/tree/view.c:849-871,897-902; sway/sway/tree/workspace.c:939-951,985-995"
+note = "Rerun 2026-10-26 at oracle 8b028185, sway 88869399, image rc-1fd3c25b (fail set identical to the committed result): 'layout stacked' (line 97, content[2]) got 'none', expected 'stacked'. Cascade of assertion 10, same as assertion 15."
 
 [[classification]]
 file = "167-workspace_layout.t"
 assertion = 17
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/167-workspace_layout.t:106; sway/sway/commands/move.c:112-135; sway/sway/tree/view.c:849-871,897-902; sway/sway/tree/workspace.c:939-951,985-995"
+note = "Rerun 2026-10-26 at oracle 8b028185, sway 88869399, image rc-1fd3c25b (fail set identical to the committed result): 'two cons at workspace level after moving back' (line 106) got 3, expected 2. Cascade: 'move left' swaps the two unwrapped ws-level siblings (move.c:120-122) instead of merging a stacked wrapper away, so three ws-level cons remain."
 
 [[classification]]
 file = "167-workspace_layout.t"
 assertion = 19
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/167-workspace_layout.t:108; sway/sway/commands/move.c:112-135; sway/sway/tree/view.c:849-871,897-902; sway/sway/tree/workspace.c:939-951,985-995"
+note = "Rerun 2026-10-26 at oracle 8b028185, sway 88869399, image rc-1fd3c25b (fail set identical to the committed result): 'layout stacked' (line 108, content[1]) got 'none', expected 'stacked'. Cascade of assertion 17: content[1] is a bare view."
 
 [[classification]]
 file = "167-workspace_layout.t"
 assertion = 22
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/167-workspace_layout.t:122; sway/sway/commands/move.c:198-232; sway/sway/tree/view.c:849-871,897-902; sway/sway/tree/workspace.c:939-951,985-995"
+note = "Rerun 2026-10-26 at oracle 8b028185, sway 88869399, image rc-1fd3c25b (fail set identical to the committed result): 'layout stacked' (line 122, content[1] on the source workspace after 'move workspace') got 'none', expected 'stacked'. Cascade of assertion 10: the remaining ws-level con is a bare view. The moved window on the target workspace does get wrapped (assertion 24 passes; workspace_add_tiling at workspace.c:948-950). The file then aborts after assertion 28 at an X11 atom reply, as committed."
 
 [[classification]]
 file = "167-workspace_layout.t"
@@ -5812,43 +5880,55 @@ reason_verified = true
 file = "174-border-config.t"
 assertion = 6
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_vocabulary"
+reason_verified = true
+citation = "i3/t/174-border-config.t:53,66-67; sway/sway/commands/new_window.c:5-13; sway/sway/commands/default_border.c:12-21; sway/sway/config.c:303-305"
+note = "Rerun 2026-10-26 at oracle 8b028185, sway 88869399, image rc-1fd3c25b (fail set identical to the committed result): 'border pixel by default' (line 66) got 'normal', expected 'pixel'. The config line 'new_window 1pixel' is rejected: new_window forwards to default_border, which accepts only none|normal|pixel (default_border.c:12-21); rerun sway log: Error on line 6 'new_window 1pixel': Expected 'default_border <none|normal|pixel>...'. The default stays B_NORMAL (config.c:303)."
 
 [[classification]]
 file = "174-border-config.t"
 assertion = 7
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_vocabulary"
+reason_verified = true
+citation = "i3/t/174-border-config.t:53,66-67; sway/sway/commands/new_window.c:5-13; sway/sway/commands/default_border.c:12-21; sway/sway/config.c:303-305"
+note = "Rerun 2026-10-26 at oracle 8b028185, sway 88869399, image rc-1fd3c25b (fail set identical to the committed result): 'border width pixels 1 (default)' (line 67) got 2, expected 1. Same rejected 'new_window 1pixel' as assertion 6; border_thickness stays at the default 2 (config.c:305)."
 
 [[classification]]
 file = "174-border-config.t"
 assertion = 10
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "i3/t/174-border-config.t:86-92; sway/sway/ipc-json.c:534-540,711-719,883-892; sway/sway/tree/container.c:106-109; sway/sway/tree/workspace.c:961-967"
+note = "Rerun 2026-10-26 at oracle 8b028185, sway 88869399, image rc-1fd3c25b (fail set identical to the committed result): 'border normal by default' (line 92, $floatingcon->{nodes}->[0]->{border}) got undef, expected 'normal'. i3 wraps a floating window in a floating_con holding the window in nodes[0]. Sway's floating list holds the view container itself, reported as type floating_con with an empty nodes array (views have no children), so nodes[0] does not exist."
 
 [[classification]]
 file = "174-border-config.t"
 assertion = 13
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "i3/t/174-border-config.t:113-119; sway/sway/commands/new_float.c:5-12; sway/sway/commands/default_floating_border.c:13-22; sway/sway/ipc-json.c:534-540,711-719,883-892; sway/sway/tree/container.c:106-109; sway/sway/tree/workspace.c:961-967"
+note = "Rerun 2026-10-26 at oracle 8b028185, sway 88869399, image rc-1fd3c25b (fail set identical to the committed result): 'border pixel by default' (line 119) got undef, expected 'pixel'. Same IPC shape difference as assertion 10 (no nodes[0] under a floating node). Independently, 'new_float 1pixel' is rejected by default_floating_border (rerun log: Error on line 6 'new_float 1pixel'), so a flattened read would give 'normal'; the run itself shows only the undef."
 
 [[classification]]
 file = "176-workspace-baf.t"
 assertion = 20
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "i3_open_command"
+reason_verified = true
+citation = "i3/t/176-workspace-baf.t:122,127,136-142,160-162; i3/src/commands.c:1727-1744; sway/sway/commands.c:113-143,274-277; sway/sway/tree/workspace.c:314-331; sway/sway/commands/rename.c:61-64"
+note = "Rerun 2026-10-26 at oracle 8b028185, sway 88869399, image rc-1fd3c25b (fail set identical to the committed result): 'workspace 6 now focused' (line 142) got '6', expected '6: baz'. The test uses the i3-only 'open' (lines 122, 127) to keep workspaces 5 and 6 alive; sway has no such handler (Unknown/invalid command), so workspace 6 is empty and is destroyed when focus leaves it (workspace_consider_destroy; log 'Destroying workspace 6'). 'rename workspace 6 to 6: baz' then fails with 'There is no workspace with that name' (rename.c:61-64) and 'workspace number 6' recreates a workspace named '6'. Rerun workspace names after the rename: '5: foo' only."
 
 [[classification]]
 file = "176-workspace-baf.t"
 assertion = 22
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "i3_open_command"
+reason_verified = true
+citation = "i3/t/176-workspace-baf.t:122,127,136-142,160-162; i3/src/commands.c:1727-1744; sway/sway/commands.c:113-143,274-277; sway/sway/tree/workspace.c:314-331; sway/sway/commands/rename.c:61-64"
+note = "Rerun 2026-10-26 at oracle 8b028185, sway 88869399, image rc-1fd3c25b (fail set identical to the committed result): 'workspace 6 now focused' (line 162, after the scratchpad round trip and 'workspace back_and_forth') got '6', expected '6: baz'. Same cause as assertion 20: the recreated workspace is named '6' because the i3-only 'open' never held '6: baz' alive."
 
 [[classification]]
 file = "176-workspace-baf.t"
@@ -7029,92 +7109,118 @@ reason_verified = true
 file = "191-resize-levels.t"
 assertion = 2
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/191-resize-levels.t:36-41; sway/sway/commands/resize.c:45-64,245-271,540-544"
+note = "Rerun 2026-10-26 at oracle 8b028185, sway 88869399, image rc-1fd3c25b (fail set identical to the committed result): 'left container got only 25%' (line 40) got percent 0.375, expected 0.25 (cmp_float: 0.125 < 1e-06 failed). 'resize grow left 10px or 25ppt' prefers the ppt amount for tiling (resize.c:540-544) but converts it to px against the width of the nearest L_HORIZ ancestor of the focused container, which is the 640px splith wrapper that is itself the container being resized (resize.c:252-260), giving 160px (25% of 640) instead of a share of the 1280px level in which it is a child. Rerun tree: left 480px (0.375), right 800px (0.625)."
 
 [[classification]]
 file = "191-resize-levels.t"
 assertion = 3
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/191-resize-levels.t:36-41; sway/sway/commands/resize.c:45-64,245-271,540-544"
+note = "Rerun 2026-10-26 at oracle 8b028185, sway 88869399, image rc-1fd3c25b (fail set identical to the committed result): 'right container got 75%' (line 41) got percent 0.625, expected 0.75 (0.125 < 1e-06 failed). Same cause as assertion 2."
 
 [[classification]]
 file = "192-layout.t"
 assertion = 8
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/layout.c:29-45; sway/sway/commands/layout.c:51-54; i3/src/con.c:2173-2192; i3/t/192-layout.t:54-56"
+note = "rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (rows reproduce the committed fail set exactly): after 'layout toggle split' (splith) the test runs 'layout toggle' with no argument (i3 'default' mode: splith->stacked->tabbed->last split); TAP got 'splitv' expected 'stacked'. Sway maps a bare 'layout toggle' to toggle_split_layout (splith<->splitv), so it never reaches stacked/tabbed, although sway.5.scd:187-190 documents the i3 cycle. Behaviour differs from sway's own man page, so this is not a deliberate design; stays N-gap."
 
 [[classification]]
 file = "192-layout.t"
 assertion = 9
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/layout.c:29-45; sway/sway/commands/layout.c:51-54; i3/src/con.c:2173-2192; i3/t/192-layout.t:58-60"
+note = "rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (rows reproduce the committed fail set exactly): after 'layout toggle split' (splith) the test runs 'layout toggle' with no argument (i3 'default' mode: splith->stacked->tabbed->last split); TAP got 'splith' expected 'tabbed'. Sway maps a bare 'layout toggle' to toggle_split_layout (splith<->splitv), so it never reaches stacked/tabbed, although sway.5.scd:187-190 documents the i3 cycle. Behaviour differs from sway's own man page, so this is not a deliberate design; stays N-gap."
 
 [[classification]]
 file = "192-layout.t"
 assertion = 10
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/layout.c:29-45; sway/sway/commands/layout.c:51-54; i3/src/con.c:2173-2192; i3/t/192-layout.t:62-64"
+note = "rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (rows reproduce the committed fail set exactly): after 'layout toggle split' (splith) the test runs 'layout toggle' with no argument (i3 'default' mode: splith->stacked->tabbed->last split); TAP got 'splitv' expected 'splith'. Sway maps a bare 'layout toggle' to toggle_split_layout (splith<->splitv), so it never reaches stacked/tabbed, although sway.5.scd:187-190 documents the i3 cycle. Behaviour differs from sway's own man page, so this is not a deliberate design; stays N-gap."
 
 [[classification]]
 file = "192-layout.t"
 assertion = 11
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/layout.c:29-45; sway/sway/commands/layout.c:51-54; i3/src/con.c:2173-2192; i3/t/192-layout.t:66-68"
+note = "rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (rows reproduce the committed fail set exactly): after 'layout toggle split' (splith) the test runs 'layout toggle' with no argument (i3 'default' mode: splith->stacked->tabbed->last split); TAP got 'splith' expected 'stacked'. Sway maps a bare 'layout toggle' to toggle_split_layout (splith<->splitv), so it never reaches stacked/tabbed, although sway.5.scd:187-190 documents the i3 cycle. Behaviour differs from sway's own man page, so this is not a deliberate design; stays N-gap."
 
 [[classification]]
 file = "192-layout.t"
 assertion = 12
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/layout.c:61-65; i3/src/con.c:2173-2192; i3/t/192-layout.t:70-72"
+note = "rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (rows reproduce the committed fail set exactly): 'layout toggle all'; TAP got 'splitv' expected 'tabbed'. Cascade of assertions 8-11: sway's all-cycle (splith->splitv->stacked->tabbed->splith, layout.c:63-65) is the same cycle as i3's (con.c:2173-2192), but it starts from splith (sway) instead of stacked (i3) because 'layout toggle' at assertions 8-11 left the layouts out of step; the sway sequence splitv,stacked,tabbed,splith,splitv,stacked,tabbed is exactly the i3 cycle shifted by that offset. Assertions 19-34 (explicit layout lists) pass."
 
 [[classification]]
 file = "192-layout.t"
 assertion = 13
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/layout.c:61-65; i3/src/con.c:2173-2192; i3/t/192-layout.t:74-76"
+note = "rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (rows reproduce the committed fail set exactly): 'layout toggle all'; TAP got 'stacked' expected 'splith'. Cascade of assertions 8-11: sway's all-cycle (splith->splitv->stacked->tabbed->splith, layout.c:63-65) is the same cycle as i3's (con.c:2173-2192), but it starts from splith (sway) instead of stacked (i3) because 'layout toggle' at assertions 8-11 left the layouts out of step; the sway sequence splitv,stacked,tabbed,splith,splitv,stacked,tabbed is exactly the i3 cycle shifted by that offset. Assertions 19-34 (explicit layout lists) pass."
 
 [[classification]]
 file = "192-layout.t"
 assertion = 14
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/layout.c:61-65; i3/src/con.c:2173-2192; i3/t/192-layout.t:78-80"
+note = "rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (rows reproduce the committed fail set exactly): 'layout toggle all'; TAP got 'tabbed' expected 'splitv'. Cascade of assertions 8-11: sway's all-cycle (splith->splitv->stacked->tabbed->splith, layout.c:63-65) is the same cycle as i3's (con.c:2173-2192), but it starts from splith (sway) instead of stacked (i3) because 'layout toggle' at assertions 8-11 left the layouts out of step; the sway sequence splitv,stacked,tabbed,splith,splitv,stacked,tabbed is exactly the i3 cycle shifted by that offset. Assertions 19-34 (explicit layout lists) pass."
 
 [[classification]]
 file = "192-layout.t"
 assertion = 15
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/layout.c:61-65; i3/src/con.c:2173-2192; i3/t/192-layout.t:82-84"
+note = "rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (rows reproduce the committed fail set exactly): 'layout toggle all'; TAP got 'splith' expected 'stacked'. Cascade of assertions 8-11: sway's all-cycle (splith->splitv->stacked->tabbed->splith, layout.c:63-65) is the same cycle as i3's (con.c:2173-2192), but it starts from splith (sway) instead of stacked (i3) because 'layout toggle' at assertions 8-11 left the layouts out of step; the sway sequence splitv,stacked,tabbed,splith,splitv,stacked,tabbed is exactly the i3 cycle shifted by that offset. Assertions 19-34 (explicit layout lists) pass."
 
 [[classification]]
 file = "192-layout.t"
 assertion = 16
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/layout.c:61-65; i3/src/con.c:2173-2192; i3/t/192-layout.t:86-88"
+note = "rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (rows reproduce the committed fail set exactly): 'layout toggle all'; TAP got 'splitv' expected 'tabbed'. Cascade of assertions 8-11: sway's all-cycle (splith->splitv->stacked->tabbed->splith, layout.c:63-65) is the same cycle as i3's (con.c:2173-2192), but it starts from splith (sway) instead of stacked (i3) because 'layout toggle' at assertions 8-11 left the layouts out of step; the sway sequence splitv,stacked,tabbed,splith,splitv,stacked,tabbed is exactly the i3 cycle shifted by that offset. Assertions 19-34 (explicit layout lists) pass."
 
 [[classification]]
 file = "192-layout.t"
 assertion = 17
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/layout.c:61-65; i3/src/con.c:2173-2192; i3/t/192-layout.t:90-92"
+note = "rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (rows reproduce the committed fail set exactly): 'layout toggle all'; TAP got 'stacked' expected 'splith'. Cascade of assertions 8-11: sway's all-cycle (splith->splitv->stacked->tabbed->splith, layout.c:63-65) is the same cycle as i3's (con.c:2173-2192), but it starts from splith (sway) instead of stacked (i3) because 'layout toggle' at assertions 8-11 left the layouts out of step; the sway sequence splitv,stacked,tabbed,splith,splitv,stacked,tabbed is exactly the i3 cycle shifted by that offset. Assertions 19-34 (explicit layout lists) pass."
 
 [[classification]]
 file = "192-layout.t"
 assertion = 18
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/layout.c:61-65; i3/src/con.c:2173-2192; i3/t/192-layout.t:94-96"
+note = "rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (rows reproduce the committed fail set exactly): 'layout toggle all'; TAP got 'tabbed' expected 'splitv'. Cascade of assertions 8-11: sway's all-cycle (splith->splitv->stacked->tabbed->splith, layout.c:63-65) is the same cycle as i3's (con.c:2173-2192), but it starts from splith (sway) instead of stacked (i3) because 'layout toggle' at assertions 8-11 left the layouts out of step; the sway sequence splitv,stacked,tabbed,splith,splitv,stacked,tabbed is exactly the i3 cycle shifted by that offset. Assertions 19-34 (explicit layout lists) pass."
 
 [[classification]]
 file = "193-ipc-version.t"
@@ -7127,8 +7233,10 @@ reason_verified = true
 file = "200-urgency-timer.t"
 assertion = 3
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_adapter_sync_latency"
+reason_verified = true
+citation = "sway/sway/config.c:256; sway/sway/input/seat.c:1223-1241; sway/sway/input/seat.c:1091-1096; i3/adapters/sway/swaycal/Shim.pm:206-235; i3/t/200-urgency-timer.t:52-60"
+note = "rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (rows reproduce the committed fail set exactly): TAP got '0' expected '1' for 'window still marked as urgent'. Sway's urgency timer is 500 ms (config.c:256, 'force_display_urgency_hint 500ms' in the test config) and is armed on the workspace switch (seat.c:1223-1237). The test's cmd 'workspace' calls sync_with_i3, which the sway adapter replaces with sway_sync (0.10 s quiet period, three equal tree snapshots, 0.20 s settle; Shim.pm:206-235); a timed rerun showed cmd+sync returning after 0.403 s, then the test's sleep(0.1) reaches ~0.5 s, so the timer has already fired. Scratch rerun with that one cmd changed to cmd_nosync (copy of the i3 test outside the repo, not committed): assertion 3 passed in 3 of 3 runs, the unmodified test fails every time. Harness mechanism shown by rerun, not sway behaviour. NEW FAMILY."
 
 [[classification]]
 file = "201-config-parser.t"
@@ -7533,99 +7641,127 @@ reason_verified = false
 file = "210-mark-unmark.t"
 assertion = 14
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "i3/src/commands.c:943-947; sway/sway/commands.c:306-309; sway/sway/commands/mark.c:46-61; sway/sway/tree/container.c:1582-1600; i3/t/210-mark-unmark.t:153-158"
+note = "rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (rows reproduce the committed fail set exactly): '[instance=iamnotunique] mark important' on two matching windows; TAP got '1' expected '0' for success. i3 rejects a mark command whose criteria match more than one window (cmd_mark, commands.c:943-947). Sway has no such check: commands.c:306-309 runs cmd_mark once per matched container and each run calls container_find_and_unmark (container.c:1582-1600) before adding the mark, so the mark moves to the last container and the command reports success. Diagnostic rerun: two windows match, exactly one carries 'important', success=1. sway.5.scd:822-828 says a mark is unique per window but does not say multi-match is rejected; no rejecting handler, so stays N-gap."
 
 [[classification]]
 file = "210-mark-unmark.t"
 assertion = 15
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "i3/src/commands.c:943-947; sway/sway/commands.c:306-309; sway/sway/commands/mark.c:46-61; sway/sway/tree/container.c:1582-1600; i3/t/210-mark-unmark.t:153-158"
+note = "rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (rows reproduce the committed fail set exactly): '[instance=iamnotunique] mark important' on two matching windows; TAP got undef expected 'A mark must not be put onto more than one window' for the error. i3 rejects a mark command whose criteria match more than one window (cmd_mark, commands.c:943-947). Sway has no such check: commands.c:306-309 runs cmd_mark once per matched container and each run calls container_find_and_unmark (container.c:1582-1600) before adding the mark, so the mark moves to the last container and the command reports success. Diagnostic rerun: two windows match, exactly one carries 'important', success=1. sway.5.scd:822-828 says a mark is unique per window but does not say multi-match is rejected; no rejecting handler, so stays N-gap."
 
 [[classification]]
 file = "210-mark-unmark.t"
 assertion = 17
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "i3/src/commands.c:943-947; sway/sway/commands.c:306-309; sway/sway/commands/mark.c:46-61; sway/sway/tree/container.c:1582-1600; i3/t/210-mark-unmark.t:153-158"
+note = "rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (rows reproduce the committed fail set exactly): '[instance=iamnotunique] mark important' on two matching windows; TAP got ['important'] expected [] for the second container's marks. i3 rejects a mark command whose criteria match more than one window (cmd_mark, commands.c:943-947). Sway has no such check: commands.c:306-309 runs cmd_mark once per matched container and each run calls container_find_and_unmark (container.c:1582-1600) before adding the mark, so the mark moves to the last container and the command reports success. Diagnostic rerun: two windows match, exactly one carries 'important', success=1. sway.5.scd:822-828 says a mark is unique per window but does not say multi-match is rejected; no rejecting handler, so stays N-gap."
 
 [[classification]]
 file = "212-assign-urgency.t"
 assertion = 1
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/src/manage.c:313-316; i3/src/manage.c:678; sway/sway/tree/view.c:628-663; sway/sway/tree/view.c:812-962; sway/sway/sway.5.scd:417-422; i3/t/212-assign-urgency.t:54"
+note = "rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399 (rows reproduce the committed fail set exactly): TAP 'not ok 1 - target workspace is urgent' (ok() reports no got/expected); sway log shows the assign applied (workspace targetws created at map time) but the workspace was not urgent. i3 sets urgency_hint when the assigned workspace is not visible (manage.c:313-316, applied at 678). Sway's view_map picks the assigned workspace in select_workspace (view.c:628-663) and never calls view_set_urgent on that path (view_map, view.c:812-962; view_set_urgent is only reached from activation/urgency requests, view.c:489-511, xwayland.c:772). sway.5.scd:417-422 documents assign as 'for_window <criteria> move container to workspace', which does not mention urgency; no rejecting handler or documented choice about urgency, so stays N-gap."
 
 [[classification]]
 file = "213-layout-restore-simple.t"
 assertion = 4
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "i3_append_layout"
+reason_verified = true
+citation = "i3/t/213-layout-restore-simple.t:55,60; sway/sway/commands.c:44-143,175-179,274-277"
+note = "r05 rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536; fail set identical to committed result. sway has no append_layout handler (commands.c handler tables 44-143; unknown commands rejected 274-277), so the layout is never restored; line 60 'one node on the workspace now' got 0 expected 1."
 
 [[classification]]
 file = "213-layout-restore-simple.t"
 assertion = 5
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "i3_append_layout"
+reason_verified = true
+citation = "i3/t/213-layout-restore-simple.t:55,61; sway/sway/commands.c:44-143,175-179,274-277"
+note = "r05 rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536; fail set identical to committed result. sway has no append_layout handler (commands.c handler tables 44-143; unknown commands rejected 274-277), so the layout is never restored; line 61 'node has splitv layout' got undef expected 'splitv'."
 
 [[classification]]
 file = "213-layout-restore-simple.t"
 assertion = 6
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "i3_append_layout"
+reason_verified = true
+citation = "i3/t/213-layout-restore-simple.t:55,62; sway/sway/commands.c:44-143,175-179,274-277"
+note = "r05 rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536; fail set identical to committed result. sway has no append_layout handler (commands.c handler tables 44-143; unknown commands rejected 274-277), so the layout is never restored; line 62 'node has two children' got 0 expected 2."
 
 [[classification]]
 file = "213-layout-restore-simple.t"
 assertion = 9
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "i3_append_layout"
+reason_verified = true
+citation = "i3/t/213-layout-restore-simple.t:92,97; sway/sway/commands.c:44-143,175-179,274-277"
+note = "r05 rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536; fail set identical to committed result. sway has no append_layout handler (commands.c handler tables 44-143; unknown commands rejected 274-277), so the layout is never restored; line 97 'one node on the workspace now' got 0 expected 2."
 
 [[classification]]
 file = "213-layout-restore-simple.t"
 assertion = 10
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "i3_append_layout"
+reason_verified = true
+citation = "i3/t/213-layout-restore-simple.t:92,98; sway/sway/commands.c:44-143,175-179,274-277"
+note = "r05 rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536; fail set identical to committed result. sway has no append_layout handler (commands.c handler tables 44-143; unknown commands rejected 274-277), so the layout is never restored; line 98 'first node has splitv layout' got undef expected 'splitv'."
 
 [[classification]]
 file = "213-layout-restore-simple.t"
 assertion = 11
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "i3_append_layout"
+reason_verified = true
+citation = "i3/t/213-layout-restore-simple.t:92,99; sway/sway/commands.c:44-143,175-179,274-277"
+note = "r05 rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536; fail set identical to committed result. sway has no append_layout handler (commands.c handler tables 44-143; unknown commands rejected 274-277), so the layout is never restored; line 99 'first node has two children' got 0 expected 2."
 
 [[classification]]
 file = "213-layout-restore-simple.t"
 assertion = 12
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "i3_append_layout"
+reason_verified = true
+citation = "i3/t/213-layout-restore-simple.t:92,100; sway/sway/commands.c:44-143,175-179,274-277"
+note = "r05 rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536; fail set identical to committed result. sway has no append_layout handler (commands.c handler tables 44-143; unknown commands rejected 274-277), so the layout is never restored; line 100 'second node has splitv layout' got undef expected 'splitv'."
 
 [[classification]]
 file = "213-layout-restore-simple.t"
 assertion = 16
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "i3_append_layout"
+reason_verified = true
+citation = "i3/t/213-layout-restore-simple.t:137,142; sway/sway/commands.c:44-143,175-179,274-277"
+note = "r05 rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536; fail set identical to committed result. sway has no append_layout handler (commands.c handler tables 44-143; unknown commands rejected 274-277), so the layout is never restored; line 142 'one node on the workspace now' got 0 expected 1 (placeholder with swallows not created)."
 
 [[classification]]
 file = "213-layout-restore-simple.t"
 assertion = 18
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "i3_append_layout"
+reason_verified = true
+citation = "i3/t/213-layout-restore-simple.t:137,157,159; sway/sway/commands.c:44-143,175-179,274-277"
+note = "r05 rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536; fail set identical to committed result. sway has no append_layout handler (commands.c handler tables 44-143; unknown commands rejected 274-277), so the layout is never restored; line 159 'top window on top' got undef expected 'top window': with no placeholder the two mapped windows are plain top-level tiles (content count 2, assertion 17 got 2 expected 1), so $content[0] is a leaf with no nodes."
 
 [[classification]]
 file = "219-ipc-window-focus.t"
 assertion = 8
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "i3/t/219-ipc-window-focus.t:52-66,76; sway/sway/commands/kill.c:15-30; sway/sway/desktop/xwayland.c:367-372; sway/subprojects/wlroots/xwayland/xwm.c:2194-2213 (wlroots c1d38536); i3/src/x.c:328-338"
+note = "r05 rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536; fail set identical to committed result. subtest 'kill doesn't produce focus event' (line 76) ran no assertions ('1..0'; 'No tests run for subtest', TAP #8) and the file aborts after 8 with 'Could not get reply for: xcb_intern_atom_reply' (exit 255; 9 and 10 unreached). sway log: one 'kill' command emits 3 window::close events and xcb BadWindow errors on all three windows 4194304-4194306. The test windows set no WM_DELETE_WINDOW (i3test open_window), so wlr_xwayland_surface_close falls to xcb_kill_client (xwm.c:2211) and the whole X connection of the test dies; i3 destroys only the selected window (x.c:328-338). The test's windows set no WM_PROTOCOLS (i3/testcases/lib/i3test.pm.in:332-362, as cited by swayward's xwm_kill_client_fallback family). Kept in N-gap: behaviour plus source establish the mechanism but not a design exception; swayward's paired 219:8 row is swayward_ipc_finding, so no mirror effect (T2 n/a)."
 
 [[classification]]
 file = "219-ipc-window-focus.t"
@@ -7750,22 +7886,28 @@ reason_verified = true
 file = "228-border-widths.t"
 assertion = 6
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "i3/t/228-border-widths.t:54; sway/sway/ipc-json.c:540,714-718,760-762,883-893; sway/sway/commands/new_float.c:5-12; sway/sway/commands/default_floating_border.c:6-30"
+note = "r05 rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536; fail set identical to committed result. line 54 'floating current border width set to 10' got undef expected '10': sway's floating_nodes entry is the window container itself (type floating_con, view containers have empty nodes), so $floating[0]->{nodes}[0] does not exist. The border width is applied: the same-config assertion 7 (window width = rect width - 2*10) passes. new_float is a deprecated alias of default_floating_border (new_float.c)."
 
 [[classification]]
 file = "228-border-widths.t"
 assertion = 13
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "i3/t/228-border-widths.t:88; sway/sway/ipc-json.c:540,714-718,760-762,883-893; sway/sway/commands/new_float.c:5-12; sway/sway/commands/default_floating_border.c:6-30"
+note = "r05 rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536; fail set identical to committed result. line 88 'floating current border width set to 7' got undef expected '7': sway's floating_nodes entry is the window container itself (type floating_con, view containers have empty nodes), so $floating[0]->{nodes}[0] does not exist. The border width is applied: the same-config assertion 14 (window width = rect width - 2*7) passes. new_float is a deprecated alias of default_floating_border (new_float.c)."
 
 [[classification]]
 file = "228-border-widths.t"
 assertion = 20
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "i3/t/228-border-widths.t:122; sway/sway/ipc-json.c:540,714-718,760-762,883-893; sway/sway/commands/new_float.c:5-12; sway/sway/commands/default_floating_border.c:6-30"
+note = "r05 rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536; fail set identical to committed result. line 122 'floating current border width set to 6' got undef expected '6': sway's floating_nodes entry is the window container itself (type floating_con, view containers have empty nodes), so $floating[0]->{nodes}[0] does not exist. The border width is applied: the same-config assertion 21 (window width = rect width - 2*6) passes. new_float is a deprecated alias of default_floating_border (new_float.c)."
 
 [[classification]]
 file = "231-ipc-floating-event.t"
@@ -7918,92 +8060,118 @@ reason_verified = true
 file = "241-consistent-center.t"
 assertion = 1
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_xwayland_geometry_finding"
+reason_verified = true
+citation = "i3/t/241-consistent-center.t:36-38; sway/sway/tree/container.c:779-795,833-848,850-893; sway/sway/config.c:268-269"
+note = "r05 rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536; fail set identical to committed result. sway enforces the 75x50 default floating minimum (config.c:268-269, container.c:779-795,833-848) and centres the content box (container.c:850-893), so the 30x30 X window is configured 75 wide at x=602 (assertions 9/10, third window x=602 confirm); line 37 'x coordinates match' got 639 expected 640 (int(602+75/2) vs int(1280/2)); y passes (assertion 2)."
 
 [[classification]]
 file = "241-consistent-center.t"
 assertion = 7
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_xwayland_geometry_finding"
+reason_verified = true
+citation = "i3/t/241-consistent-center.t:61-67; sway/sway/commands/scratchpad.c:46-88; sway/sway/tree/root.c:157-200; sway/sway/tree/container.c:779-795"
+note = "r05 rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536; fail set identical to committed result. line 67 'x midpoint is ws center' got 639 expected 640 (got = the first window's midpoint, expected = the scratchpad-shown window's midpoint); y midpoint passes (assertion 8). The first window's 639 follows from the 75 px minimum width (see assertion 1); the shown window's 1 px difference was not isolated further (root_scratchpad_show re-places via floating_fix_coordinates/set_container_transform)."
 
 [[classification]]
 file = "241-consistent-center.t"
 assertion = 11
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_xwayland_mapping_finding"
+reason_verified = true
+citation = "i3/t/241-consistent-center.t:91-96; sway/sway/desktop/xwayland.c:310-340; i3/src/manage.c:492-495"
+note = "r05 rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536; fail set identical to committed result. sway has no WM_CLIENT_LEADER handling (no 'leader' in sway/ or wlroots xwayland; xwayland.c wants_floating 310-340 checks only modal, window type and size hints), so the child window is not floated and centred over its leader as i3 does (i3/src/manage.c:492-495); line 96 'x coordinates match' got 602 (leader's x) expected 0 (child's x; it is tiled at the workspace origin)."
 
 [[classification]]
 file = "241-consistent-center.t"
 assertion = 12
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_xwayland_mapping_finding"
+reason_verified = true
+citation = "i3/t/241-consistent-center.t:91-97; sway/sway/desktop/xwayland.c:310-340; i3/src/manage.c:492-495"
+note = "r05 rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536; fail set identical to committed result. sway has no WM_CLIENT_LEADER handling (no 'leader' in sway/ or wlroots xwayland; xwayland.c wants_floating 310-340 checks only modal, window type and size hints), so the child window is not floated and centred over its leader as i3 does (i3/src/manage.c:492-495); line 97 'y coordinates match' got 375 (leader's y) expected 0 (child's y)."
 
 [[classification]]
 file = "243-move-to-mark.t"
 assertion = 13
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/243-move-to-mark.t:34-48,120-139; sway/sway/desktop/xwayland.c:756-774; wlroots/xwayland/xwm.c:1654-1655,1711-1713; sway/sway/commands/move.c:236-237,269-273"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b: 'target workspace is urgent' failed (ok() with false). A probe in the same container showed the source workspace is not urgent even before the move: the test's _NET_WM_STATE_DEMANDS_ATTENTION client message reaches wlroots, which emits request_demands_attention, but sway registers no listener (no 'demands' in sway/ or include/) and its only X11 urgency path is WM_HINTS (handle_set_hints), so S is never urgent. The move code itself updates urgency (workspace_detect_urgent on old and new workspace). Assertion 12 passes vacuously."
 
 [[classification]]
 file = "243-move-to-mark.t"
 assertion = 35
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_mark_workspace_rejected"
+reason_verified = true
+citation = "i3/t/243-move-to-mark.t:259-280; sway/sway/commands/mark.c:20-23; sway/sway/commands/focus.c:339-351; sway/sway/commands.c:191-198"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b: 'there is a tabbed container and a window' got 1 expected 2. 'focus parent' twice selects the workspace node, where handler_context.container is NULL, so 'mark target' fails with \"Only containers can have marks\" (probe, line 275); the later move then resolved the stale 'target' mark from an earlier section, so S did not reach this workspace."
 
 [[classification]]
 file = "243-move-to-mark.t"
 assertion = 36
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_mark_workspace_rejected"
+reason_verified = true
+citation = "i3/t/243-move-to-mark.t:259-280; sway/sway/commands/mark.c:20-23; sway/sway/commands/focus.c:339-351; sway/sway/commands.c:191-198"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b: 'S is the second window' got undef expected 4194329 (window id). Same cause as assertion 35: the workspace mark is rejected (\"Only containers can have marks\"), so there is no second window next to the tabbed container."
 
 [[classification]]
 file = "243-move-to-mark.t"
 assertion = 38
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/243-move-to-mark.t:299-313; sway/sway/commands/move.c:241-261; sway/sway/tree/container.c:1363-1374,1410-1423"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b: 'tiling container moved to the target workspace' got 0 expected 1. Target M is floating; container_move_to_container calls container_add_sibling(M, S), and container_get_siblings returns M's workspace floating list, so S lands among the floating nodes (probe tree: both Window 3 and Window 4 are floating_con under the target workspace) and the workspace has no tiling node."
 
 [[classification]]
 file = "243-move-to-mark.t"
 assertion = 40
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/243-move-to-mark.t:316-334; sway/sway/ipc-json.c:711-718,883-892; sway/sway/commands/move.c:257-261"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b: 'tiling container moved inside floating container' is is(1, grep-count): got 1 expected 0 (grep count). S did move into the floating container (probe tree: floating_con splitv holds Windows 6, 7 and 5), but sway reports the split container itself as the floating_con, with no wrapper node, so the test's floating_nodes[0]->nodes[0]->nodes path reads Window 6's empty child list. The i3 test notes this is 'not actively supported behavior'."
 
 [[classification]]
 file = "243-move-to-mark.t"
 assertion = 43
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_mark_workspace_rejected"
+reason_verified = true
+citation = "i3/t/243-move-to-mark.t:351-367; sway/sway/commands/mark.c:20-23; sway/sway/commands.c:191-198"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b: 'tiling container moved to the target workspace' got 0 expected 1. M is a workspace; 'mark target' fails with \"Only containers can have marks\" (probe, line 362), so the move went to the stale 'target' mark in an earlier section and the target workspace stayed empty."
 
 [[classification]]
 file = "243-move-to-mark.t"
 assertion = 44
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_mark_workspace_rejected"
+reason_verified = true
+citation = "i3/t/243-move-to-mark.t:370-391; sway/sway/commands/mark.c:20-23; sway/sway/commands.c:191-198"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b: 'there is a window and a container with the contents of the original workspace' got 1 expected 2. S is a workspace; 'mark S' fails with \"Only containers can have marks\" (probe, line 378) and '[con_mark=S] move container to mark target' fails with \"No matching node.\", so nothing moved."
 
 [[classification]]
 file = "243-move-to-mark.t"
 assertion = 46
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_mark_workspace_rejected"
+reason_verified = true
+citation = "i3/t/243-move-to-mark.t:370-391; sway/sway/commands/mark.c:20-23; sway/sway/commands.c:191-198"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b: 'target workspace has the floating container' got 0 expected 1. Same cause as assertion 44: the workspace S was never marked, so its floating container was not moved. Assertion 45 passes because M stays first."
 
 [[classification]]
 file = "243-move-to-mark.t"
 assertion = 50
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_adapter_scratch_lookup"
+reason_verified = true
+citation = "i3/t/243-move-to-mark.t:396-413; i3/adapters/sway/swaycal/Shim.pm:420-437; sway/sway/ipc-json.c:459-499"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b: 'there are two floating containers in the scratchpad' got 0 expected 2. The test reads get_ws('__i3_scratch'); the adapter's get_ws skips the __i3 output, so it returns undef and the count autovivifies to 0 (assertion 49 passes the same way). A probe reading GET_TREE directly shows __i3 -> __i3_scratch with 2 floating_nodes after the move, so sway behaved as expected (line 407 move ok)."
 
 [[classification]]
 file = "244-new-workspace-floating-enable-center.t"
@@ -8750,43 +8918,55 @@ reason_verified = true
 file = "264-dock-criteria.t"
 assertion = 1
 outcome = "fail"
-reason = "The pinned run emitted no TAP plan; retain this as an environment or harness finding."
-reason_verified = false
+reason = "sway_xwayland_mapping_finding"
+reason_verified = true
+citation = "i3/t/264-dock-criteria.t:32-37; sway/sway/desktop/xwayland.c:317-340; sway/sway/ipc-json.c:869-875"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b: 'created one docked client' got 0 expected 1. DOCK window (_NET_WM_WINDOW_TYPE_DOCK, class x). sway source has no dock window handling (grep 'dock' in sway/ and include/ finds only bar mode); wants_floating knows only modal, dialog, utility, toolbar, splash, and the output's IPC children are workspaces only, so the client is an ordinary container on the workspace. The run emitted no TAP plan because the test dies after assertion 11 (xcb_intern_atom_reply failure following 'kill'); the six failing rows ran and are real failures, so they are not harness findings. One '# swaycal re-map' line (try=1) occurred."
 
 [[classification]]
 file = "264-dock-criteria.t"
 assertion = 3
 outcome = "fail"
-reason = "The pinned run emitted no TAP plan; retain this as an environment or harness finding."
-reason_verified = false
+reason = "sway_xwayland_mapping_finding"
+reason_verified = true
+citation = "i3/t/264-dock-criteria.t:38; sway/sway/desktop/xwayland.c:317-340; sway/sway/ipc-json.c:869-875"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b: 'no container on the current workspace' got 1 expected 0 (children of the workspace). DOCK window (_NET_WM_WINDOW_TYPE_DOCK, class x). sway source has no dock window handling (grep 'dock' in sway/ and include/ finds only bar mode); wants_floating knows only modal, dialog, utility, toolbar, splash, and the output's IPC children are workspaces only, so the client is an ordinary container on the workspace. The DOCK client occupies a workspace child slot."
 
 [[classification]]
 file = "264-dock-criteria.t"
 assertion = 4
 outcome = "fail"
-reason = "The pinned run emitted no TAP plan; retain this as an environment or harness finding."
-reason_verified = false
+reason = "sway_xwayland_mapping_finding"
+reason_verified = true
+citation = "i3/t/264-dock-criteria.t:40-42; sway/sway/desktop/xwayland.c:317-340; sway/sway/ipc-json.c:869-875"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b: 'one docked client after move' got 0 expected 1. DOCK window (_NET_WM_WINDOW_TYPE_DOCK, class x). sway source has no dock window handling (grep 'dock' in sway/ and include/ finds only bar mode); wants_floating knows only modal, dialog, utility, toolbar, splash, and the output's IPC children are workspaces only, so the client is an ordinary container on the workspace. After 'move workspace current' there is still no dockarea child."
 
 [[classification]]
 file = "264-dock-criteria.t"
 assertion = 7
 outcome = "fail"
-reason = "The pinned run emitted no TAP plan; retain this as an environment or harness finding."
-reason_verified = false
+reason = "sway_xwayland_mapping_finding"
+reason_verified = true
+citation = "i3/t/264-dock-criteria.t:44; sway/sway/desktop/xwayland.c:317-340; sway/sway/ipc-json.c:869-875"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b: 'no container on the current workspace' got 1 expected 0 (children of the workspace). DOCK window (_NET_WM_WINDOW_TYPE_DOCK, class x). sway source has no dock window handling (grep 'dock' in sway/ and include/ finds only bar mode); wants_floating knows only modal, dialog, utility, toolbar, splash, and the output's IPC children are workspaces only, so the client is an ordinary container on the workspace. The DOCK client occupies a workspace child slot."
 
 [[classification]]
 file = "264-dock-criteria.t"
 assertion = 8
 outcome = "fail"
-reason = "The pinned run emitted no TAP plan; retain this as an environment or harness finding."
-reason_verified = false
+reason = "sway_xwayland_mapping_finding"
+reason_verified = true
+citation = "i3/t/264-dock-criteria.t:46-48; sway/sway/desktop/xwayland.c:317-340; sway/sway/ipc-json.c:869-875"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b: 'one docked client after fullscreen' got 0 expected 1. DOCK window (_NET_WM_WINDOW_TYPE_DOCK, class x). sway source has no dock window handling (grep 'dock' in sway/ and include/ finds only bar mode); wants_floating knows only modal, dialog, utility, toolbar, splash, and the output's IPC children are workspaces only, so the client is an ordinary container on the workspace. There is still no dockarea child after 'fullscreen'."
 
 [[classification]]
 file = "264-dock-criteria.t"
 assertion = 11
 outcome = "fail"
-reason = "The pinned run emitted no TAP plan; retain this as an environment or harness finding."
-reason_verified = false
+reason = "sway_xwayland_mapping_finding"
+reason_verified = true
+citation = "i3/t/264-dock-criteria.t:50; sway/sway/desktop/xwayland.c:317-340; sway/sway/ipc-json.c:869-875"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b: 'no container on the current workspace' got 1 expected 0 (children of the workspace). DOCK window (_NET_WM_WINDOW_TYPE_DOCK, class x). sway source has no dock window handling (grep 'dock' in sway/ and include/ finds only bar mode); wants_floating knows only modal, dialog, utility, toolbar, splash, and the output's IPC children are workspaces only, so the client is an ordinary container on the workspace. The DOCK client occupies a workspace child slot."
 
 [[classification]]
 file = "264-dock-criteria.t"
@@ -8947,106 +9127,136 @@ citation = "i3/t/268-ipc-config.t:27-50; sway/sway/config.c:732-773; sway/sway/i
 file = "269-focus-stack-above.t"
 assertion = 2
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/269-focus-stack-above.t:32-37; wlroots/xwayland/xwm.c:1257-1283"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b: 'left window has focus' got 4194305 (right window) expected 4194304 (left). A ConfigureWindow with only STACK_MODE_ABOVE (no x/y/width/height) is dropped by xwm_handle_configure_request ('(mask & geo_mask) == 0' return; '// TODO: handle ev->{parent,sibling}?'), so it never reaches sway's request_configure handler and nothing changes focus."
 
 [[classification]]
 file = "269-focus-stack-above.t"
 assertion = 3
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/269-focus-stack-above.t:32-37; wlroots/xwayland/xwm.c:1257-1283"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b: 'right window is no longer focused' got 7 (same container id) expected anything else. Consequence of assertion 2: focus never left the right window."
 
 [[classification]]
 file = "271-for_window_tilingfloating.t"
 assertion = 2
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_criteria_vocabulary"
+reason_verified = true
+citation = "i3/t/271-for_window_tilingfloating.t:21-28,44; sway/sway/criteria.c:578-622,625-633; sway/sway/commands/for_window.c:14-20"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'mark set for 'tiling' criterion' failed at i3/t/271-for_window_tilingfloating.t:44: TAP $got->[1] does not exist, expected 'tiling_auto'. The config line for_window [tiling_from=\"auto\"] ... is rejected by sway's criteria parser (sway log: \"Token 'tiling_from' is not recognized\", the config loads without that rule): token_from_name has no tiling_from/floating_from (criteria.c:578-622) and parse_token returns T_INVALID's error (625-633). Only the 'tiling' mark is set, so marks are ['tiling'] not ['tiling','tiling_auto']."
 
 [[classification]]
 file = "271-for_window_tilingfloating.t"
 assertion = 4
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "i3/t/271-for_window_tilingfloating.t:48; sway/sway/ipc-json.c:534-540,714-717,883-893; sway/sway/tree/workspace.c:961-967"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'mark set for 'floating' criterion' failed at i3/t/271-for_window_tilingfloating.t:48: TAP got undef, expected an ARRAY (marks). The test reads $nodes[0]->{nodes}[0]->{marks} on the floating_nodes entry, i3's floating_con wrapper around the client. Sway lists the view container itself in floating_nodes (workspace->floating holds the views, ipc-json.c:534-540; workspace_add_floating, workspace.c:961-967) with type floating_con set on that node (ipc-json.c:714-717), and its nodes[] is empty for a view (883-893), so the lookup is undef. The sway log shows the for_window mark was applied to the floating view, so the TAP does not show whether the rule worked, only that the i3 wrapper shape is absent."
 
 [[classification]]
 file = "271-for_window_tilingfloating.t"
 assertion = 6
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "i3/t/271-for_window_tilingfloating.t:55-62; sway/sway/tree/view.c:570-580,943; sway/sway/commands/mark.c:58-64; sway/sway/criteria.c:578-622"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'Marks updated after 'floating_user' criterion' failed at i3/t/271-for_window_tilingfloating.t:62: TAP $got->[0] = 'floating', expected 'floating_auto'. Sway only runs for_window commands from view_execute_criteria, called at view map (view.c:943), title/class/role/type changes (desktop/xwayland.c:691-752, xdg_shell.c:356-601) and the mark command (commands/mark.c:63); floating enable/disable does not call it (commands/floating.c has no criteria call), and each criterion runs at most once per view (view.c:575-578). i3 re-evaluates for_window on a floating/tiling change; here the tiling container B (floating disable) keeps its old 'floating' mark instead of gaining 'tiling'/'tiling_user'; the tiling_from/floating_from rules are additionally rejected (criteria.c:578-622, see the sway_criteria_vocabulary rows 2 and 18). Behaviour difference in command effect; no sway source states it as a deliberate choice, so it stays a finding."
 
 [[classification]]
 file = "271-for_window_tilingfloating.t"
 assertion = 8
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "i3/t/271-for_window_tilingfloating.t:66; sway/sway/ipc-json.c:534-540,714-717,883-893; sway/sway/tree/workspace.c:961-967"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'Marks updated after 'tiling_user' criterion' failed at i3/t/271-for_window_tilingfloating.t:66: TAP got undef, expected an ARRAY (marks). The test reads $nodes[0]->{nodes}[0]->{marks} on the floating_nodes entry, i3's floating_con wrapper around the client. Sway lists the view container itself in floating_nodes (workspace->floating holds the views, ipc-json.c:534-540; workspace_add_floating, workspace.c:961-967) with type floating_con set on that node (ipc-json.c:714-717), and its nodes[] is empty for a view (883-893), so the lookup is undef. The sway log shows the for_window mark was applied to the floating view, so the TAP does not show whether the rule worked, only that the i3 wrapper shape is absent."
 
 [[classification]]
 file = "271-for_window_tilingfloating.t"
 assertion = 10
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "i3/t/271-for_window_tilingfloating.t:71-81; sway/sway/tree/view.c:570-580,943; sway/sway/commands/mark.c:58-64"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'Only 'tiling_user' rule triggered' failed at i3/t/271-for_window_tilingfloating.t:81: TAP $got->[1] = 'floating', expected 'tiling_user'. The sway log shows 'mark A' re-ran view_execute_criteria on A (still floating at that moment, so [floating] fired and added 'floating', mark.c:58-64), then 'floating disable' triggered no for_window re-evaluation. Sway only runs for_window commands from view_execute_criteria, called at view map (view.c:943), title/class/role/type changes (desktop/xwayland.c:691-752, xdg_shell.c:356-601) and the mark command (commands/mark.c:63); floating enable/disable does not call it (commands/floating.c has no criteria call), and each criterion runs at most once per view (view.c:575-578). i3 re-evaluates for_window on a floating/tiling change; A ends with marks [A, floating]. The missing tiling_user rule is also a tiling_from rejection (criteria.c:578-622). Stays a finding."
 
 [[classification]]
 file = "271-for_window_tilingfloating.t"
 assertion = 12
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "i3/t/271-for_window_tilingfloating.t:85; sway/sway/ipc-json.c:534-540,714-717,883-893; sway/sway/tree/workspace.c:961-967"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'Only 'floating_user' rule triggered' failed at i3/t/271-for_window_tilingfloating.t:85: TAP got undef, expected an ARRAY (marks). The test reads $nodes[0]->{nodes}[0]->{marks} on the floating_nodes entry, i3's floating_con wrapper around the client. Sway lists the view container itself in floating_nodes (workspace->floating holds the views, ipc-json.c:534-540; workspace_add_floating, workspace.c:961-967) with type floating_con set on that node (ipc-json.c:714-717), and its nodes[] is empty for a view (883-893), so the lookup is undef. The sway log shows the for_window mark was applied to the floating view, so the TAP does not show whether the rule worked, only that the i3 wrapper shape is absent."
 
 [[classification]]
 file = "271-for_window_tilingfloating.t"
 assertion = 16
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "i3/t/271-for_window_tilingfloating.t:114; sway/sway/ipc-json.c:534-540,714-717,883-893; sway/sway/tree/workspace.c:961-967"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'mark set for 'floating' criterion' failed at i3/t/271-for_window_tilingfloating.t:114: TAP got undef, expected an ARRAY (marks). The test reads $nodes[0]->{nodes}[0]->{marks} on the floating_nodes entry, i3's floating_con wrapper around the client. Sway lists the view container itself in floating_nodes (workspace->floating holds the views, ipc-json.c:534-540; workspace_add_floating, workspace.c:961-967) with type floating_con set on that node (ipc-json.c:714-717), and its nodes[] is empty for a view (883-893), so the lookup is undef. The sway log shows the for_window mark was applied to the floating view, so the TAP does not show whether the rule worked, only that the i3 wrapper shape is absent."
 
 [[classification]]
 file = "271-for_window_tilingfloating.t"
 assertion = 18
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_criteria_vocabulary"
+reason_verified = true
+citation = "i3/t/271-for_window_tilingfloating.t:117-121; sway/sway/criteria.c:578-622,625-633; sway/sway/commands.c:236-243"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'mark set for 'tiling' criterion' failed at i3/t/271-for_window_tilingfloating.t:121: TAP $got->[1] does not exist, expected 'tiling_auto'. The command [tiling_from=\"auto\" con_mark=\"tiling\"] mark --add tiling_auto goes through criteria_parse, which fails on the unknown token (criteria.c:578-622, 625-633) and the command handler returns CMD_INVALID with that error without running the command (commands.c:236-243), so the mark is never added; marks stay ['tiling']."
 
 [[classification]]
 file = "271-for_window_tilingfloating.t"
 assertion = 20
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "i3/t/271-for_window_tilingfloating.t:125; sway/sway/ipc-json.c:534-540,714-717,883-893; sway/sway/tree/workspace.c:961-967"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'mark set for 'floating' criterion' failed at i3/t/271-for_window_tilingfloating.t:125: TAP got undef, expected an ARRAY (marks). The test reads $nodes[0]->{nodes}[0]->{marks} on the floating_nodes entry, i3's floating_con wrapper around the client. Sway lists the view container itself in floating_nodes (workspace->floating holds the views, ipc-json.c:534-540; workspace_add_floating, workspace.c:961-967) with type floating_con set on that node (ipc-json.c:714-717), and its nodes[] is empty for a view (883-893), so the lookup is undef. The sway log shows the for_window mark was applied to the floating view, so the TAP does not show whether the rule worked, only that the i3 wrapper shape is absent."
 
 [[classification]]
 file = "274-move-branch-position.t"
 assertion = 3
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/274-move-branch-position.t:150; sway/sway/commands/move.c:112-139,153-165"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'moving con right into a stack placed it below the focused-inactive leaf' failed at i3/t/274-move-branch-position.t:150: TAP got '3', expected '5' (target position vs focused-inactive leaf position + 1; the leaf sits at 4). Moving right into a stack into a branch whose layout is perpendicular to the move descends to the focused-inactive child (move.c:153-165) and then, because that child is a view not a sibling, inserts at container_sibling_index(destination) + offset where offset is 1 only for LEFT/UP (move.c:124-138). For right the offset is 0, so the moved container lands before the focused-inactive child (position 3, leaf pushed to 4); i3 places it after. The left/up cases (assertions 11-16) pass. The offset is explicit in code but no comment or doc states it as a deliberate departure from i3, so it stays a finding."
 
 [[classification]]
 file = "274-move-branch-position.t"
 assertion = 4
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/274-move-branch-position.t:161; sway/sway/commands/move.c:112-139,153-165"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'moving con right into a stack from a branch placed it below the focused-inactive leaf' failed at i3/t/274-move-branch-position.t:161: TAP got '3', expected '5' (target position vs focused-inactive leaf position + 1; the leaf sits at 4). Moving right into a stack from a branch into a branch whose layout is perpendicular to the move descends to the focused-inactive child (move.c:153-165) and then, because that child is a view not a sibling, inserts at container_sibling_index(destination) + offset where offset is 1 only for LEFT/UP (move.c:124-138). For right the offset is 0, so the moved container lands before the focused-inactive child (position 3, leaf pushed to 4); i3 places it after. The left/up cases (assertions 11-16) pass. The offset is explicit in code but no comment or doc states it as a deliberate departure from i3, so it stays a finding."
 
 [[classification]]
 file = "274-move-branch-position.t"
 assertion = 7
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/274-move-branch-position.t:221; sway/sway/commands/move.c:112-139,153-165"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'moving con down into tabs placed it after the focused-inactive tab' failed at i3/t/274-move-branch-position.t:221: TAP got '3', expected '5' (target position vs focused-inactive leaf position + 1; the leaf sits at 4). Moving down into tabs into a branch whose layout is perpendicular to the move descends to the focused-inactive child (move.c:153-165) and then, because that child is a view not a sibling, inserts at container_sibling_index(destination) + offset where offset is 1 only for LEFT/UP (move.c:124-138). For down the offset is 0, so the moved container lands before the focused-inactive child (position 3, leaf pushed to 4); i3 places it after. The left/up cases (assertions 11-16) pass. The offset is explicit in code but no comment or doc states it as a deliberate departure from i3, so it stays a finding."
 
 [[classification]]
 file = "274-move-branch-position.t"
 assertion = 8
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/274-move-branch-position.t:232; sway/sway/commands/move.c:112-139,153-165"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'moving con down into tabs from a branch placed it after the focused-inactive tab' failed at i3/t/274-move-branch-position.t:232: TAP got '3', expected '5' (target position vs focused-inactive leaf position + 1; the leaf sits at 4). Moving down into tabs from a branch into a branch whose layout is perpendicular to the move descends to the focused-inactive child (move.c:153-165) and then, because that child is a view not a sibling, inserts at container_sibling_index(destination) + offset where offset is 1 only for LEFT/UP (move.c:124-138). For down the offset is 0, so the moved container lands before the focused-inactive child (position 3, leaf pushed to 4); i3 places it after. The left/up cases (assertions 11-16) pass. The offset is explicit in code but no comment or doc states it as a deliberate departure from i3, so it stays a finding."
 
 [[classification]]
 file = "279-regress-default-floating-border.t"
@@ -10830,36 +11040,46 @@ reason_verified = true
 file = "293-focus-follows-mouse.t"
 assertion = 6
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "i3/t/293-focus-follows-mouse.t:75; sway/sway/ipc-json.c:534-540,714-717,883-893; sway/sway/tree/workspace.c:961-967"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'second floating on top' failed at i3/t/293-focus-follows-mouse.t:75: TAP got undef, expected '4194309'. The test finds the floating client via $ws->{floating_nodes}->[n]->{nodes}->[0]->{window}, i3's floating_con wrapper. Sway puts the view container itself in floating_nodes (ipc-json.c:534-540; workspace.c:961-967), its 'window' is on that node (ipc-json.c:672-673) and nodes[] is empty (883-893), so the lookup is undef. Same shape as 141-resize.t:424-447. The TAP does not show whether the stacking order matched, only that the i3 wrapper shape is absent."
 
 [[classification]]
 file = "293-focus-follows-mouse.t"
 assertion = 7
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "i3/t/293-focus-follows-mouse.t:76; sway/sway/ipc-json.c:534-540,714-717,883-893; sway/sway/tree/workspace.c:961-967"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'first floating behind' failed at i3/t/293-focus-follows-mouse.t:76: TAP got undef, expected '4194308'. The test finds the floating client via $ws->{floating_nodes}->[n]->{nodes}->[0]->{window}, i3's floating_con wrapper. Sway puts the view container itself in floating_nodes (ipc-json.c:534-540; workspace.c:961-967), its 'window' is on that node (ipc-json.c:672-673) and nodes[] is empty (883-893), so the lookup is undef. Same shape as 141-resize.t:424-447. The TAP does not show whether the stacking order matched, only that the i3 wrapper shape is absent."
 
 [[classification]]
 file = "293-focus-follows-mouse.t"
 assertion = 8
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/293-focus-follows-mouse.t:78-79; sway/sway/input/seatop_default.c:538-612"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'first floating window focused' failed at i3/t/293-focus-follows-mouse.t:79: TAP got 4194310 (the tiling window opened last, focused before the warp), expected 4194308 (first floating). Focus did not move after the test's X11 root warp_pointer(40,40). Sway moves focus on hover only from compositor pointer motion (handle_pointer_motion -> check_focus_follows_mouse, seatop_default.c:538-612; focus_follows_mouse defaults to yes, config.c:272). NOT ESTABLISHED: whether the X11 warp reaches sway's cursor at all (assertion 2, which is headless_xtest_boundary, shows the same symptom; assertions 3-5 are listed unstable); the rerun alone does not separate a harness boundary from a sway behaviour, so per policy it stays in the N-gap finding. FLAG for orchestrator: if assertion 2's boundary is accepted, assertion 8 shares it."
 
 [[classification]]
 file = "293-focus-follows-mouse.t"
 assertion = 9
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "i3/t/293-focus-follows-mouse.t:81; sway/sway/ipc-json.c:534-540,714-717,883-893; sway/sway/tree/workspace.c:961-967"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'second floating still on top' failed at i3/t/293-focus-follows-mouse.t:81: TAP got undef, expected '4194309'. The test finds the floating client via $ws->{floating_nodes}->[n]->{nodes}->[0]->{window}, i3's floating_con wrapper. Sway puts the view container itself in floating_nodes (ipc-json.c:534-540; workspace.c:961-967), its 'window' is on that node (ipc-json.c:672-673) and nodes[] is empty (883-893), so the lookup is undef. Same shape as 141-resize.t:424-447. The TAP does not show whether the stacking order matched, only that the i3 wrapper shape is absent."
 
 [[classification]]
 file = "293-focus-follows-mouse.t"
 assertion = 10
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "i3/t/293-focus-follows-mouse.t:82; sway/sway/ipc-json.c:534-540,714-717,883-893; sway/sway/tree/workspace.c:961-967"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'first floating still behind' failed at i3/t/293-focus-follows-mouse.t:82: TAP got undef, expected '4194308'. The test finds the floating client via $ws->{floating_nodes}->[n]->{nodes}->[0]->{window}, i3's floating_con wrapper. Sway puts the view container itself in floating_nodes (ipc-json.c:534-540; workspace.c:961-967), its 'window' is on that node (ipc-json.c:672-673) and nodes[] is empty (883-893), so the lookup is undef. Same shape as 141-resize.t:424-447. The TAP does not show whether the stacking order matched, only that the i3 wrapper shape is absent."
 
 [[classification]]
 file = "294-focus-order.t"
@@ -11979,50 +12199,64 @@ reason_verified = false
 file = "313-include.t"
 assertion = 23
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_config_include_ipc"
+reason_verified = true
+citation = "i3/src/ipc.c:1100,1292-1302; sway/sway/ipc-json.c:225-239; sway/sway/ipc-server.c:907-915; sway/sway/sway-ipc.7.scd:1000-1027,1058-1070; i3/t/313-include.t:295"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'included config file names correct' got undef, expected [indirect file, variable file]. i3 GET_VERSION adds included_config_file_names (i3/src/ipc.c:1100); sway's ipc_json_get_version emits only major, minor, patch, human_readable, variant and loaded_config_file_name (ipc-json.c:225-239), and sway-ipc.7.scd lists exactly those properties. The 22 include/for_window assertions around it pass, so the include directive itself works."
 
 [[classification]]
 file = "313-include.t"
 assertion = 25
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_config_text"
+reason_verified = true
+citation = "i3/t/313-include.t:330; sway/sway/config.c:732-773; sway/sway/ipc-server.c:907-915; i3/adapters/sway/SocketActivation.pm:170"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'GET_CONFIG returns the top-level config file' got \"xwayland force\\noutput * mode 1280x800\\nfont ...\\n\\nset $vartest special title\\n\\ninclude /tmp/..\\n\\nipc-socket ...\\n\", expected the same text without the first two lines. Those two lines are the adapter's own prelude written into the config copy sway loads (SocketActivation.pm:170); sway's GET_CONFIG returns config->current_config, the bytes it read from that file (config.c:738-772, ipc-server.c:907-915), so a transformed config cannot equal the original. Everything after the prelude is byte-identical to the expected text. Same family and reasoning as 268-ipc-config.t:2."
 
 [[classification]]
 file = "313-include.t"
 assertion = 26
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_config_include_ipc"
+reason_verified = true
+citation = "i3/src/ipc.c:1100,1292-1302; sway/sway/ipc-json.c:225-239; sway/sway/ipc-server.c:907-915; sway/sway/sway-ipc.7.scd:1000-1027,1058-1070; i3/t/313-include.t:333"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'included_configs contains all 3 files' got '0' (included_configs absent, scalar @{undef}), expected '3'. i3 GET_CONFIG adds an included_configs array with path, raw_contents and variable_replaced_contents per file (i3/src/ipc.c:1292-1302); sway's GET_CONFIG builds an object with the single property config (ipc-server.c:907-915) and documents it as such (sway-ipc.7.scd:1058-1070)."
 
 [[classification]]
 file = "313-include.t"
 assertion = 27
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_config_include_ipc"
+reason_verified = true
+citation = "i3/src/ipc.c:1100,1292-1302; sway/sway/ipc-json.c:225-239; sway/sway/ipc-server.c:907-915; sway/sway/sway-ipc.7.scd:1000-1027,1058-1070; i3/t/313-include.t:334"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'included_configs->[0]->{raw_contents} contains top-level config' got undef, expected the top-level config text. i3 GET_CONFIG adds an included_configs array with path, raw_contents and variable_replaced_contents per file (i3/src/ipc.c:1292-1302); sway's GET_CONFIG builds an object with the single property config (ipc-server.c:907-915) and documents it as such (sway-ipc.7.scd:1058-1070)."
 
 [[classification]]
 file = "313-include.t"
 assertion = 28
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_config_include_ipc"
+reason_verified = true
+citation = "i3/src/ipc.c:1100,1292-1302; sway/sway/ipc-json.c:225-239; sway/sway/ipc-server.c:907-915; sway/sway/sway-ipc.7.scd:1000-1027,1058-1070; i3/t/313-include.t:335"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'included_configs->[1]->{raw_contents} contains indirect config' got undef, expected \"for_window [title=\\\"$vartest\\\"] border none\\ninclude <relative>\\n\". i3 GET_CONFIG adds an included_configs array with path, raw_contents and variable_replaced_contents per file (i3/src/ipc.c:1292-1302); sway's GET_CONFIG builds an object with the single property config (ipc-server.c:907-915) and documents it as such (sway-ipc.7.scd:1058-1070)."
 
 [[classification]]
 file = "313-include.t"
 assertion = 29
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_config_include_ipc"
+reason_verified = true
+citation = "i3/src/ipc.c:1100,1292-1302; sway/sway/ipc-json.c:225-239; sway/sway/ipc-server.c:907-915; sway/sway/sway-ipc.7.scd:1000-1027,1058-1070; i3/t/313-include.t:336"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'included_configs->[2]->{raw_contents} contains variable config' got undef, expected \"set $vartest special title\\nfor_window ...\\n\". i3 GET_CONFIG adds an included_configs array with path, raw_contents and variable_replaced_contents per file (i3/src/ipc.c:1292-1302); sway's GET_CONFIG builds an object with the single property config (ipc-server.c:907-915) and documents it as such (sway-ipc.7.scd:1058-1070)."
 
 [[classification]]
 file = "313-include.t"
 assertion = 30
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_config_include_ipc"
+reason_verified = true
+citation = "i3/src/ipc.c:1100,1292-1302; sway/sway/ipc-json.c:225-239; sway/sway/ipc-server.c:907-915; sway/sway/sway-ipc.7.scd:1000-1027,1058-1070; i3/t/313-include.t:342"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'included_configs->[1]->{variable_replaced_contents} contains config with variables replaced' got undef, expected the indirect config with $vartest replaced. i3 GET_CONFIG adds an included_configs array with path, raw_contents and variable_replaced_contents per file (i3/src/ipc.c:1292-1302); sway's GET_CONFIG builds an object with the single property config (ipc-server.c:907-915) and documents it as such (sway-ipc.7.scd:1058-1070)."
 
 [[classification]]
 file = "315-all-criterion.t"
@@ -12280,15 +12514,19 @@ reason_verified = false
 file = "319-gaps.t"
 assertion = 19
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/reload.c:15-52,54-75; sway/sway/tree/workspace.c:224-242; sway/sway/commands/workspace.c:58-124; i3/t/319-gaps.t:231-268"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'left window position and size matches gaps expectations' after 'reload' with new 'workspace 2 gaps inner 16' (issue #5257): $got->{width}=625, $expected->{width}=616, i.e. inner gap stayed 10 on the already-existing workspace 2. Sway copies config->gaps_inner and the matching workspace_config into a workspace only in workspace_create (workspace.c:224-242); reload (reload.c:15-52, idle-scheduled at :71) loads a new config and calls arrange_root, and no code path re-applies gaps_inner/workspace gaps to existing workspaces (every gaps_inner write is in workspace.c:225,242, commands/gaps.c and commands/workspace.c). The earlier assertions 1-12 and 17-18 pass, so gaps themselves work; only the reload pick-up differs."
 
 [[classification]]
 file = "319-gaps.t"
 assertion = 20
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/reload.c:15-52,54-75; sway/sway/tree/workspace.c:224-242; sway/sway/commands/workspace.c:58-124; i3/t/319-gaps.t:231-268"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'right window position and size matches gaps expectations' after the same reload: $got->{width}=625, $expected->{width}=616; same cause as assertion 19 (existing workspace keeps its inner gap of 10, sway has no reload step that re-applies workspace gaps)."
 
 [[classification]]
 file = "320-mouse-bindings.t"
@@ -12435,15 +12673,19 @@ citation = "i3/t/325-layout-percent-and-marks.t:45-49; sway/sway/commands.c:113-
 file = "503-workspace.t"
 assertion = 7
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:538-546,613-677; i3/src/workspace.c:615-654; i3/t/503-workspace.t:99"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'workspace 6:a focused' (the file's second 'workspace next' check; label is a copy-paste in the test) got '1', expected '6:b'. Sway's workspace_get_number parses '6:a' and '6:b' both as number 6 (strtoll, workspace.c:538-546); workspace_next picks the least workspace with a strictly greater number (workspace.c:663), finds none after 6:a, and wraps to the first numbered one ('1', workspace.c:672-676). i3 has an explicit tie rule 'two workspaces with the same number but different names: take the next one' (i3/src/workspace.c:645-648) that sway lacks."
 
 [[classification]]
 file = "503-workspace.t"
 assertion = 8
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:538-546,613-677; i3/src/workspace.c:615-654; i3/t/503-workspace.t:106"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'workspace 6:b focused' got '2', expected '6:c': follows from assertion 7 (focus is on workspace 1 instead of 6:b, so the next step is 2); sway's same-number tie handling is absent (workspace.c:663-676 vs i3/src/workspace.c:645-648). Assertions 9-18, including next_on_output/prev_on_output, pass."
 
 [[classification]]
 file = "504-move-workspace-to-output.t"
@@ -12904,22 +13146,28 @@ reason_verified = false
 file = "506-focus-right.t"
 assertion = 26
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/focus.c:294-338; sway/sway/tree/output.c:316-331; wlroots/types/wlr_output_layout.c:425-482 (c1d38536); i3/src/randr.c:259-318; i3/t/506-focus-right.t:150-151"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'focus on fake-1' got 'fake-2', expected 'fake-1' (three outputs 1080x1920+0+0, 1920x200+1080+1720, 1080x1920+1280+0; 'focus output right' from fake-0). Sway's focus_output uses wlr_output_layout_adjacent_output NEAREST: among outputs entirely to the right it takes the smallest squared distance from the current output's centre (540,960) to the candidate's closest point (wlr_output_layout.c:425-482): fake-2 is 547600, fake-1 (1080,1720) is 869200, so fake-2 wins. i3's get_output_next picks the overlapping output with the smallest x (randr.c:259-318), which is fake-1. Different selection rule, neither source states it as a rejection of i3's; stays a finding."
 
 [[classification]]
 file = "506-focus-right.t"
 assertion = 27
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/focus.c:294-338; sway/sway/tree/output.c:316-331; wlroots/types/wlr_output_layout.c:425-482 (c1d38536); i3/src/randr.c:259-318; i3/t/506-focus-right.t:153-154"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'focus on fake-2' got 'fake-0', expected 'fake-2': follows from assertion 26 (focus is already on fake-2, nothing lies to its right, sway wraps via wlr_output_layout_farthest_output to fake-0, focus.c:310-323). Same selection-rule difference."
 
 [[classification]]
 file = "506-focus-right.t"
 assertion = 30
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/focus.c:294-338; sway/sway/tree/output.c:316-331; wlroots/types/wlr_output_layout.c:425-482 (c1d38536); i3/src/randr.c:259-318; i3/t/506-focus-right.t:162-163"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'focus on fake-2 (wrapping)' got 'fake-1', expected 'fake-2' ('focus output left' from fake-0, assertions 28-29 pass and leave focus on fake-0). Sway wraps with wlr_output_layout_farthest_output (focus.c:310-323), the same centre-to-closest-point distance as above, so the farthest output to the right is fake-1 (869200), not fake-2 (547600); i3 FARTHEST_OUTPUT is by x (randr.c:259-318)."
 
 [[classification]]
 file = "509-workspace_layout.t"
@@ -13081,36 +13329,46 @@ citation = "i3/t/512-move-wraps.t:1"
 file = "513-move-workspace.t"
 assertion = 1
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/ipc-json.c:860-875; i3/src/randr.c:414; i3/adapters/sway/swaycal/Shim.pm:339-362; i3/t/513-move-workspace.t:25-43,59-60"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'workspace 1 and 5 on fake-0' got [] ($got->[0] does not exist), expected ['1','5']. The test's own helper workspaces_per_screen finds each output's i3 'content' child with first { $_->{type} eq 'con' } and reads workspaces from it. Sway's GET_TREE has no such node: an output's children are its workspaces directly (ipc-json.c:860-875), so the helper gets undef and an empty list. The adapter's optional shim replaces only i3test.pm helpers (Shim.pm:339-362), which is why assertions 3-6 (get_ws_content) pass, not the copy of this lookup inside the .t file. Cause is the missing content node, which is a real tree-shape difference; no family covers it yet (candidate for a content-node family, orchestrator decision), so it stays a finding like the same lookup in 504-move-workspace-to-output.t."
 
 [[classification]]
 file = "513-move-workspace.t"
 assertion = 2
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/ipc-json.c:860-875; i3/src/randr.c:414; i3/adapters/sway/swaycal/Shim.pm:339-362; i3/t/513-move-workspace.t:25-43,61"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'workspace 2 on fake-1' got [] ($got->[0] does not exist), expected ['2']: same cause as assertion 1 (the test's local workspaces_per_screen cannot find the output's 'con' content node in sway's tree)."
 
 [[classification]]
 file = "516-move.t"
 assertion = 2
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/move.c:333-345,388-392; i3/t/516-move.t:45"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b (exit 0, fail_assertions reproduce the committed [2,3,4] / [20,22,24,30,32,38]); got 0, expected 1 on right-bottom. Single window alone on right-top with default horizontal workspace layout: 'move down' is not parallel and the container has no parent, so sway wraps the workspace and sets wrapped=true (move.c:333-345); the singleton-to-next-output branch requires !wrapped (move.c:388-392), so the container is promoted inside right-top and stays on the same output (sway-log: 'move down' arranges right-top only, no output change). i3 moves it to the output below."
 
 [[classification]]
 file = "516-move.t"
 assertion = 3
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/move.c:333-345,388-392; i3/t/516-move.t:48"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b (exit 0, fail_assertions reproduce the committed [2,3,4] / [20,22,24,30,32,38]); got 0, expected 1 on left-bottom. Cascade of assertion 2: the window never left right-top, and 'move left' there hits the same wrap-and-promote path (move.c:333-345 then 388-392 gated on !wrapped)."
 
 [[classification]]
 file = "516-move.t"
 assertion = 4
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/move.c:333-345,388-392; i3/t/516-move.t:51"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b (exit 0, fail_assertions reproduce the committed [2,3,4] / [20,22,24,30,32,38]); got 0, expected 1 on left-top. Cascade of assertion 2: the window is still on right-top, and 'move up' there hits the same wrap-and-promote path (move.c:333-345, 388-392)."
 
 [[classification]]
 file = "516-move.t"
@@ -13228,162 +13486,208 @@ reason_verified = false
 file = "528-workspace-next-prev-reversed.t"
 assertion = 9
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:35"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace 8:b focused' after 'workspace next' got 'B' expected '8:b' (t line 35). first divergence: from 8:a (number 8) workspace_next needs n < wsn strictly (workspace.c:663), so same-number 8:b..8:e are skipped; the numbered scan finds none above 8 and wraps to the first named workspace (B, workspace.c:675). i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 10
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:35"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace 8:c focused' after 'workspace next' got 'F' expected '8:c' (t line 35). cascade of assertion 9: sway has left the 8:x sequence, so each later step lands one stage ahead of i3's order. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 11
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:35"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace 8:d focused' after 'workspace next' got 'C' expected '8:d' (t line 35). cascade of assertion 9: sway has left the 8:x sequence, so each later step lands one stage ahead of i3's order. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 12
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:35"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace 8:e focused' after 'workspace next' got 'A' expected '8:e' (t line 35). cascade of assertion 9: sway has left the 8:x sequence, so each later step lands one stage ahead of i3's order. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 13
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:35"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace B focused' after 'workspace next' got 'D' expected 'B' (t line 35). cascade of assertion 9: sway has left the 8:x sequence, so each later step lands one stage ahead of i3's order. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 14
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:35"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace F focused' after 'workspace next' got 'E' expected 'F' (t line 35). cascade of assertion 9: sway has left the 8:x sequence, so each later step lands one stage ahead of i3's order. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 15
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:35"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace C focused' after 'workspace next' got '1' expected 'C' (t line 35). cascade of assertion 9: sway has left the 8:x sequence, so each later step lands one stage ahead of i3's order. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 16
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:35"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace A focused' after 'workspace next' got '2' expected 'A' (t line 35). cascade of assertion 9: sway has left the 8:x sequence, so each later step lands one stage ahead of i3's order. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 17
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:35"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace D focused' after 'workspace next' got '3' expected 'D' (t line 35). cascade of assertion 9: sway has left the 8:x sequence, so each later step lands one stage ahead of i3's order. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 18
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:35"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace E focused' after 'workspace next' got '4' expected 'E' (t line 35). cascade of assertion 9: sway has left the 8:x sequence, so each later step lands one stage ahead of i3's order. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 19
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:35"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace 1 focused' after 'workspace next' got '5' expected '1' (t line 35). cascade of assertion 9: sway has left the 8:x sequence, so each later step lands one stage ahead of i3's order. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 28
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:47"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace 8:d focused' after 'workspace prev' got '7' expected '8:d' (t line 47). first divergence: from 8:e workspace_prev needs wsn < n strictly (workspace.c:598), so same-number 8:d..8:a are skipped and the closest lower numbered workspace 7 is chosen. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 29
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:47"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace 8:c focused' after 'workspace prev' got '6' expected '8:c' (t line 47). cascade of assertion 28: sway has skipped 8:d..8:a, so each later step lands one stage ahead of i3's order. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 30
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:47"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace 8:b focused' after 'workspace prev' got '5' expected '8:b' (t line 47). cascade of assertion 28: sway has skipped 8:d..8:a, so each later step lands one stage ahead of i3's order. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 31
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:47"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace 8:a focused' after 'workspace prev' got '4' expected '8:a' (t line 47). cascade of assertion 28: sway has skipped 8:d..8:a, so each later step lands one stage ahead of i3's order. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 32
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:47"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace 7 focused' after 'workspace prev' got '3' expected '7' (t line 47). cascade of assertion 28: sway has skipped 8:d..8:a, so each later step lands one stage ahead of i3's order. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 33
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:47"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace 6 focused' after 'workspace prev' got '2' expected '6' (t line 47). cascade of assertion 28: sway has skipped 8:d..8:a, so each later step lands one stage ahead of i3's order. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 34
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:47"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace 5 focused' after 'workspace prev' got '1' expected '5' (t line 47). cascade of assertion 28: sway has skipped 8:d..8:a, so each later step lands one stage ahead of i3's order. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 35
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:47"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace 4 focused' after 'workspace prev' got 'E' expected '4' (t line 47). cascade of assertion 28: sway has skipped 8:d..8:a, so each later step lands one stage ahead of i3's order. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 36
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:47"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace 3 focused' after 'workspace prev' got 'D' expected '3' (t line 47). cascade of assertion 28: sway has skipped 8:d..8:a, so each later step lands one stage ahead of i3's order. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 37
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:47"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace 2 focused' after 'workspace prev' got 'A' expected '2' (t line 47). cascade of assertion 28: sway has skipped 8:d..8:a, so each later step lands one stage ahead of i3's order. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "528-workspace-next-prev-reversed.t"
 assertion = 38
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-610,613-677; i3/t/528-workspace-next-prev-reversed.t:47"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, outcome identical to committed (fail 9-19,28-38 of 38): 'workspace 1 focused' after 'workspace prev' got 'C' expected '1' (t line 47). cascade of assertion 28: sway has skipped 8:d..8:a, so each later step lands one stage ahead of i3's order. i3 orders same-number workspaces by output then creation; sway workspace_next/prev compare only the leading number, then named ones by output order."
 
 [[classification]]
 file = "531-fullscreen-on-given-output.t"
 assertion = 2
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/desktop/xwayland.c:532; sway/sway/tree/view.c:833-838; sway/sway/tree/container.c:1308-1315; i3/t/531-fullscreen-on-given-output.t:57"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b: 'not ok 2 - second window spans the second output', got rect x=0, expected x=1024 (same fail set as committed: 2 and 3). Sway's XWayland map path passes a NULL fullscreen output to view_map (xwayland.c:532), so the X11 window's requested geometry is ignored and both windows land on the focused workspace (view.c:838 select_workspace); fullscreening the second then disables the first on that workspace (container.c:1311-1314), so the second spans output 1 at x=0 and assertion 3 (first window fullscreen) fails for the same cause. Only the xdg path honours a requested fullscreen output (view.c:833-836). No rejecting handler or documented design: stays N-gap."
 
 [[classification]]
 file = "531-fullscreen-on-given-output.t"
@@ -13396,190 +13700,244 @@ reason_verified = true
 file = "535-workspace-next-prev.t"
 assertion = 9
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:35"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace next' got 'B' expected '8:b' (t/535 line 35). Root cause at 9 (8:a -> next): i3 returns the next workspace with the same number (i3 workspace.c:643-648), sway picks only a strictly greater number, finds none and wraps to the first named workspace (workspace.c:613-678); later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 10
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:35"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace next' got 'F' expected '8:c' (t/535 line 35). Cascade: later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 11
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:35"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace next' got 'C' expected '8:d' (t/535 line 35). Cascade: later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 12
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:35"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace next' got 'A' expected '8:e' (t/535 line 35). Cascade: later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 13
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:35"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace next' got 'D' expected 'B' (t/535 line 35). Cascade: later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 14
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:35"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace next' got 'E' expected 'F' (t/535 line 35). Cascade: later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 15
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:35"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace next' got '1' expected 'C' (t/535 line 35). Cascade: later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 16
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:35"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace next' got '2' expected 'A' (t/535 line 35). Cascade: later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 17
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:35"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace next' got '3' expected 'D' (t/535 line 35). Cascade: later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 18
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:35"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace next' got '4' expected 'E' (t/535 line 35). Cascade: later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 19
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:35"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace next' got '5' expected '1' (t/535 line 35). Cascade: later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 28
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:47"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace prev' got '7' expected '8:d' (t/535 line 47). Root cause at 28 (8:e -> prev): i3 returns the previous workspace with the same number (i3 workspace.c:730-735), sway picks only a strictly smaller number and jumps to 7 (workspace.c:548-611); later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 29
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:47"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace prev' got '6' expected '8:c' (t/535 line 47). Cascade: later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 30
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:47"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace prev' got '5' expected '8:b' (t/535 line 47). Cascade: later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 31
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:47"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace prev' got '4' expected '8:a' (t/535 line 47). Cascade: later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 32
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:47"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace prev' got '3' expected '7' (t/535 line 47). Cascade: later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 33
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:47"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace prev' got '2' expected '6' (t/535 line 47). Cascade: later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 34
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:47"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace prev' got '1' expected '5' (t/535 line 47). Cascade: later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 35
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:47"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace prev' got 'E' expected '4' (t/535 line 47). Cascade: later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 36
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:47"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace prev' got 'D' expected '3' (t/535 line 47). Cascade: later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 37
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:47"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace prev' got 'A' expected '2' (t/535 line 47). Cascade: later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "535-workspace-next-prev.t"
 assertion = 38
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/workspace.c:548-611,613-678; i3/src/workspace.c:581-659,665-746; i3/t/535-workspace-next-prev.t:47"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b: 22 fails, same assertions as committed. 'workspace prev' got 'C' expected '1' (t/535 line 47). Cascade: later rows in this run inherit the wrong starting workspace."
 
 [[classification]]
 file = "541-resize-set-tiling.t"
 assertion = 12
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "i3/t/541-resize-set-tiling.t:88-92; sway/sway/ipc-json.c:543-564,816-825; sway/sway/sway-ipc.7.scd:337-339"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, sway pin 88869399: TAP 12 'bottom window got 200 px' fails, cmp_float diff 27 (expected rect.height 200 after 'resize set height 200 px'). The tiled container is resized to 200 px, but ipc_json_describe_node subtracts the title-bar height (deco_rect, border normal) from the container rect.height. Sway documents rect as excluding decorations; no source shows a rejecting handler, so the row stays a finding."
 
 [[classification]]
 file = "541-resize-set-tiling.t"
 assertion = 19
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "i3/t/541-resize-set-tiling.t:121-125; sway/sway/ipc-json.c:543-564,816-825; sway/sway/commands/resize.c:306-335"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, sway pin 88869399: TAP 19 'bottom-right window got 135 px height' fails, diff 27 (width 155 in TAP 18 passes). 'resize set 155 px 135 px' resizes pending height to 135, but IPC rect.height has the title-bar height removed (ipc-json.c:816-825). Same cause as assertion 12."
 
 [[classification]]
 file = "541-resize-set-tiling.t"
 assertion = 20
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "i3/t/541-resize-set-tiling.t:128-132; sway/sway/commands/resize.c:293-300,19-30,106-115; sway/sway/sway.5.scd:327-333"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, sway pin 88869399: TAP 20 'bottom-right window got 201 px width' fails, diff 46 (= 201-155: width unchanged from the previous step). 'resize set 201 131' has no unit; sway treats a unit-less tiled amount as ppt (resize.c:293-300, documented in sway.5.scd:327-333), i3 treats it as px. 201 ppt then makes container_resize_tiled bail out at its MIN_SANE_W check, so nothing changes. Documented sway choice, but no rejecting handler or missing command: candidate for a new N-i3 family, kept in N-gap by default (orchestrator decides)."
 
 [[classification]]
 file = "541-resize-set-tiling.t"
 assertion = 21
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_command_semantics_finding"
+reason_verified = true
+citation = "i3/t/541-resize-set-tiling.t:128-133; sway/sway/commands/resize.c:314-335,138-146; sway/sway/sway.5.scd:327-333"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, sway pin 88869399: TAP 21 'bottom-right window got 131 px height' fails, diff 23 (height still the 135 px of the previous step minus the title bar, i.e. unchanged). Unit-less '131' is read as ppt by sway (resize.c:314-322), rejected by the MIN_SANE_H check in container_resize_tiled; i3 reads px. Same cause as assertion 20."
 
 [[classification]]
 file = "541-resize-set-tiling.t"
 assertion = 24
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_ipc_semantics_finding"
+reason_verified = true
+citation = "i3/t/541-resize-set-tiling.t:136-142; sway/sway/ipc-json.c:543-564,816-825"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, sway pin 88869399: TAP 24 'bottom-right window got 200 px height' fails, diff 27 after 'resize set 75 ppt 200 px' (the ppt width and 25/75 percent assertions 22-23 pass). Height is resized to 200 px but IPC rect.height excludes the title bar (ipc-json.c:816-825). Same cause as assertion 12."
 
 [[classification]]
 file = "543-move-workspace-to-multiple-outputs.t"
@@ -14382,22 +14740,28 @@ citation = "i3/t/551-net-wm-state-maximized.t:45-56; sway/sway/desktop/xwayland.
 file = "553-popup_during_fullscreen.t"
 assertion = 9
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/553-popup_during_fullscreen.t:80-87; sway/sway/tree/view.c:919-926,945; sway/sway/tree/view.c:697-709"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, sway pin 88869399: TAP 9 'fullscreen window focused' fails: got 4194305 (the transient popup) expected 4194304 (w1). With popup_during_fullscreen leave_fullscreen, view_map exits fullscreen of the parent (view.c:919-926) before should_focus (view.c:945), so the popup is focused. i3's test calls this 'arguably a bug' (line 86). Sway documents only 'exit fullscreen, render the dialog' (sway.5.scd:853-857); no deliberate focus rule."
 
 [[classification]]
 file = "553-popup_during_fullscreen.t"
 assertion = 16
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/553-popup_during_fullscreen.t:112-119; sway/sway/tree/view.c:697-709; sway/sway/tree/container.c:1566-1571"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, sway pin 88869399: TAP 16 'popup still focused' fails: got 4194304 (w1) expected 4194305 (popup); TAP 14 'popup focused' (unstable-listed, not a row here) fails the same way. should_focus returns false whenever the workspace has a fullscreen view (view.c:707-710), with no exception for transient popups, so under the default smart mode the popup never takes focus even though container_is_transient_for shows it above the fullscreen window. Behavioural difference; no design citation."
 
 [[classification]]
 file = "553-popup_during_fullscreen.t"
 assertion = 19
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "i3/t/553-popup_during_fullscreen.t:128-141; sway/sway/commands/popup_during_fullscreen.c:12-21; sway/sway/tree/view.c:697-709"
+note = "Rerun 2026-10-26, oracle 8b028185, image rc-1fd3c25b, sway pin 88869399: TAP 19 'popup focused' fails: got 4194304 (w1) expected 4194305 (popup). Config 'popup_during_fullscreen all' is rejected by sway (sway-log-3: \"Expected 'popup_during_fullscreen smart|ignore|leave_fullscreen'\"; popup_during_fullscreen.c:12-21), so sway stays at its default smart. The failure is not due to the rejection alone: smart also leaves the popup unfocused (should_focus, view.c:707-710; assertions 14/16), so the row stays a tree finding; the missing 'all' value is recorded here as a secondary cause."
 
 [[classification]]
 file = "554-commands-crash-for-window.t"
@@ -14662,54 +15026,70 @@ reason_verified = false
 file = "100-fullscreen.t"
 assertion = 17
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_xwayland_geometry_finding"
+reason_verified = true
+citation = "sway/sway/tree/arrange.c:264-322; sway/sway/tree/view.c:1195-1199; wlroots/xwayland/xwm.c:1398-1406 (c1d38536); i3/src/x.c:1223-1228; i3/t/100-fullscreen.t:122-134"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'Window got repositioned' failed (no got/expected in TAP; the assertion is ok(!eq_hash($new_rect,$original_rect))). A diagnostic rerun of the same file with a diag line before the assertion printed new=0,0,30,30 orig=0,0,30,30, i.e. the second window opened under a fullscreen window was never moved or resized. While workspace->fullscreen is set, arrange_workspace arranges only the fullscreen container and skips the tiling children and floating list (arrange.c:310-322), so the new view is never given a rect and never configured; view_is_visible only reports it hidden in sway's own tree (view.c:1195-1199). i3 unmaps the frame of a container hidden by fullscreen (x.c:1223-1228), whereas sway keeps the X window mapped. Same cause as the already-reviewed assertion 16 (X window stays mapped: xwm.c:1398-1406 maps on MapRequest unconditionally; the rerun printed mapped=1). This is a behavioural consequence, not a documented choice, so it stays a finding."
 
 [[classification]]
 file = "319-gaps.t"
 assertion = 13
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/tree/view.c:408-420; sway/sway/tree/arrange.c:199-210; sway/sway/commands/hide_edge_borders.c:15-18; sway/sway/sway.5.scd:791-796; i3/src/render.c:437-454; i3/t/319-gaps.t:168-198"
+note = "Rerun 2026-10-26 at oracle 8b028185, image rc-1fd3c25b, sway 88869399/wlroots c1d38536 (fail set matches the committed result): 'left window position and size matches gaps expectations' (stacked container inside splith, issue #5261): $got->{y}=37, $expected->{y}=10. After the helper is destroyed the stacked container holds one window with border pixel 0. i3 adds the stack decoration only if p->children > 1 or the border is not pixel/none (render.c:450-453), so the lone window stays at y=10. Sway keeps the title bar of a lone stacked/tabbed child unless config->hide_lone_tab is set (view.c:408-420 offsets by titlebar_height*siblings->length, 27 px here), and that flag is set only by the opt-in 'hide_edge_borders --i3' (hide_edge_borders.c:15-18, documented in sway.5.scd:791-796), which the i3 test config does not use. Documented sway behaviour with an opt-in i3 mode, but no source states the default as a rejection of i3's semantics, and the test config does not request the opt-in; stays a finding."
 
 [[classification]]
 file = "524-move.t"
 assertion = 20
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/move.c:333-345,388-411; i3/t/524-move.t:69"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b (exit 0, fail_assertions reproduce the committed [2,3,4] / [20,22,24,30,32,38]); got 1, expected 0 on right-top. '[class=first] move down' leaves the first window on right-top: sway-log shows a single 'move down' that arranges right-top only, with no output change, while the second window's earlier 'move down, move down' did cross to right-bottom. Source: a window that has a parent (the stacked/wrapper container) crosses outputs only via the singleton branch (move.c:388-392, requires !wrapped, parent without parent, parent with exactly one child); otherwise the promote branch (move.c:393-411) keeps it on the same workspace. i3 moves it to right-bottom."
 
 [[classification]]
 file = "524-move.t"
 assertion = 22
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/move.c:333-345,388-411; i3/t/524-move.t:70"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b (exit 0, fail_assertions reproduce the committed [2,3,4] / [20,22,24,30,32,38]); got 1, expected 2 on right-bottom. Cascade of assertion 20: the first window never left right-top (same promote path, move.c:388-411)."
 
 [[classification]]
 file = "524-move.t"
 assertion = 24
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/move.c:333-345,388-411; i3/t/524-move.t:74"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b (exit 0, fail_assertions reproduce the committed [2,3,4] / [20,22,24,30,32,38]); got 0, expected 1 on right-bottom. Cascade of assertion 20: right-bottom should still hold the first window, which stayed on right-top."
 
 [[classification]]
 file = "524-move.t"
 assertion = 30
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/move.c:333-345,388-411; i3/t/524-move.t:80"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b (exit 0, fail_assertions reproduce the committed [2,3,4] / [20,22,24,30,32,38]); got 1, expected 2 on left-bottom. Cascade of assertion 20: '[class=first] move left' only promotes it within right-top (sway-log arranges right-top only; move.c:388-411)."
 
 [[classification]]
 file = "524-move.t"
 assertion = 32
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/move.c:333-345,388-411; i3/t/524-move.t:84"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b (exit 0, fail_assertions reproduce the committed [2,3,4] / [20,22,24,30,32,38]); got 0, expected 1 on left-bottom. Cascade of assertion 20: left-bottom should still hold the first window, which never left right-top."
 
 [[classification]]
 file = "524-move.t"
 assertion = 38
 outcome = "fail"
-reason = "unclassified"
-reason_verified = false
+reason = "sway_tree_semantics_finding"
+reason_verified = true
+citation = "sway/sway/commands/move.c:333-345,388-411; i3/t/524-move.t:90"
+note = "2026-10-26 rerun at oracle 8b028185, image rc-1fd3c25b (exit 0, fail_assertions reproduce the committed [2,3,4] / [20,22,24,30,32,38]); got 1, expected 2 on left-top. Cascade of assertion 20: '[class=first] move up' only promotes it within right-top (sway-log arranges right-top only), so left-top holds only the second window."

@@ -1,49 +1,59 @@
-# i3 test oracle
+# Run and read the i3 test oracle
 
-`i3/t/` contains unchanged files from i3 commit `9be3249ac5b377ed3270e36bca83df53d8023337`. Compare a file with `testcases/t/` at that revision before accepting an update. The original licence and author notice are in [`LICENSE`](LICENSE).
+`i3/t/` contains unchanged tests from i3 commit
+`9be3249ac5b377ed3270e36bca83df53d8023337`. Keep its [licence and author notice](LICENSE).
+[Run the suite](../docs/reproducing.md) or read [adapter setup](../docs/adding-a-compositor.md).
 
-## Result schema
+## Check a result file
 
-A result file has a `[files]` entry for every vendored `.t` file. Each entry records:
+```sh
+./contrib/coverage-report i3/results/sway-1.12.toml --check
+```
 
-- `assertions`: the test's authoritative TAP plan.
-- `tap_plan`: the plan captured from the run, or `"none"` if the test emitted no plan.
-- `pass`: the number of passing assertions.
-- `skip`: one table per skipped assertion.
-- `fail`: assertions that ran and did not pass.
-- `unreached`: assertions the run did not reach.
-- `unstable_assertions`: assertion numbers whose outcomes differed between
-  repeated runs. They remain in the raw result but are omitted from stable
-  pass/skip/fail counts.
-- `flaky = true`: the file's TAP plan differed between runs or the file aborted
-  at a different point, so assertion-level comparison is not valid.
-- `survived = true`: a zero-assertion crash-regression file reached its `1..0`
-  plan without the compositor or test process failing. This is distinct from a
-  file-level skip: the test ran and its survival condition passed.
+Each `i3/results/<snapshot>.toml` is raw runner output. `pins.toml` names the
+snapshot; `[run]` records the exact compositor commit. `[files]` has an entry
+for every vendored `.t` file, and its counts must cover the full plan.
 
-Each result is `i3/results/<snapshot>.toml`, named in `pins.toml` `[snapshot]`; for example, `i3/results/sway-1.12.toml` is the i3 suite run on sway 1.12. The exact commit is in the file's `[run]` section. The counts must cover the full plan. Run `contrib/coverage-report i3/results/<snapshot>.toml --check` to validate a file.
+| Field | Meaning |
+| --- | --- |
+| `assertions` | Authoritative TAP assertion plan from the test |
+| `tap_plan` | Captured plan, or `"none"` if none was emitted |
+| `pass` | Passing assertions |
+| `skip` | One table per skipped assertion |
+| `fail` | Assertions that ran and failed |
+| `unreached` | Assertions the run did not reach |
+| `unstable_assertions` | Assertion numbers that differed across repeated runs; kept raw, excluded from stable counts |
+| `flaky = true` | The plan differed or the abort point moved, preventing assertion-level comparison |
+| `survived = true` | A zero-assertion crash-regression file reached `1..0` without compositor or test failure; it ran, rather than being skipped |
 
-## Abort-cause evidence
+See [unstable assertions and bucket terms](../docs/results.md#how-to-read-a-block).
 
-`abort-causes/<snapshot>.toml` records why unreached assertions stopped, for
-rows whose classification is unverified. Each `[[file]]` entry is one focused
-rerun of that test file on the pinned compositor in the pinned container. It
-records the committed first unreached assertion, where the rerun stopped, the
-runner exit code, the verified `cause` (`kill`, `xtest`, or `other`), and an
-excerpt of the TAP and compositor log at the abort with its SHA-256. The file
-header defines each cause's signature, and each excerpt must show it.
-`contrib/validate` checks the entries against the committed result and
-classification. It requires an entry for every file whose unverified unreached
-rows stop at the same first assertion as swayward's verified kill or XTEST
-row, and it checks the `docs/results.md` sway N-x11-all/N-harness split against the
-evidence. Bucket rules move a file's
-unverified unreached rows to N-x11-all only for a `kill` or `xtest` cause; any
-other row stays N-harness. Evidence never edits results or classifications.
+## Explain an abort without changing the measurement
 
-## Skip policy
+`abort-causes/<snapshot>.toml` holds evidence for unverified unreached rows.
+Each `[[file]]` is a focused rerun on the pinned compositor in the pinned container:
 
-A skip is a measured difference, not a hidden failure. Each skip names the assertion, gives a reason, and cites the relevant i3 or sway source line. Use a skip only when the compositor cannot or deliberately does not satisfy the test's premise. Keep a failed or unreached assertion as `fail` or `unreached` until the reason has been checked.
+- It records the committed first unreached assertion, rerun stop point, runner
+  exit, and verified cause (`kill`, `xtest`, or `other`).
+- It includes TAP and compositor-log excerpts with SHA-256; each excerpt must
+  show the signature defined in the file header.
+- `contrib/validate` checks the entries against results and classifications.
+  Evidence never changes either file.
 
-Do not edit `i3/t/` to turn a failure into a pass. If an adapter cannot establish an X11 or process-lifecycle premise, record that limit in the result instead of changing the assertion.
+Validation requires evidence when an unverified file stops at the same first
+assertion as swayward's verified kill or XTEST row. It also checks the sway
+N-x11-all/N-harness split in `docs/results.md` against that evidence.
 
-`unvendored.toml` records upstream test files that are not present and why. It prevents a partial vendored set from being presented as the complete i3 suite.
+Only `kill` or `xtest` moves a file's unverified unreached rows to N-x11-all;
+other rows stay N-harness. [Result terms](../docs/results.md#how-to-read-a-block) define both buckets.
+
+## Review a skip or update a test
+
+- A skip is a measured difference. Name the assertion, reason and i3 or sway
+  source line; use it only when the compositor cannot or deliberately does
+  not satisfy the premise. Keep `fail` or `unreached` until reviewed.
+- Never edit `i3/t/` to make a failure pass. Record X11 or process-lifecycle
+  limits rather than changing assertions. Follow the [adapter and skip rules](../CONTRIBUTING.md#keep-test-rules-the-same-for-every-compositor).
+- Before accepting a test update, compare it with upstream `testcases/t/`
+  at the pinned i3 revision. `unvendored.toml` records missing upstream files
+  and reasons, so a partial set cannot be presented as the whole suite.

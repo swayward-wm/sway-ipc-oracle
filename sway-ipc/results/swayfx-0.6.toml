@@ -5,17 +5,17 @@
 
 [run]
 compositor = "swayfx"
-version = "0.6-fd71a6bd (Oct 18 2026, branch 'HEAD')"
+version = "0.6-fd71a6bd (Nov 21 2026, branch 'HEAD')"
 commit = "fd71a6bdc061bd633b488ae7b83e8a6981d22f86"
-inputs = "d2d284cecf2fd4b157c44c30fdb0278b5ac58f6d8acc27fd6e1f77ac6a761f35"
-date = "2026-10-20"
+inputs = "0b9206a160390e59e5f15e8f66e7b856bd6fd7e7f7a0d0791fddc1b0f85038bd"
+date = "2026-11-22"
 normalization = "sway-ipc/normalize.toml"
 normalization_rules = ["runtime-identifiers", "focus-by-child-position", "rectangle-semantics", "backend-output-reference", "backend-output-properties", "backend-output-capabilities", "version-runtime-identity", "backend-output-name", "floating-rect-run-variance", "tree-rect-tolerance", "floating-percent-run-variance", "floating-descendant-percent-run-variance", "hidden-scratchpad-descendant-rect", "hidden-scratchpad-descendant-percent", "tree-percent-tolerance", "focus-child-position-comparison", "backend-mode-array-length", "swayfx-version-original-version", "swayfx-output-layer-shell-surfaces"]
 scenario_isolation = "fresh compositor per scenario"
 difference_fields = 1
-match = 4916
+match = 4985
 mismatch = 1
-unstable = 0
+unstable = 1
 not_applicable = 0
 
 [[result]]
@@ -3415,6 +3415,356 @@ verdict = "match"
 
 [[result]]
 scenario = "disabled_output_evacuation"
+request = "commands"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle"
+request = "tree"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle"
+request = "workspaces"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle"
+request = "outputs"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle"
+request = "binding_modes"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle"
+request = "seats"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle"
+request = "inputs"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle"
+request = "version"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle"
+request = "commands"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "tree"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "workspaces"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "outputs"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "binding_modes"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "seats"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "inputs"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "version"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "commands"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "tree"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "workspaces"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "outputs"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "binding_modes"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "seats"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "inputs"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "version"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "commands"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "tree"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "workspaces"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "outputs"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "binding_modes"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "seats"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "inputs"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "version"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "commands"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "tree"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "workspaces"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "outputs"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "binding_modes"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "seats"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "inputs"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "version"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "commands"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "tree"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "workspaces"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "outputs"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "binding_modes"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "seats"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "inputs"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "version"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "commands"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "tree"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "workspaces"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "outputs"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "binding_modes"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "seats"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "inputs"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "version"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
 request = "commands"
 verdict = "match"
 
@@ -23902,7 +24252,7 @@ verdict = "match"
 [[result]]
 scenario = "criteria_focus_floater_leaves_fullscreen_before"
 request = "tree"
-verdict = "match"
+verdict = "unstable"
 
 [[result]]
 scenario = "criteria_focus_floater_leaves_fullscreen_before"

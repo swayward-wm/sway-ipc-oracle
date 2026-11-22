@@ -1,0 +1,4 @@
+dropped keys: ['foreign_toplevel_identifier', 'id', 'pid', 'window']; focus ints -> sorted node-id index
+seeds compared: 295; seeds with any difference: 0; steps compared: 11800; steps with a difference: 0
+first differing path, indices folded (seeds):
+first differing path per seed:

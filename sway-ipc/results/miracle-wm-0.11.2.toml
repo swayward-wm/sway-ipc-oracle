@@ -7,17 +7,17 @@
 compositor = "miracle-wm"
 version = "0.9.1"
 commit = "2df22b0e959f44e2e8cb91060f7f53c2ae8347a2"
-inputs = "641d3ae567a646846fd5609554af30cdb9a939508ef7c14f6260b7af8181d150"
-date = "2026-10-21"
+inputs = "99db20951bd2080362d1dc66740a53ab60601047996674cbb4f8a7855776af70"
+date = "2026-11-22"
 normalization = "sway-ipc/normalize.toml"
 normalization_rules = ["runtime-identifiers", "focus-by-child-position", "rectangle-semantics", "backend-output-reference", "backend-output-properties", "backend-output-capabilities", "version-runtime-identity", "backend-output-name", "floating-rect-run-variance", "tree-rect-tolerance", "floating-percent-run-variance", "floating-descendant-percent-run-variance", "hidden-scratchpad-descendant-rect", "hidden-scratchpad-descendant-percent", "tree-percent-tolerance", "focus-child-position-comparison", "backend-mode-array-length"]
 scenario_isolation = "fresh compositor per scenario"
 adapted = ["miracle-config-yaml", "miracle-outputs-virtual", "miracle-reset-client-close"]
-difference_fields = 197
-match = 1103
-mismatch = 2768
-unstable = 50
-not_applicable = 964
+difference_fields = 193
+match = 1123
+mismatch = 2854
+unstable = 0
+not_applicable = 978
 crash = 32
 
 [[result]]
@@ -2451,13 +2451,13 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "two_workspaces"
 request = "tree"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes: length 1 != 2", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
 scenario = "two_workspaces"
 request = "workspaces"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$workspaces[0]: keys differ", "$workspaces[1]: keys differ"]
 
 [[result]]
@@ -2508,13 +2508,13 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "numbered_sparse"
 request = "tree"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes: length 1 != 3", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
 scenario = "numbered_sparse"
 request = "workspaces"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$workspaces[0]: keys differ", "$workspaces[1]: keys differ", "$workspaces[2]: keys differ"]
 
 [[result]]
@@ -3944,6 +3944,412 @@ verdict = "not applicable"
 reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has no case in src/ipc_message_handler.cpp:65-260 and the connection is closed without a reply; wiki/docs/ipc/index.md lists it as not yet implemented"
 
 [[result]]
+scenario = "output_toggle"
+request = "tree"
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes[0]: keys differ", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '3'", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1]: keys differ", "$tree.nodes[1].focused: False != True", "$tree.nodes[1].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].focused: False != True", "$tree.nodes[1].nodes[0].layout: 'splitv' != 'splith'", "$tree.nodes[1].nodes[0].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].nodes[0].idle_inhibitors.user: 'none' != 'visible'", "$tree.nodes[1].nodes[0].nodes[0].name: 'fixture-1' != ''", "$tree.nodes[1].nodes[0].nodes[0].shell: 'xdg_shell' != 'miracle-wm'", "$tree.nodes[1].nodes[0].nodes[0].window: type NoneType != int", "$tree.nodes[1].nodes[0].orientation: 'vertical' != 'none'", "$tree.nodes[1].scale_filter: 'nearest' != 'linear'"]
+
+[[result]]
+scenario = "output_toggle"
+request = "workspaces"
+verdict = "mismatch"
+differences = ["$workspaces: length 1 != 2", "$workspaces[0]: keys differ"]
+
+[[result]]
+scenario = "output_toggle"
+request = "outputs"
+verdict = "mismatch"
+differences = ["$outputs[0]: keys differ", "$outputs[0].current_workspace: '1' != '3'", "$outputs[0].name: '__oracle_normalized__' != 'Virtual-1'", "$outputs[0].subpixel_hinting: 'unknown' != 'rgb'", "$outputs[1]: keys differ", "$outputs[1].active: False != True", "$outputs[1].current_workspace: type NoneType != str", "$outputs[1].dpms: False != True", "$outputs[1].name: '__oracle_normalized__' != 'Virtual-2'", "$outputs[1].power: False != True"]
+
+[[result]]
+scenario = "output_toggle"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle"
+request = "binding_modes"
+verdict = "mismatch"
+differences = ["$binding_modes: length 2 != 5"]
+
+[[result]]
+scenario = "output_toggle"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle"
+request = "version"
+verdict = "mismatch"
+differences = ["$version: keys differ"]
+
+[[result]]
+scenario = "output_toggle"
+request = "commands"
+verdict = "mismatch"
+differences = ["$commands[2].reply[0]: keys differ", "$commands[2].reply[0].success: True != False"]
+
+[[result]]
+scenario = "output_toggle"
+request = "inputs"
+verdict = "not applicable"
+reason = "miracle-wm 0.11.2 does not implement GET_INPUTS: the request type has no case in src/ipc_message_handler.cpp:65-260 and the connection is closed without a reply; wiki/docs/ipc/index.md lists it as not yet implemented"
+
+[[result]]
+scenario = "output_toggle"
+request = "seats"
+verdict = "not applicable"
+reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has no case in src/ipc_message_handler.cpp:65-260 and the connection is closed without a reply; wiki/docs/ipc/index.md lists it as not yet implemented"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "tree"
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes: length 3 != 2", "$tree.nodes[0]: keys differ", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '3'", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1]: keys differ", "$tree.nodes[1].focused: False != True", "$tree.nodes[1].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].focused: False != True", "$tree.nodes[1].nodes[0].layout: 'splitv' != 'splith'", "$tree.nodes[1].nodes[0].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].nodes[0].idle_inhibitors.user: 'none' != 'visible'", "$tree.nodes[1].nodes[0].nodes[0].name: 'fixture-1' != ''", "$tree.nodes[1].nodes[0].nodes[0].shell: 'xdg_shell' != 'miracle-wm'", "$tree.nodes[1].nodes[0].nodes[0].window: type NoneType != int", "$tree.nodes[1].nodes[0].orientation: 'vertical' != 'none'", "$tree.nodes[1].scale_filter: 'nearest' != 'linear'"]
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "workspaces"
+verdict = "mismatch"
+differences = ["$workspaces[0]: keys differ", "$workspaces[1]: keys differ", "$workspaces[1].name: '2' != '3'", "$workspaces[1].num: 2 != 3"]
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "outputs"
+verdict = "mismatch"
+differences = ["$outputs[0]: keys differ", "$outputs[0].current_workspace: '1' != '3'", "$outputs[0].name: '__oracle_normalized__' != 'Virtual-1'", "$outputs[0].subpixel_hinting: 'unknown' != 'rgb'", "$outputs[1]: keys differ", "$outputs[1].current_workspace: '2' != '1'", "$outputs[1].name: '__oracle_normalized__' != 'Virtual-2'", "$outputs[1].subpixel_hinting: 'unknown' != 'rgb'"]
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "binding_modes"
+verdict = "mismatch"
+differences = ["$binding_modes: length 2 != 5"]
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "version"
+verdict = "mismatch"
+differences = ["$version: keys differ"]
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "commands"
+verdict = "mismatch"
+differences = ["$commands[2].reply[0]: keys differ", "$commands[2].reply[0].success: True != False", "$commands[3].reply[0]: keys differ", "$commands[3].reply[0].success: True != False"]
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "inputs"
+verdict = "not applicable"
+reason = "miracle-wm 0.11.2 does not implement GET_INPUTS: the request type has no case in src/ipc_message_handler.cpp:65-260 and the connection is closed without a reply; wiki/docs/ipc/index.md lists it as not yet implemented"
+
+[[result]]
+scenario = "output_toggle_reenable"
+request = "seats"
+verdict = "not applicable"
+reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has no case in src/ipc_message_handler.cpp:65-260 and the connection is closed without a reply; wiki/docs/ipc/index.md lists it as not yet implemented"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "tree"
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes: length 3 != 2", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1]: keys differ", "$tree.nodes[1].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].layout: 'splitv' != 'splith'", "$tree.nodes[1].nodes[0].name: '1' != '2'", "$tree.nodes[1].nodes[0].nodes: length 1 != 0", "$tree.nodes[1].nodes[0].num: 1 != 2", "$tree.nodes[1].nodes[0].orientation: 'vertical' != 'none'", "$tree.nodes[1].scale: 1.5 != 1.0"]
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "workspaces"
+verdict = "mismatch"
+differences = ["$workspaces[0]: keys differ", "$workspaces[1]: keys differ"]
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "outputs"
+verdict = "mismatch"
+differences = ["$outputs[0]: keys differ", "$outputs[0].name: '__oracle_normalized__' != 'Virtual-1'", "$outputs[0].scale: 1.5 != 1.0", "$outputs[0].subpixel_hinting: 'unknown' != 'rgb'", "$outputs[1]: keys differ", "$outputs[1].name: '__oracle_normalized__' != 'Virtual-2'", "$outputs[1].scale: 1.5 != 1.0", "$outputs[1].subpixel_hinting: 'unknown' != 'rgb'"]
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "binding_modes"
+verdict = "mismatch"
+differences = ["$binding_modes: length 2 != 5"]
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "version"
+verdict = "mismatch"
+differences = ["$version: keys differ"]
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "commands"
+verdict = "mismatch"
+differences = ["$commands[1].reply[0]: keys differ", "$commands[1].reply[0].success: True != False"]
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "inputs"
+verdict = "not applicable"
+reason = "miracle-wm 0.11.2 does not implement GET_INPUTS: the request type has no case in src/ipc_message_handler.cpp:65-260 and the connection is closed without a reply; wiki/docs/ipc/index.md lists it as not yet implemented"
+
+[[result]]
+scenario = "output_identifier_unknown_scale"
+request = "seats"
+verdict = "not applicable"
+reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has no case in src/ipc_message_handler.cpp:65-260 and the connection is closed without a reply; wiki/docs/ipc/index.md lists it as not yet implemented"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "tree"
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes: length 1 != 2", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "workspaces"
+verdict = "mismatch"
+differences = ["$workspaces: length 0 != 2"]
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "outputs"
+verdict = "mismatch"
+differences = ["$outputs[0]: keys differ", "$outputs[0].active: False != True", "$outputs[0].current_workspace: type NoneType != str", "$outputs[0].dpms: False != True", "$outputs[0].name: '__oracle_normalized__' != 'Virtual-1'", "$outputs[0].power: False != True", "$outputs[1]: keys differ", "$outputs[1].active: False != True", "$outputs[1].current_workspace: type NoneType != str", "$outputs[1].dpms: False != True", "$outputs[1].name: '__oracle_normalized__' != 'Virtual-2'", "$outputs[1].power: False != True"]
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "binding_modes"
+verdict = "mismatch"
+differences = ["$binding_modes: length 2 != 5"]
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "version"
+verdict = "mismatch"
+differences = ["$version: keys differ"]
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "commands"
+verdict = "mismatch"
+differences = ["$commands[1].reply[0]: keys differ", "$commands[1].reply[0].success: True != False", "$commands[2].reply[0]: keys differ", "$commands[2].reply[0].success: True != False"]
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "inputs"
+verdict = "not applicable"
+reason = "miracle-wm 0.11.2 does not implement GET_INPUTS: the request type has no case in src/ipc_message_handler.cpp:65-260 and the connection is closed without a reply; wiki/docs/ipc/index.md lists it as not yet implemented"
+
+[[result]]
+scenario = "output_identifier_unknown_toggle"
+request = "seats"
+verdict = "not applicable"
+reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has no case in src/ipc_message_handler.cpp:65-260 and the connection is closed without a reply; wiki/docs/ipc/index.md lists it as not yet implemented"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "tree"
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "workspaces"
+verdict = "mismatch"
+differences = ["$workspaces[0]: keys differ"]
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "outputs"
+verdict = "mismatch"
+differences = ["$outputs[0]: keys differ", "$outputs[0].name: '__oracle_normalized__' != 'Virtual-1'", "$outputs[0].subpixel_hinting: 'unknown' != 'rgb'"]
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "binding_modes"
+verdict = "mismatch"
+differences = ["$binding_modes: length 2 != 5"]
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "version"
+verdict = "mismatch"
+differences = ["$version: keys differ"]
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "commands"
+verdict = "mismatch"
+differences = ["$commands[1].reply[0]: keys differ", "$commands[1].reply[0].success: True != False"]
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "inputs"
+verdict = "not applicable"
+reason = "miracle-wm 0.11.2 does not implement GET_INPUTS: the request type has no case in src/ipc_message_handler.cpp:65-260 and the connection is closed without a reply; wiki/docs/ipc/index.md lists it as not yet implemented"
+
+[[result]]
+scenario = "command_parse_edge_cases_title_format_empty"
+request = "seats"
+verdict = "not applicable"
+reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has no case in src/ipc_message_handler.cpp:65-260 and the connection is closed without a reply; wiki/docs/ipc/index.md lists it as not yet implemented"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "tree"
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "workspaces"
+verdict = "mismatch"
+differences = ["$workspaces[0]: keys differ"]
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "outputs"
+verdict = "mismatch"
+differences = ["$outputs[0]: keys differ", "$outputs[0].name: '__oracle_normalized__' != 'Virtual-1'", "$outputs[0].subpixel_hinting: 'unknown' != 'rgb'"]
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "binding_modes"
+verdict = "mismatch"
+differences = ["$binding_modes: length 2 != 5"]
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "version"
+verdict = "mismatch"
+differences = ["$version: keys differ"]
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "commands"
+verdict = "mismatch"
+differences = ["$commands[1].reply[0]: keys differ", "$commands[1].reply[0].success: True != False", "$commands[2].reply[0]: keys differ", "$commands[2].reply[0].success: True != False"]
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "inputs"
+verdict = "not applicable"
+reason = "miracle-wm 0.11.2 does not implement GET_INPUTS: the request type has no case in src/ipc_message_handler.cpp:65-260 and the connection is closed without a reply; wiki/docs/ipc/index.md lists it as not yet implemented"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_upper"
+request = "seats"
+verdict = "not applicable"
+reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has no case in src/ipc_message_handler.cpp:65-260 and the connection is closed without a reply; wiki/docs/ipc/index.md lists it as not yet implemented"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "tree"
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "workspaces"
+verdict = "mismatch"
+differences = ["$workspaces[0]: keys differ"]
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "outputs"
+verdict = "mismatch"
+differences = ["$outputs[0]: keys differ", "$outputs[0].name: '__oracle_normalized__' != 'Virtual-1'", "$outputs[0].subpixel_hinting: 'unknown' != 'rgb'"]
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "marks"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "binding_modes"
+verdict = "mismatch"
+differences = ["$binding_modes: length 2 != 5"]
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "binding_state"
+verdict = "match"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "version"
+verdict = "mismatch"
+differences = ["$version: keys differ"]
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "commands"
+verdict = "mismatch"
+differences = ["$commands[1].reply[0]: keys differ", "$commands[1].reply[0].success: True != False", "$commands[2].reply[0]: keys differ", "$commands[2].reply[0].success: True != False", "$commands[3].reply[0]: keys differ", "$commands[3].reply[0].success: True != False"]
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "inputs"
+verdict = "not applicable"
+reason = "miracle-wm 0.11.2 does not implement GET_INPUTS: the request type has no case in src/ipc_message_handler.cpp:65-260 and the connection is closed without a reply; wiki/docs/ipc/index.md lists it as not yet implemented"
+
+[[result]]
+scenario = "command_parse_edge_cases_input_xkb_lower"
+request = "seats"
+verdict = "not applicable"
+reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has no case in src/ipc_message_handler.cpp:65-260 and the connection is closed without a reply; wiki/docs/ipc/index.md lists it as not yet implemented"
+
+[[result]]
 scenario = "output_scale"
 request = "tree"
 verdict = "mismatch"
@@ -4930,8 +5336,8 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "scratchpad_unfloat"
 request = "tree"
-verdict = "unstable"
-differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
 scenario = "scratchpad_unfloat"
@@ -5278,14 +5684,14 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "layout_default_prev_split"
 request = "tree"
-verdict = "unstable"
-differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes: length 1 != 2", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '2'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].nodes[0].urgent: False != True", "$tree.nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].urgent: False != True"]
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes: length 1 != 2", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '2'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
 scenario = "layout_default_prev_split"
 request = "workspaces"
-verdict = "unstable"
-differences = ["$workspaces[0]: keys differ", "$workspaces[0].urgent: False != True", "$workspaces[1]: keys differ"]
+verdict = "mismatch"
+differences = ["$workspaces[0]: keys differ", "$workspaces[1]: keys differ"]
 
 [[result]]
 scenario = "layout_default_prev_split"
@@ -10966,8 +11372,8 @@ verdict = "match"
 [[result]]
 scenario = "swap_focused_tab_keeps_focus"
 request = "tree"
-verdict = "unstable"
-differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 2", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].layout: 'splith' != 'tabbed'", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 2", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
 scenario = "swap_focused_tab_keeps_focus"
@@ -10984,8 +11390,7 @@ differences = ["$outputs[0]: keys differ", "$outputs[0].name: '__oracle_normaliz
 [[result]]
 scenario = "swap_focused_tab_keeps_focus"
 request = "marks"
-verdict = "unstable"
-differences = ["$marks: length 1 != 0"]
+verdict = "match"
 
 [[result]]
 scenario = "swap_focused_tab_keeps_focus"
@@ -15745,19 +16150,19 @@ differences = ["$command[0].error: \"Mark 'oracle' not found\" != 'Failed to mov
 [[result]]
 scenario = "move_global_fullscreen_error_precedence"
 request = "tree"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 2", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
 scenario = "move_global_fullscreen_error_precedence"
 request = "workspaces"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$workspaces[0]: keys differ"]
 
 [[result]]
 scenario = "move_global_fullscreen_error_precedence"
 request = "outputs"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$outputs[0]: keys differ", "$outputs[0].name: '__oracle_normalized__' != 'Virtual-1'", "$outputs[0].subpixel_hinting: 'unknown' != 'rgb'"]
 
 [[result]]
@@ -15984,7 +16389,7 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "two_output_move_keeps_arrival_order"
 request = "tree"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$tree: keys differ", "$tree.nodes: length 3 != 2", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1]: keys differ", "$tree.nodes[1].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].layout: 'splitv' != 'splith'", "$tree.nodes[1].nodes[0].name: '1' != '2'", "$tree.nodes[1].nodes[0].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].nodes[0].idle_inhibitors.user: 'none' != 'visible'", "$tree.nodes[1].nodes[0].nodes[0].name: 'fixture-2' != ''", "$tree.nodes[1].nodes[0].nodes[0].percent: 0.3330965909090909 != 0.33307087421417236", "$tree.nodes[1].nodes[0].nodes[0].shell: 'xdg_shell' != 'miracle-wm'", "$tree.nodes[1].nodes[0].nodes[0].window: type NoneType != int", "$tree.nodes[1].nodes[0].nodes[1]: keys differ", "$tree.nodes[1].nodes[0].nodes[1].idle_inhibitors.user: 'none' != 'visible'", "$tree.nodes[1].nodes[0].nodes[1].name: 'fixture-3' != ''", "$tree.nodes[1].nodes[0].nodes[1].percent: 0.3330965909090909 != 0.33307087421417236", "$tree.nodes[1].nodes[0].nodes[1].shell: 'xdg_shell' != 'miracle-wm'", "$tree.nodes[1].nodes[0].nodes[1].window: type NoneType != int", "$tree.nodes[1].nodes[0].nodes[2]: keys differ", "$tree.nodes[1].nodes[0].nodes[2].focused: False != True", "$tree.nodes[1].nodes[0].nodes[2].idle_inhibitors.user: 'none' != 'visible'", "$tree.nodes[1].nodes[0].nodes[2].name: 'fixture-4' != ''", "$tree.nodes[1].nodes[0].nodes[2].percent: 0.3338068181818182 != 0.33385828137397766", "$tree.nodes[1].nodes[0].nodes[2].shell: 'xdg_shell' != 'miracle-wm'", "$tree.nodes[1].nodes[0].nodes[2].window: type NoneType != int", "$tree.nodes[1].nodes[0].num: 1 != 2", "$tree.nodes[1].nodes[0].orientation: 'vertical' != 'none'", "$tree.nodes[1].scale_filter: 'nearest' != 'linear'"]
 
 [[result]]
@@ -16041,7 +16446,7 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "two_output_move_after_assigned_view"
 request = "tree"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$tree: keys differ", "$tree.nodes: length 3 != 2", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 2", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1]: keys differ", "$tree.nodes[1].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].layout: 'splitv' != 'splith'", "$tree.nodes[1].nodes[0].name: '1' != '2'", "$tree.nodes[1].nodes[0].nodes: length 5 != 4", "$tree.nodes[1].nodes[0].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].nodes[0].idle_inhibitors.user: 'none' != 'visible'", "$tree.nodes[1].nodes[0].nodes[0].name: 'fixture-2' != ''", "$tree.nodes[1].nodes[0].nodes[0].percent: 0.2002840909090909 != 0.24960629642009735", "$tree.nodes[1].nodes[0].nodes[0].shell: 'xdg_shell' != 'miracle-wm'", "$tree.nodes[1].nodes[0].nodes[0].window: type NoneType != int", "$tree.nodes[1].nodes[0].nodes[1]: keys differ", "$tree.nodes[1].nodes[0].nodes[1].idle_inhibitors.user: 'none' != 'visible'", "$tree.nodes[1].nodes[0].nodes[1].name: 'fixture-3' != ''", "$tree.nodes[1].nodes[0].nodes[1].percent: 0.2002840909090909 != 0.24960629642009735", "$tree.nodes[1].nodes[0].nodes[1].shell: 'xdg_shell' != 'miracle-wm'", "$tree.nodes[1].nodes[0].nodes[1].window: type NoneType != int", "$tree.nodes[1].nodes[0].nodes[2]: keys differ", "$tree.nodes[1].nodes[0].nodes[2].idle_inhibitors.user: 'none' != 'visible'", "$tree.nodes[1].nodes[0].nodes[2].name: 'fixture-4' != ''", "$tree.nodes[1].nodes[0].nodes[2].percent: 0.2002840909090909 != 0.25039368867874146", "$tree.nodes[1].nodes[0].nodes[2].shell: 'xdg_shell' != 'miracle-wm'", "$tree.nodes[1].nodes[0].nodes[2].window: type NoneType != int", "$tree.nodes[1].nodes[0].nodes[3]: keys differ", "$tree.nodes[1].nodes[0].nodes[3].focused: False != True", "$tree.nodes[1].nodes[0].nodes[3].idle_inhibitors.user: 'none' != 'visible'", "$tree.nodes[1].nodes[0].nodes[3].name: 'fixture-6' != ''", "$tree.nodes[1].nodes[0].nodes[3].percent: 0.2002840909090909 != 0.25039368867874146", "$tree.nodes[1].nodes[0].nodes[3].shell: 'xdg_shell' != 'miracle-wm'", "$tree.nodes[1].nodes[0].nodes[3].window: type NoneType != int", "$tree.nodes[1].nodes[0].num: 1 != 2", "$tree.nodes[1].nodes[0].orientation: 'vertical' != 'none'", "$tree.nodes[1].scale_filter: 'nearest' != 'linear'"]
 
 [[result]]
@@ -16525,7 +16930,7 @@ verdict = "match"
 [[result]]
 scenario = "move_scratchpad_from_fullscreen_wrapper_percent"
 request = "tree"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].floating_nodes: length 1 != 0", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
@@ -16873,7 +17278,7 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "fullscreen_layout_toggle_split_under_view"
 request = "tree"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].layout: 'splith' != 'splitv'", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 2", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
@@ -17392,7 +17797,7 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "move_back_and_forth_after_move_workspace_to_output"
 request = "tree"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$tree: keys differ", "$tree.nodes: length 3 != 2", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1]: keys differ", "$tree.nodes[1].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].layout: 'splitv' != 'splith'", "$tree.nodes[1].nodes[0].name: '3' != '2'", "$tree.nodes[1].nodes[0].num: 3 != 2", "$tree.nodes[1].nodes[0].orientation: 'vertical' != 'none'", "$tree.nodes[1].scale_filter: 'nearest' != 'linear'"]
 
 [[result]]
@@ -17874,8 +18279,7 @@ differences = ["$outputs[0]: keys differ", "$outputs[0].name: '__oracle_normaliz
 [[result]]
 scenario = "swap_tiled_with_floating_mark"
 request = "marks"
-verdict = "unstable"
-differences = ["$marks: length 1 != 0"]
+verdict = "match"
 
 [[result]]
 scenario = "swap_tiled_with_floating_mark"
@@ -17933,8 +18337,7 @@ differences = ["$outputs[0]: keys differ", "$outputs[0].name: '__oracle_normaliz
 [[result]]
 scenario = "swap_tiled_with_floating_mark_maps_beside_focus_inactive"
 request = "marks"
-verdict = "unstable"
-differences = ["$marks: length 1 != 0"]
+verdict = "match"
 
 [[result]]
 scenario = "swap_tiled_with_floating_mark_maps_beside_focus_inactive"
@@ -18032,8 +18435,8 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "fullscreen_tab_split_reports_output_box"
 request = "tree"
-verdict = "unstable"
-differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].layout: 'splith' != 'tabbed'", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
 scenario = "fullscreen_tab_split_reports_output_box"
@@ -18130,8 +18533,7 @@ differences = ["$version: keys differ"]
 [[result]]
 scenario = "move_to_mark_on_fullscreen_view_zeroes_view"
 request = "commands"
-verdict = "unstable"
-differences = ["$commands[5].reply[0]: keys differ", "$commands[5].reply[0].success: True != False"]
+verdict = "match"
 
 [[result]]
 scenario = "move_to_mark_on_fullscreen_view_zeroes_view"
@@ -18616,7 +19018,7 @@ verdict = "match"
 [[result]]
 scenario = "swap_across_outputs_into_tabbed_visible"
 request = "tree"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$tree: keys differ", "$tree.nodes: length 3 != 2", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 2", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1]: keys differ", "$tree.nodes[1].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].layout: 'splitv' != 'tabbed'", "$tree.nodes[1].nodes[0].name: '1' != '2'", "$tree.nodes[1].nodes[0].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].nodes[0].border: 'none' != 'normal'", "$tree.nodes[1].nodes[0].nodes[0].current_border_width: 0 != 2", "$tree.nodes[1].nodes[0].nodes[0].focused: False != True", "$tree.nodes[1].nodes[0].nodes[0].layout: 'tabbed' != 'none'", "$tree.nodes[1].nodes[0].nodes[0].name: type NoneType != str", "$tree.nodes[1].nodes[0].nodes[0].nodes: length 2 != 0", "$tree.nodes[1].nodes[0].nodes[0].window: type NoneType != int", "$tree.nodes[1].nodes[0].num: 1 != 2", "$tree.nodes[1].nodes[0].orientation: 'vertical' != 'none'", "$tree.nodes[1].scale_filter: 'nearest' != 'linear'"]
 
 [[result]]
@@ -18673,8 +19075,7 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "move_to_mark_across_outputs_into_tabbed_visible"
 request = "command"
-verdict = "unstable"
-differences = ["$command[0]: keys differ", "$command[0].success: True != False"]
+verdict = "match"
 
 [[result]]
 scenario = "move_to_mark_across_outputs_into_tabbed_visible"
@@ -18697,8 +19098,7 @@ differences = ["$outputs[0]: keys differ", "$outputs[0].name: '__oracle_normaliz
 [[result]]
 scenario = "move_to_mark_across_outputs_into_tabbed_visible"
 request = "marks"
-verdict = "unstable"
-differences = ["$marks: length 1 != 0"]
+verdict = "match"
 
 [[result]]
 scenario = "move_to_mark_across_outputs_into_tabbed_visible"
@@ -19375,8 +19775,8 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "kill_scratchpad_global_fullscreen_focuses_sibling"
 request = "tree"
-verdict = "unstable"
-differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 2", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
 scenario = "kill_scratchpad_global_fullscreen_focuses_sibling"
@@ -19662,14 +20062,14 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "sticky_floating_workspace_switch_kill_workspace"
 request = "tree"
-verdict = "unstable"
-differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes: length 1 != 2", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].nodes[0].urgent: False != True", "$tree.nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].urgent: False != True"]
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes: length 1 != 2", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
 scenario = "sticky_floating_workspace_switch_kill_workspace"
 request = "workspaces"
-verdict = "unstable"
-differences = ["$workspaces: length 1 != 2", "$workspaces[0]: keys differ", "$workspaces[0].focused: True != False", "$workspaces[0].name: '3' != '1'", "$workspaces[0].num: 3 != 1", "$workspaces[0].urgent: False != True", "$workspaces[0].visible: True != False"]
+verdict = "mismatch"
+differences = ["$workspaces: length 1 != 2", "$workspaces[0]: keys differ", "$workspaces[0].focused: True != False", "$workspaces[0].name: '3' != '1'", "$workspaces[0].num: 3 != 1", "$workspaces[0].visible: True != False"]
 
 [[result]]
 scenario = "sticky_floating_workspace_switch_kill_workspace"
@@ -19795,8 +20195,8 @@ differences = ["$command[0]: keys differ", "$command[0].success: True != False"]
 [[result]]
 scenario = "floating_enable_in_hidden_scratchpad_group"
 request = "tree"
-verdict = "unstable"
-differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].floating_nodes: length 1 != 0", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 3", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].floating_nodes: length 1 != 0", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 2", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
 scenario = "floating_enable_in_hidden_scratchpad_group"
@@ -19973,14 +20373,14 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "criteria_focus_marked_split_on_other_workspace"
 request = "tree"
-verdict = "unstable"
-differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes: length 1 != 2", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].nodes[0].urgent: False != True", "$tree.nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].urgent: False != True"]
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes: length 1 != 2", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].layout: 'splith' != 'stacking'", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
 scenario = "criteria_focus_marked_split_on_other_workspace"
 request = "workspaces"
-verdict = "unstable"
-differences = ["$workspaces: length 1 != 2", "$workspaces[0]: keys differ", "$workspaces[0].focused: True != False", "$workspaces[0].urgent: False != True", "$workspaces[0].visible: True != False"]
+verdict = "mismatch"
+differences = ["$workspaces: length 1 != 2", "$workspaces[0]: keys differ", "$workspaces[0].focused: True != False", "$workspaces[0].visible: True != False"]
 
 [[result]]
 scenario = "criteria_focus_marked_split_on_other_workspace"
@@ -20325,8 +20725,8 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "split_floated_wrapper_then_tile"
 request = "tree"
-verdict = "unstable"
-differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].floating_nodes: length 0 != 1", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
 scenario = "split_floated_wrapper_then_tile"
@@ -20557,7 +20957,7 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "floating_fullscreen_group_map_keeps_focus"
 request = "tree"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 2", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
@@ -20914,8 +21314,8 @@ verdict = "match"
 [[result]]
 scenario = "swap_tiled_with_floating_split_child"
 request = "tree"
-verdict = "unstable"
-differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].layout: 'splith' != 'splitv'", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 2", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].layout: 'splith' != 'splitv'", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 3", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
 scenario = "swap_tiled_with_floating_split_child"
@@ -21738,7 +22138,7 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "float_wrapped_view_refocuses_view"
 request = "tree"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes: length 1 != 2", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].layout: 'splith' != 'tabbed'", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
@@ -22091,19 +22491,19 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "move_workspace_wrapper_lands_beside_focus_inactive"
 request = "tree"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes: length 1 != 2", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 2", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
 scenario = "move_workspace_wrapper_lands_beside_focus_inactive"
 request = "workspaces"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$workspaces[0]: keys differ", "$workspaces[0].focused: False != True", "$workspaces[0].visible: False != True", "$workspaces[1]: keys differ", "$workspaces[1].focused: True != False", "$workspaces[1].visible: True != False"]
 
 [[result]]
 scenario = "move_workspace_wrapper_lands_beside_focus_inactive"
 request = "outputs"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$outputs[0]: keys differ", "$outputs[0].current_workspace: '2' != '1'", "$outputs[0].name: '__oracle_normalized__' != 'Virtual-1'", "$outputs[0].subpixel_hinting: 'unknown' != 'rgb'"]
 
 [[result]]
@@ -22276,7 +22676,7 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "for_window_split_in_floating_group"
 request = "tree"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].layout: 'splith' != 'splitv'", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 2", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
@@ -22450,7 +22850,7 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "move_to_other_output_workspace_refocuses_focused_split"
 request = "tree"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$tree: keys differ", "$tree.nodes: length 3 != 2", "$tree.nodes[0]: keys differ", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1]: keys differ", "$tree.nodes[1].focused: False != True", "$tree.nodes[1].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].focused: False != True", "$tree.nodes[1].nodes[0].name: '1' != '2'", "$tree.nodes[1].nodes[0].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].nodes[0].border: 'none' != 'normal'", "$tree.nodes[1].nodes[0].nodes[0].current_border_width: 0 != 2", "$tree.nodes[1].nodes[0].nodes[0].layout: 'splith' != 'none'", "$tree.nodes[1].nodes[0].nodes[0].name: type NoneType != str", "$tree.nodes[1].nodes[0].nodes[0].nodes: length 1 != 0", "$tree.nodes[1].nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1].nodes[0].nodes[0].window: type NoneType != int", "$tree.nodes[1].nodes[0].num: 1 != 2", "$tree.nodes[1].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1].scale_filter: 'nearest' != 'linear'"]
 
 [[result]]
@@ -23357,7 +23757,7 @@ differences = ["$command[0]: keys differ", "$command[0].success: False != True"]
 [[result]]
 scenario = "scratchpad_split_move_out_empties_scratchpad"
 request = "tree"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
@@ -23705,7 +24105,7 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "for_window_split_tabbed_move_refocuses_emptied_split"
 request = "tree"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$tree: keys differ", "$tree.nodes: length 3 != 2", "$tree.nodes[0]: keys differ", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].layout: 'splith' != 'tabbed'", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 2", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1]: keys differ", "$tree.nodes[1].focused: False != True", "$tree.nodes[1].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].focused: False != True", "$tree.nodes[1].nodes[0].name: '1' != '2'", "$tree.nodes[1].nodes[0].nodes: length 1 != 0", "$tree.nodes[1].nodes[0].num: 1 != 2", "$tree.nodes[1].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1].scale_filter: 'nearest' != 'linear'"]
 
 [[result]]
@@ -24114,7 +24514,7 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "scratchpad_split_second_view_show_hides"
 request = "tree"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].floating_nodes: length 1 != 0", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
@@ -24631,7 +25031,7 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "move_back_and_forth_after_cross_output_floating_move"
 request = "tree"
-verdict = "unstable"
+verdict = "mismatch"
 differences = ["$tree: keys differ", "$tree.nodes: length 3 != 2", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1]: keys differ", "$tree.nodes[1].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].layout: 'splitv' != 'splith'", "$tree.nodes[1].nodes[0].name: '1' != '2'", "$tree.nodes[1].nodes[0].num: 1 != 2", "$tree.nodes[1].nodes[0].orientation: 'vertical' != 'none'", "$tree.nodes[1].scale_filter: 'nearest' != 'linear'"]
 
 [[result]]
@@ -27135,20 +27535,20 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "fs_move_back_focus_moved"
 request = "tree"
-verdict = "unstable"
-differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes: length 1 != 2", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 2", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
 scenario = "fs_move_back_focus_moved"
 request = "workspaces"
-verdict = "unstable"
-differences = ["$workspaces[0]: keys differ", "$workspaces[1]: keys differ"]
+verdict = "mismatch"
+differences = ["$workspaces: length 2 != 1", "$workspaces[0]: keys differ", "$workspaces[0].focused: False != True", "$workspaces[0].visible: False != True"]
 
 [[result]]
 scenario = "fs_move_back_focus_moved"
 request = "outputs"
-verdict = "unstable"
-differences = ["$outputs[0]: keys differ", "$outputs[0].name: '__oracle_normalized__' != 'Virtual-1'", "$outputs[0].subpixel_hinting: 'unknown' != 'rgb'"]
+verdict = "mismatch"
+differences = ["$outputs[0]: keys differ", "$outputs[0].current_workspace: '3' != '1'", "$outputs[0].name: '__oracle_normalized__' != 'Virtual-1'", "$outputs[0].subpixel_hinting: 'unknown' != 'rgb'"]
 
 [[result]]
 scenario = "fs_move_back_focus_moved"
@@ -27193,14 +27593,14 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "fs_move_back_focus"
 request = "tree"
-verdict = "unstable"
-differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes: length 1 != 2", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 1", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes: length 2 != 1", "$tree.nodes[0]: keys differ", "$tree.nodes[0].focused: False != True", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].focused: False != True", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].nodes: length 0 != 2", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'"]
 
 [[result]]
 scenario = "fs_move_back_focus"
 request = "workspaces"
-verdict = "unstable"
-differences = ["$workspaces: length 1 != 2", "$workspaces[0]: keys differ"]
+verdict = "mismatch"
+differences = ["$workspaces[0]: keys differ"]
 
 [[result]]
 scenario = "fs_move_back_focus"
@@ -27251,8 +27651,8 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "output_disable_empty_active_focuses_evacuated_workspace"
 request = "tree"
-verdict = "unstable"
-differences = ["$tree: keys differ", "$tree.nodes[0]: keys differ", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1]: keys differ", "$tree.nodes[1].focused: False != True", "$tree.nodes[1].nodes: length 1 != 2", "$tree.nodes[1].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].nodes[0].focused: True != False", "$tree.nodes[1].nodes[0].nodes[0].idle_inhibitors.user: 'none' != 'visible'", "$tree.nodes[1].nodes[0].nodes[0].name: 'fixture-odef-1' != ''", "$tree.nodes[1].nodes[0].nodes[0].shell: 'xdg_shell' != 'miracle-wm'", "$tree.nodes[1].nodes[0].nodes[0].urgent: False != True", "$tree.nodes[1].nodes[0].nodes[0].visible: True != False", "$tree.nodes[1].nodes[0].nodes[0].window: type NoneType != int", "$tree.nodes[1].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1].nodes[0].urgent: False != True", "$tree.nodes[1].scale_filter: 'nearest' != 'linear'", "$tree.nodes[1].urgent: False != True"]
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes[0]: keys differ", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1]: keys differ", "$tree.nodes[1].focused: False != True", "$tree.nodes[1].nodes: length 1 != 2", "$tree.nodes[1].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].nodes[0].focused: True != False", "$tree.nodes[1].nodes[0].nodes[0].idle_inhibitors.user: 'none' != 'visible'", "$tree.nodes[1].nodes[0].nodes[0].name: 'fixture-odef-1' != ''", "$tree.nodes[1].nodes[0].nodes[0].shell: 'xdg_shell' != 'miracle-wm'", "$tree.nodes[1].nodes[0].nodes[0].visible: True != False", "$tree.nodes[1].nodes[0].nodes[0].window: type NoneType != int", "$tree.nodes[1].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1].scale_filter: 'nearest' != 'linear'"]
 
 [[result]]
 scenario = "output_disable_empty_active_focuses_evacuated_workspace"
@@ -27309,8 +27709,8 @@ reason = "miracle-wm 0.11.2 does not implement GET_SEATS: the request type has n
 [[result]]
 scenario = "output_disable_sticky_active_shows_evacuated_workspace"
 request = "tree"
-verdict = "unstable"
-differences = ["$tree: keys differ", "$tree.nodes[0]: keys differ", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1]: keys differ", "$tree.nodes[1].focused: False != True", "$tree.nodes[1].nodes: length 1 != 2", "$tree.nodes[1].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].floating_nodes: length 1 != 0", "$tree.nodes[1].nodes[0].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].nodes[0].idle_inhibitors.user: 'none' != 'visible'", "$tree.nodes[1].nodes[0].nodes[0].name: 'fixture-odef-1' != ''", "$tree.nodes[1].nodes[0].nodes[0].shell: 'xdg_shell' != 'miracle-wm'", "$tree.nodes[1].nodes[0].nodes[0].urgent: False != True", "$tree.nodes[1].nodes[0].nodes[0].visible: True != False", "$tree.nodes[1].nodes[0].nodes[0].window: type NoneType != int", "$tree.nodes[1].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1].nodes[0].urgent: False != True", "$tree.nodes[1].scale_filter: 'nearest' != 'linear'", "$tree.nodes[1].urgent: False != True"]
+verdict = "mismatch"
+differences = ["$tree: keys differ", "$tree.nodes[0]: keys differ", "$tree.nodes[0].nodes[0]: keys differ", "$tree.nodes[0].nodes[0].name: '__i3_scratch' != '1'", "$tree.nodes[0].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1]: keys differ", "$tree.nodes[1].focused: False != True", "$tree.nodes[1].nodes: length 1 != 2", "$tree.nodes[1].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].floating_nodes: length 1 != 0", "$tree.nodes[1].nodes[0].nodes[0]: keys differ", "$tree.nodes[1].nodes[0].nodes[0].idle_inhibitors.user: 'none' != 'visible'", "$tree.nodes[1].nodes[0].nodes[0].name: 'fixture-odef-1' != ''", "$tree.nodes[1].nodes[0].nodes[0].shell: 'xdg_shell' != 'miracle-wm'", "$tree.nodes[1].nodes[0].nodes[0].visible: True != False", "$tree.nodes[1].nodes[0].nodes[0].window: type NoneType != int", "$tree.nodes[1].nodes[0].orientation: 'horizontal' != 'none'", "$tree.nodes[1].scale_filter: 'nearest' != 'linear'"]
 
 [[result]]
 scenario = "output_disable_sticky_active_shows_evacuated_workspace"

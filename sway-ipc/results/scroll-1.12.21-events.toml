@@ -5,10 +5,10 @@
 
 [run]
 compositor = "scroll"
-version = "1.13-dev-f80c5820 (Oct 18 2026, branch 'HEAD')"
+version = "1.13-dev-f80c5820 (Nov 21 2026, branch 'HEAD')"
 commit = "f80c5820c0eebaad586f0008faecfe3ae62c307a"
-inputs = "d63fe96b6889d2981797f5685274102f92cffe0f27c82ade60609327a60257e4"
-date = "2026-10-21"
+inputs = "81605e363425cdbaf1b7e36627ad0480e0ef4ca7d1b37235e80d6b878e75dec2"
+date = "2026-11-22"
 normalization = "sway-ipc/normalize.toml"
 normalization_rules = ["runtime-identifiers", "focus-by-child-position", "rectangle-semantics", "backend-output-reference", "backend-output-properties", "backend-output-capabilities", "version-runtime-identity", "backend-output-name", "floating-rect-run-variance", "tree-rect-tolerance", "floating-percent-run-variance", "floating-descendant-percent-run-variance", "hidden-scratchpad-descendant-rect", "hidden-scratchpad-descendant-percent", "tree-percent-tolerance", "focus-child-position-comparison", "backend-mode-array-length"]
 scenario_isolation = "fresh compositor per scenario"

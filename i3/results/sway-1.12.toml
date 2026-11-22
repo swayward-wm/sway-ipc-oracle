@@ -7,7 +7,7 @@ compositor = "sway"
 version = "sway version 1.12-88869399 (Oct 18 2026, branch 'HEAD')"
 commit = "88869399f421d9180dd8b6ed0b5a1f4a3585d252"
 i3_suite_commit = "9be3249ac5b377ed3270e36bca83df53d8023337"
-inputs = "2474c1804f2f77f5dbd97871bf1d84ed409446ad1432203d0098e668a02e898c"
+inputs = "9baa3c58e79cef4e2c0999dc63c2262aa68541f294ab43f6d15b586929e4bf63"
 date = "2026-10-19"
 environment = "headless compositor with private IPC/X11 sockets and real X11 clients"
 

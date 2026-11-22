@@ -8,6 +8,6 @@ readme-snapshots must reject this table: it puts three compositors side by side.
 | --- | --- | --- | --- |
 | `i3-4.25` | 3,754/1/0 | 242/246/540 | `9be3249a` |
 | `sway-1.12` | 1,461/20/2,117 | 740/0/40 | `88869399` |
-| `swayward-1fd3c25b` | 1,453/11/2,269 | 749/31/0 | `1fd3c25b` |
+| `swayward-fc39ac88` | 1,453/11/2,269 | 749/31/0 | `fc39ac88` |
 
 ## End

@@ -1,0 +1,767 @@
+pr-check: base 1652c54b clean ASan, head 1652c54b clean ASan
+explored 300 seeds (head), 17m52s, 4 jobs; hinted windows enabled
+--seeds 300: fixed exploration size, no wall limit (--minutes ignored)
+NEW in head: 0
+pre-existing 4, fixed 0, blocked 0, unconfirmed 0, harness 0. Details: /out/noise/report.txt
+behaviour differences: 0 of 268 compared seeds in 0 groups (same 268, base crashed 0, harness 0)
+
+== pre-existing (32) ==
+  head seed 17 (1 outputs, explore crashed at step 10): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 10: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 10: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 10: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 10: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (10), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. smart_gaps inverse_outer
+       3. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       4. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       5. floating enable
+       6. splith
+       7. mark m
+       8. move scratchpad
+       9. floating enable
+       10. move container to mark m
+  head seed 23 (1 outputs, explore crashed at step 25): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 25: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 25: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 25: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 25: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (25), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. mark m
+       4. layout tabbed
+       5. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       6. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       7. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       8. focus next
+       9. swap container with mark m
+       10. [con_mark=m] focus
+       11. for_window [app_id="fixture-diff-5"] split v
+       12. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       13. layout toggle
+       14. gaps inner current set 10
+       15. focus parent
+       16. focus parent
+       17. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       18. layout toggle
+       19. floating enable
+       20. splitt
+       21. mark m
+       22. move scratchpad
+       23. exec foot --app-id=fixture-diff-7 --title=fixture-diff-7 sh -c 'sleep 300'
+       24. floating enable
+       25. move container to mark m
+  head seed 35 (1 outputs, explore crashed at step 11): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (11), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       4. splith
+       5. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       6. mark m
+       7. focus parent
+       8. floating enable
+       9. move scratchpad
+       10. floating enable
+       11. move container to mark m
+  head seed 44 (1 outputs, explore crashed at step 29): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 29: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 29: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 29: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 29: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (29), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. focus_wrapping force
+       3. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       4. floating enable
+       5. xdg-hinted fixture-diff-2 200 150 0 0 0
+       6. sticky enable
+       7. tiling_drag enable
+       8. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       9. for_window [app_id="fixture-diff-4"] fullscreen enable
+       10. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       11. workspace 3
+       12. move container to workspace oracle
+       13. splitv
+       14. split toggle
+       15. move container to workspace oracle
+       16. [app_id="fixture-diff-4"] floating enable
+       17. resize grow left 20 px
+       18. focus parent
+       19. split h; layout default
+       20. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       21. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       22. floating enable
+       23. splitv
+       24. mark m
+       25. move scratchpad
+       26. scratchpad show
+       27. move scratchpad
+       28. floating enable
+       29. move container to mark m
+  head seed 53 (2 outputs, explore crashed at step 20): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 20: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 20: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 20: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 20: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (20), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. focus output right
+       4. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       5. for_window [app_id="fixture-diff-3"] split v
+       6. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       7. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       8. move left 20 px
+       9. workspace prev_on_output
+       10. focus output left
+       11. move workspace to output right
+       12. move right
+       13. workspace next
+       14. floating enable
+       15. splitv
+       16. mark m
+       17. move scratchpad
+       18. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       19. floating enable
+       20. move container to mark m
+  head seed 64 (1 outputs, explore crashed at step 35): SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     head 2/2: crashed at step 35: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen, crashed at step 35: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     base 2/2: crashed at step 35: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen, crashed at step 35: SEGV: seat_node_from_node < seat_set_raw_focus < workspace_focus_fullscreen
+     commands (35), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. smart_gaps on
+       3. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       4. splitv
+       5. layout tabbed
+       6. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       7. focus next sibling
+       8. layout toggle split
+       9. layout toggle
+       10. layout toggle split
+       11. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       12. move container to workspace back_and_forth
+       13. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       14. move container to workspace next
+       15. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       16. layout toggle splitv tabbed
+       17. floating enable
+       18. gaps inner current set 10
+       19. fullscreen enable
+       20. splith
+       21. split toggle
+       22. layout stacking
+       23. splitt
+       24. tiling_drag enable
+       25. mark m
+       26. [con_mark="m"] focus
+       27. layout tabbed
+       28. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       29. focus prev
+       30. [con_mark=m] focus
+       31. exec foot --app-id=fixture-diff-7 --title=fixture-diff-7 sh -c 'sleep 300'
+       32. layout toggle all
+       33. focus parent
+       34. split toggle
+       35. move container to workspace prev
+  head seed 66 (2 outputs, explore crashed at step 31): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 31: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 31: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 31: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 31: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (31), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. focus output right
+       4. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       5. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       6. max_render_time 5
+       7. focus output left
+       8. floating enable
+       9. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       10. splith
+       11. split v
+       12. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       13. splith
+       14. focus output right
+       15. move container to workspace 2
+       16. [app_id=nomatch] kill
+       17. [app_id="^fixture-diff-"] mark --add q
+       18. [workspace=__focused__] move container to workspace 1
+       19. fullscreen disable global
+       20. [con_mark="q"] kill
+       21. move scratchpad
+       22. workspace prev
+       23. workspace --no-auto-back-and-forth 1
+       24. mark --toggle z
+       25. floating enable
+       26. splitt
+       27. mark m
+       28. move scratchpad
+       29. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       30. floating enable
+       31. move container to mark m
+  head seed 68 (1 outputs, explore crashed at step 19): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 19: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 19: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 19: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 19: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (19), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. output * transform 90
+       3. focus_on_window_activation smart
+       4. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       5. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       6. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       7. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       8. unmark
+       9. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       10. layout tabbed; layout toggle
+       11. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       12. output * transform normal
+       13. unmark
+       14. floating enable
+       15. splith
+       16. mark m
+       17. move scratchpad
+       18. floating enable
+       19. move container to mark m
+  head seed 71 (2 outputs, explore crashed at step 19): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 19: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 19: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 19: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 19: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (19), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. focus output right
+       4. xdg-hinted fixture-diff-2 300 200 300 200 0
+       5. title_align right
+       6. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       7. max_render_time 5
+       8. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       9. focus output left
+       10. move container to output right
+       11. move workspace to output left
+       12. workspace next
+       13. floating enable
+       14. splith
+       15. mark m
+       16. move scratchpad
+       17. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       18. floating enable
+       19. move container to mark m
+  head seed 89 (2 outputs, explore crashed at step 16): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 16: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 16: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 16: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 16: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (16), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. focus output right
+       4. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       5. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       6. split toggle
+       7. focus output left
+       8. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       9. output * transform 90
+       10. workspace next
+       11. floating enable
+       12. splitt
+       13. mark m
+       14. move scratchpad
+       15. floating enable
+       16. move container to mark m
+  head seed 93 (1 outputs, explore crashed at step 37): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 37: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 37: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 37: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 37: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (37), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       4. splitv
+       5. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       6. focus next
+       7. for_window [app_id="fixture-diff-4"] sticky enable
+       8. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       9. focus parent
+       10. floating enable
+       11. focus child
+       12. split h
+       13. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       14. move container to workspace oracle
+       15. move --no-auto-back-and-forth container to workspace 1
+       16. set $oracle value
+       17. fullscreen toggle; move scratchpad
+       18. floating toggle
+       19. workspace --no-auto-back-and-forth 1
+       20. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       21. fullscreen enable global
+       22. resize grow left 20 px
+       23. [app_id="fixture-diff-3"] focus
+       24. focus_on_window_activation smart
+       25. layout default
+       26. border pixel 1
+       27. [app_id="fixture-diff-5"] focus
+       28. layout stacking
+       29. [app_id="fixture-diff-2"] focus
+       30. splith
+       31. exec foot --app-id=fixture-diff-7 --title=fixture-diff-7 sh -c 'sleep 300'
+       32. mark m
+       33. focus parent
+       34. floating enable
+       35. move scratchpad
+       36. floating enable
+       37. move container to mark m
+  head seed 107 (2 outputs, explore crashed at step 22): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 22: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 22: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 22: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 22: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (22), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. focus_wrapping workspace
+       3. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       4. focus output right
+       5. split h
+       6. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       7. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       8. focus output left
+       9. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       10. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       11. move container to output left
+       12. layout tabbed
+       13. move left
+       14. focus left
+       15. splitv
+       16. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       17. mark m
+       18. focus parent
+       19. floating enable
+       20. move scratchpad
+       21. floating enable
+       22. move container to mark m
+  head seed 125 (1 outputs, explore crashed at step 11): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (11), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       4. splith
+       5. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       6. mark m
+       7. focus parent
+       8. floating enable
+       9. move scratchpad
+       10. floating enable
+       11. move container to mark m
+  head seed 128 (1 outputs, explore crashed at step 16): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 16: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 16: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 16: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 16: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (16), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. default_border normal 4
+       3. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       4. floating enable
+       5. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       6. splitt
+       7. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       8. [tiling] mark --add x
+       9. splitv
+       10. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       11. mark m
+       12. focus parent
+       13. floating enable
+       14. move scratchpad
+       15. floating enable
+       16. move container to mark m
+  head seed 143 (1 outputs, explore crashed at step 12): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 12: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 12: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 12: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 12: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (12), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. focus_wrapping workspace
+       3. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       4. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       5. floating enable
+       6. splitv
+       7. mark m
+       8. move scratchpad
+       9. scratchpad show
+       10. move scratchpad
+       11. floating enable
+       12. move container to mark m
+  head seed 147 (1 outputs, explore crashed at step 20): SEGV: view_is_visible < transaction_commit < transaction_commit_pending
+     head 2/2: crashed at step 20: SEGV: view_is_visible < transaction_commit < transaction_commit_pending, crashed at step 20: SEGV: view_is_visible < transaction_commit < transaction_commit_pending
+     base 2/2: crashed at step 20: SEGV: view_is_visible < transaction_commit < transaction_commit_pending, crashed at step 20: SEGV: view_is_visible < transaction_commit < transaction_commit_pending
+     commands (20), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. default_border pixel 1
+       3. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       4. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       5. focus parent
+       6. floating enable
+       7. [app_id="fixture-diff-2"] urgent enable
+       8. focus child
+       9. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       10. kill
+       11. workspace --no-auto-back-and-forth 1
+       12. output * transform 90
+       13. workspace prev
+       14. [app_id="^fixture-diff-[23]$"] floating enable
+       15. fullscreen toggle global
+       16. for_window [app_id="fixture-diff-4"] layout tabbed
+       17. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       18. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       19. [workspace=__focused__] move container to workspace 2
+       20. move scratchpad
+  head seed 150 (2 outputs, explore crashed at step 39): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 39: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 39: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 39: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 39: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (39), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. focus output right
+       4. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       5. focus output left
+       6. xdg-hinted fixture-diff-3 400 300 400 300 1
+       7. layout stacking
+       8. move left
+       9. mark m
+       10. [app_id="fixture-hint-parent"] focus
+       11. [con_mark=m] focus
+       12. fullscreen toggle global
+       13. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       14. splith
+       15. move container to workspace next
+       16. fullscreen disable
+       17. focus output left
+       18. move workspace to output right
+       19. layout toggle split
+       20. workspace next_on_output
+       21. focus output left
+       22. workspace next
+       23. workspace next_on_output
+       24. workspace prev_on_output
+       25. focus left
+       26. splith
+       27. workspace next
+       28. workspace back_and_forth
+       29. gaps inner current minus 20
+       30. move container to workspace next
+       31. titlebar_border_thickness 2
+       32. floating enable
+       33. splitv
+       34. mark m
+       35. move scratchpad
+       36. scratchpad show
+       37. move scratchpad
+       38. floating enable
+       39. move container to mark m
+  head seed 151 (1 outputs, explore crashed at step 15): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 15: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 15: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 15: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 15: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (15), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. move scratchpad
+       4. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       5. scratchpad show
+       6. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       7. resize set 400 300
+       8. floating disable
+       9. floating enable
+       10. splitt
+       11. mark m
+       12. move scratchpad
+       13. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       14. floating enable
+       15. move container to mark m
+  head seed 161 (1 outputs, explore crashed at step 9): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 9: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 9: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 9: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 9: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (9), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       4. floating enable
+       5. splitv
+       6. mark m
+       7. move scratchpad
+       8. floating enable
+       9. move container to mark m
+  head seed 162 (1 outputs, explore crashed at step 40): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 40: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 40: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 40: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 40: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (40), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       4. fullscreen enable
+       5. move container to workspace next
+       6. floating toggle
+       7. layout splitv
+       8. assign [app_id="fixture-diff-3"] workspace 2
+       9. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       10. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       11. kill
+       12. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       13. splitt
+       14. fullscreen toggle
+       15. split v
+       16. splitv
+       17. layout tabbed
+       18. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       19. exec foot --app-id=fixture-diff-7 --title=fixture-diff-7 sh -c 'sleep 300'
+       20. split v
+       21. layout toggle tabbed stacking split
+       22. move left 20 px
+       23. focus prev
+       24. font monospace 10
+       25. floating enable
+       26. sticky enable
+       27. workspace 2
+       28. title_format [%app_id] %title
+       29. workspace next_on_output
+       30. [app_id="fixture-diff-5"] scratchpad show
+       31. max_render_time 5
+       32. splitv
+       33. floating enable
+       34. splitt
+       35. mark m
+       36. move scratchpad
+       37. scratchpad show
+       38. move scratchpad
+       39. floating enable
+       40. move container to mark m
+  head seed 179 (1 outputs, explore crashed at step 9): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 9: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 9: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 9: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 9: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (9), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       4. floating enable
+       5. splith
+       6. mark m
+       7. move scratchpad
+       8. floating enable
+       9. move container to mark m
+  head seed 181 (1 outputs, explore crashed at step 21): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 21: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 21: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 21: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 21: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (21), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. smart_gaps on
+       3. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       4. floating enable
+       5. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       6. fullscreen enable
+       7. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       8. fullscreen disable
+       9. move container to workspace 2
+       10. split v
+       11. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       12. layout default
+       13. move --no-auto-back-and-forth container to workspace 1
+       14. splith
+       15. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       16. mark m
+       17. focus parent
+       18. floating enable
+       19. move scratchpad
+       20. floating enable
+       21. move container to mark m
+  head seed 197 (1 outputs, explore crashed at step 13): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 13: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 13: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 13: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 13: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (13), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. smart_gaps on
+       3. default_border none
+       4. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       5. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       6. splitv
+       7. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       8. mark m
+       9. focus parent
+       10. floating enable
+       11. move scratchpad
+       12. floating enable
+       13. move container to mark m
+  head seed 208 (1 outputs, explore crashed at step 22): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 22: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 22: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 22: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 22: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (22), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. splitv
+       4. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       5. layout splith
+       6. for_window [app_id="fixture-diff-3"] sticky enable
+       7. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       8. layout default
+       9. xdg-hinted fixture-diff-4 400 300 400 300 1
+       10. layout toggle
+       11. force_focus_wrapping yes
+       12. split toggle
+       13. layout toggle split
+       14. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       15. floating enable
+       16. splitt
+       17. mark m
+       18. move scratchpad
+       19. scratchpad show
+       20. move scratchpad
+       21. floating enable
+       22. move container to mark m
+  head seed 210 (1 outputs, explore crashed at step 18): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 18: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 18: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 18: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 18: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (18), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       4. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       5. move container to workspace 2
+       6. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       7. [app_id="^fixture-diff-[23]$"] floating enable
+       8. [app_id="^fixture-diff-"] mark --add q
+       9. [con_id=@con:fixture-diff-3] kill
+       10. smart_borders on
+       11. splith
+       12. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       13. mark m
+       14. focus parent
+       15. floating enable
+       16. move scratchpad
+       17. floating enable
+       18. move container to mark m
+  head seed 215 (1 outputs, explore crashed at step 11): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (11), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       4. floating enable
+       5. splitv
+       6. mark m
+       7. move scratchpad
+       8. scratchpad show
+       9. move scratchpad
+       10. floating enable
+       11. move container to mark m
+  head seed 233 (1 outputs, explore crashed at step 11): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (11), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       4. floating enable
+       5. splitv
+       6. mark m
+       7. move scratchpad
+       8. scratchpad show
+       9. move scratchpad
+       10. floating enable
+       11. move container to mark m
+  head seed 245 (1 outputs, explore crashed at step 31): SEGV: container_swap < cmd_swap < execute_command
+     head 2/2: crashed at step 31: SEGV: container_swap < cmd_swap < execute_command, crashed at step 31: SEGV: container_swap < cmd_swap < execute_command
+     base 2/2: crashed at step 31: SEGV: container_swap < cmd_swap < execute_command, crashed at step 31: SEGV: container_swap < cmd_swap < execute_command
+     commands (31), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. focus_wrapping no
+       3. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       4. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       5. focus parent
+       6. focus parent
+       7. workspace prev
+       8. focus parent; [app_id="fixture-diff-1"] urgent enable
+       9. move scratchpad
+       10. move container to workspace 2
+       11. fullscreen toggle
+       12. fullscreen toggle; move scratchpad
+       13. move container to workspace 2
+       14. gaps outer current plus 5
+       15. fullscreen toggle global
+       16. focus parent; floating toggle
+       17. [con_id=__focused__] mark --add z
+       18. mark n
+       19. output * transform 90
+       20. workspace --no-auto-back-and-forth 1
+       21. [tiling] mark --add tiled
+       22. layout toggle splitv tabbed
+       23. [app_id="fixture-diff-1"] floating enable
+       24. move right
+       25. focus parent; split v
+       26. workspace 2
+       27. [workspace=__focused__] move container to workspace 2
+       28. layout toggle
+       29. resize set 0 300
+       30. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       31. swap container with con_id @con:fixture-diff-1
+  head seed 246 (1 outputs, explore crashed at step 25): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 25: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 25: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 25: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 25: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (25), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       4. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       5. move container to workspace 2
+       6. exec foot --app-id=fixture-diff-4 --title=fixture-diff-4 sh -c 'sleep 300'
+       7. exec foot --app-id=fixture-diff-5 --title=fixture-diff-5 sh -c 'sleep 300'
+       8. [app_id="^fixture-diff-[23]$"] floating enable
+       9. [con_id=__focused__] mark z
+       10. [con_id=@con:fixture-diff-3] kill
+       11. resize grow height 10 ppt
+       12. [floating] border pixel 4
+       13. move container to workspace next
+       14. layout stacking
+       15. output * scale 1
+       16. [app_id="fixture-diff-1"] focus
+       17. unmark z
+       18. splitv
+       19. exec foot --app-id=fixture-diff-6 --title=fixture-diff-6 sh -c 'sleep 300'
+       20. mark m
+       21. focus parent
+       22. floating enable
+       23. move scratchpad
+       24. floating enable
+       25. move container to mark m
+  head seed 251 (1 outputs, explore crashed at step 12): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 12: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 12: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 12: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 12: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (12), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. default_border normal 4
+       3. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       4. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       5. floating enable
+       6. splitt
+       7. mark m
+       8. move scratchpad
+       9. scratchpad show
+       10. move scratchpad
+       11. floating enable
+       12. move container to mark m
+  head seed 269 (1 outputs, explore crashed at step 11): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (11), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       4. splith
+       5. exec foot --app-id=fixture-diff-3 --title=fixture-diff-3 sh -c 'sleep 300'
+       6. mark m
+       7. focus parent
+       8. floating enable
+       9. move scratchpad
+       10. floating enable
+       11. move container to mark m
+  head seed 287 (1 outputs, explore crashed at step 11): SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     head 2/2: crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     base 2/2: crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container, crashed at step 11: SEGV: workspace_add_floating < container_move_to_workspace < container_move_to_container
+     commands (11), replay with --replay:
+       1. force_display_urgency_hint 0 ms
+       2. exec foot --app-id=fixture-diff-1 --title=fixture-diff-1 sh -c 'sleep 300'
+       3. exec foot --app-id=fixture-diff-2 --title=fixture-diff-2 sh -c 'sleep 300'
+       4. floating enable
+       5. splitt
+       6. mark m
+       7. move scratchpad
+       8. scratchpad show
+       9. move scratchpad
+       10. floating enable
+       11. move container to mark m

@@ -2,7 +2,7 @@
 i3 = "9be3249ac5b377ed3270e36bca83df53d8023337"
 sway = "88869399f421d9180dd8b6ed0b5a1f4a3585d252"
 wlroots = "c1d38536c926134698ff2615843e0d4103e84ac4"
-swayward = "1fd3c25b1fca4cabc412e7fcfc5f9248f295b7dc"
+swayward = "fc39ac8805196aeab74ff2955bee3e5de7f95fea"
 # SwayFX 0.6 builds against the wlroots pin above and scenefx 0.5.
 swayfx = "fd71a6bdc061bd633b488ae7b83e8a6981d22f86"
 scenefx = "37ccd723bef49e6891156ffafce8f549f01446cc"
@@ -19,7 +19,7 @@ swirl = "dc6382f2ba80280759de6959b770ccb225d4d673"
 [snapshot]
 i3 = "i3-4.25"
 sway = "sway-1.12"
-swayward = "swayward-1fd3c25b"
+swayward = "swayward-fc39ac88"
 swayfx = "swayfx-0.6"
 scroll = "scroll-1.12.21"
 miracle-wm = "miracle-wm-0.11.2"

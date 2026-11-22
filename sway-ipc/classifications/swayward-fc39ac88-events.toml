@@ -1,0 +1,3 @@
+# Human-reviewed triage of swayward-fc39ac88 events mismatches, keyed by
+# scenario.request. The committed result (T4 measurement: oracle 3078804b, swayward fc39ac88, image sway-ipc-oracle-launch bffe9df0, two agreeing runs) has no
+# mismatches. contrib/validate prints the untriaged count.

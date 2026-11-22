@@ -4,6 +4,7 @@
 import argparse
 import copy
 import datetime
+import functools
 import hashlib
 import json
 import os
@@ -63,10 +64,8 @@ COMMANDS = (
 
 
 def require_clean_binary(binary: Path, compositor: str) -> str:
-    probe = binary.resolve().parent
-    while probe != probe.parent and not (probe / ".git").exists():
-        probe = probe.parent
-    if not (probe / ".git").exists():
+    probe = source_checkout(binary)
+    if probe is None:
         raise RuntimeError(f"cannot find source checkout for {binary}")
     commit = subprocess.check_output(
         ["git", "-C", probe, "rev-parse", "HEAD"], text=True
@@ -84,6 +83,50 @@ def require_clean_binary(binary: Path, compositor: str) -> str:
     if dirty or description.endswith("-dirty"):
         raise RuntimeError(f"refusing to measure dirty {compositor} build ({description})")
     return commit
+
+
+def source_checkout(binary: Path):
+    """The nearest enclosing git checkout of binary, or None."""
+    probe = binary.resolve().parent
+    while probe != probe.parent and not (probe / ".git").exists():
+        probe = probe.parent
+    return probe if (probe / ".git").exists() else None
+
+
+def binary_provenance(binary: Path) -> dict:
+    """Measured provenance of an unpinned binary; never raises on missing git."""
+    binary = Path(binary).resolve()
+    git_head = dirty = None
+    checkout = source_checkout(binary)
+    if checkout is not None:
+        try:
+            git_head = subprocess.check_output(
+                ["git", "-C", checkout, "rev-parse", "HEAD"], text=True,
+                stderr=subprocess.DEVNULL,
+            ).strip()
+            dirty = bool(subprocess.check_output(
+                ["git", "-C", checkout, "status", "--porcelain"], text=True,
+                stderr=subprocess.DEVNULL,
+            ).strip())
+        except (OSError, subprocess.CalledProcessError):
+            git_head = dirty = None
+    try:
+        asan = b"__asan_init" in binary.read_bytes()
+    except OSError:
+        asan = False
+    return {"binary": str(binary), "git_head": git_head, "dirty": dirty, "asan": asan}
+
+
+@functools.cache
+def systemd_scope_available() -> bool:
+    """Whether a transient user scope can be started here (probed once)."""
+    try:
+        return subprocess.run(
+            ["systemd-run", "--user", "--scope", "--quiet", "true"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10,
+        ).returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        return False
 
 
 def reject_dirty_version(compositor: str, version: str, commit: str) -> None:
@@ -790,10 +833,21 @@ class Adapter:
         for name in ("SWAYSOCK", "SCROLLSOCK", "MIRACLESOCK", "I3SOCK", "WAYLAND_DISPLAY", "DISPLAY"):
             self.env.pop(name, None)
         self.env["FOOT_SERVER_SOCKET"] = str(run_dir / "no-foot-server")
+        if self.unpinned:
+            # Leak reports at shutdown exit 1 and would look like crashes.
+            self.env.setdefault("ASAN_OPTIONS", "detect_leaks=0")
+            self.env.setdefault("UBSAN_OPTIONS", "halt_on_error=0:print_stacktrace=1")
+
+    @property
+    def unpinned(self):
+        """Opt-in per adapter: measure an arbitrary binary with no pin checks."""
+        return getattr(self.args, "unpinned", False)
 
     def wrapped(self, command):
         limited = ["timeout", "--kill-after=5", str(self.args.timeout), *command]
         if os.environ.get("ORACLE_CONTAINER") == "1":
+            return limited
+        if self.unpinned and not systemd_scope_available():
             return limited
         return ["systemd-run", "--user", "--scope", "--quiet", "-p", "MemoryMax=2G",
                 "-p", "MemorySwapMax=0", *limited]
@@ -803,8 +857,10 @@ class Adapter:
 
         The source checkout is checked once before a run, but a binary rebuilt
         from a later commit mid-run would otherwise be measured and recorded
-        under the earlier pin.
+        under the earlier pin. Unpinned adapters skip the check.
         """
+        if self.unpinned:
+            return version_reply
         name = next(key for key, adapter in ADAPTERS.items() if adapter is type(self))
         details = getattr(type(self), "version_details", None)
         if details is None:

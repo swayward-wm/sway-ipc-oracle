@@ -1,0 +1,41 @@
+{
+  "argv": [
+    "./contrib/pr-check",
+    "--base",
+    "/w/sway-fixed/build/sway/sway",
+    "--head",
+    "/w/sway-master/build/sway/sway",
+    "--out",
+    "/w/prcheck-gate-3",
+    "--seeds",
+    "300",
+    "--jobs",
+    "4"
+  ],
+  "start": "2026-10-24T14:43:53+00:00",
+  "out": "/w/prcheck-gate-3",
+  "jobs": 4,
+  "seeds": 300,
+  "also_base": 0,
+  "minutes": null,
+  "budget": null,
+  "base": {
+    "binary": "/w/sway-fixed/build/sway/sway",
+    "git_head": "17cdc7db4401cba8d784513d17f2652e68e5fe0f",
+    "dirty": false,
+    "asan": true
+  },
+  "head": {
+    "binary": "/w/sway-master/build/sway/sway",
+    "git_head": "1652c54b73f67df17b7b4ab0b0f7048204aa8104",
+    "dirty": false,
+    "asan": true
+  },
+  "hinted_disabled": null,
+  "foot_missing": false,
+  "startup": {
+    "base": null,
+    "head": null
+  },
+  "preflight_expired": false
+}

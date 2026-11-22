@@ -37,7 +37,7 @@ and initial focus for swayward, sway, and i3. Derived rows that replay this
 setup carry `adapted = ["source-fake-output-layout"]`.
 
 Rows affected by a translation carry an `adapted` field in
-`i3/results/swayward-1fd3c25b.toml`. The adapter does not translate X11 `class` criteria
+`i3/results/swayward-fc39ac88.toml`. The adapter does not translate X11 `class` criteria
 to Wayland `app_id`; that would hide swayward's lack of X11 metadata from
 xwayland-satellite.
 

@@ -8,6 +8,6 @@ readme-snapshots must reject this table: its rows name three compositors.
 | --- | --- |
 | **i3 v4.25** | 3,754/1/0 |
 | Sway-V1.12 | 1,461/20/2,117 |
-| SwayWard_1fd3c25b | 1,453/11/2,269 |
+| SwayWard_fc39ac88 | 1,453/11/2,269 |
 
 ## End

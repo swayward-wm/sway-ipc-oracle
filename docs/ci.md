@@ -1,33 +1,56 @@
 # Run the oracle in your compositor's CI
 
-This guide adds the oracle to a compositor's CI, so a pull request that
-changes how the compositor answers i3/sway IPC fails before it merges. It
-assumes the oracle already has an adapter for your compositor. If it does not,
-read [Adding a compositor](adding-a-compositor.md) first.
+CI gates on new differences, not a perfect match with sway. Known differences
+do not fail the gate.
 
-[swayward](https://github.com/swayward-wm/swayward) runs the oracle this way
-on every push. Its `contrib/fetch-oracle`, `contrib/targeted-oracle` and
-`.github/workflows/ci.yml` are a complete working example.
+Keep a result from a known-good commit and run the same corpus on each PR.
+Fail when a previously matching row stops matching or any row starts to crash
+or hang.
 
-## How it works
+## Run a corpus
 
-The oracle compares your compositor against sway 1.12's recorded replies.
-Your compositor will not match sway on every row, and it does not have to. CI
-checks for change, not for perfection:
+After [pinning the oracle](#pin-the-oracle) and [pointing it at your build](#point-the-oracle-at-your-build),
+run this from your compositor checkout. Set the adapter name and binary path:
 
-1. Keep a baseline: a result file that records what your compositor did at a
-   known-good commit.
-2. On each pull request, run the same corpus against the new build.
-3. Fail only on rows that matched in the baseline and mismatch now.
+```sh
+COMPOSITOR=swayward
+BINARY="$PWD/target/release/swayward"
+ORACLE="$PWD/.cache/sway-ipc-oracle"
+OUT="${OUT:-$PWD/target/oracle}"
+mkdir -p "$OUT/tmp"
+export TMPDIR="$OUT/tmp"
+"$ORACLE/contrib/sway-ipc-run" command-fuzz --compositor "$COMPOSITOR" \
+  --binary "$BINARY" --out "$OUT/command-fuzz.toml" > "$OUT/command-fuzz.log" 2>&1 &
+PID=$!
+status=0; wait "$PID" || status=$?
+echo "exit $status"
+[ "$status" -le 1 ] || exit "$status"
+```
 
-Rows that mismatched before and still mismatch are known differences. Rows
-that mismatched before and match now are fixes. Update the baseline when you
-accept either.
+Always pass `--out`: otherwise the runner writes into the oracle's committed
+snapshots. Exit 0 means all rows match; 1 means a mismatch, crash or hang;
+2 means setup or the run failed.
+
+Known differences often give exit 1, so the step above fails only on 2.
+[The baseline check](#compare-with-the-baseline) decides whether exit 1 is new.
+
+Requirements for Wayland adapters:
+
+- Python 3.11+, using only the standard library, and `foot` for client windows.
+- A C compiler, `pkg-config`, `wayland-scanner`, and `wayland-client` and
+  `wayland-protocols` development packages. Without them, size-hint and
+  taskbar scenarios report not applicable.
+- A user systemd instance for the runner's 2 GiB memory-capped scope.
+  GitHub's Ubuntu runners have one. In a container without systemd, set
+  `ORACLE_CONTAINER=1` and supply an outer memory cap.
+
+For pinned builds and dependencies, [use the container](reproducing.md).
+Check [adapter-specific requirements](../sway-ipc/adapters/), especially
+SwayFX's render device. If your compositor has no adapter, see [adapter setup](adding-a-compositor.md).
 
 ## Pin the oracle
 
-Pin the oracle at an exact commit in your repository, so an oracle change
-never breaks your CI without a commit on your side:
+Store an exact oracle commit in your compositor repository:
 
 ```toml
 # tests/oracle.toml
@@ -35,7 +58,7 @@ repo = "https://github.com/swayward-wm/sway-ipc-oracle.git"
 commit = "<40-hex oracle commit>"
 ```
 
-Fetch it with a shallow clone of that commit:
+Fetch a shallow checkout from that record:
 
 ```sh
 cache=.cache/sway-ipc-oracle
@@ -46,139 +69,138 @@ git -C "$cache" fetch --depth 1 origin "$commit"
 git -C "$cache" checkout -q --detach FETCH_HEAD
 ```
 
-To move to a newer oracle, change the commit and regenerate your baseline in
-the same change.
+When you change the oracle pin, regenerate the baseline in the same change.
+Use a regular clone for container runs; a worktree's `.git` points outside
+its mount, so provenance checks need that shared Git directory mounted too.
 
 ## Point the oracle at your build
 
-The runners measure only committed, clean builds of the commit named in the
-oracle's `pins.toml`. The runner finds the commit by walking up from the
-binary to its git checkout. Most adapters also check the commit in the
-compositor's `GET_VERSION` reply after start; your adapter's README says how
-it checks. So in CI:
-
-- Build from a clean checkout, and keep the binary inside it. A
-  `CARGO_TARGET_DIR` outside the checkout breaks the commit lookup.
-- Before a run, set your compositor's line in the fetched oracle's
-  `pins.toml` to the commit under test. Leave its `[snapshot]` name
-  unchanged.
-- If your adapter checks `GET_VERSION`, make sure your build reports the
-  commit it was built from, as sway does (`1.12-88869399`).
+From your compositor checkout, update its source pin in the fetched oracle:
 
 ```sh
+COMPOSITOR=swayward
 head=$(git rev-parse HEAD)
-sed -i "s/^mycompositor = \"[0-9a-f]\{40\}\"$/mycompositor = \"$head\"/" \
+sed -i "s/^$COMPOSITOR = \"[0-9a-f]\{40\}\"$/$COMPOSITOR = \"$head\"/" \
   .cache/sway-ipc-oracle/pins.toml
 ```
 
+- Build from a clean, committed checkout and keep the binary inside it.
+  The runner walks up from the binary to find its Git commit; an external
+  `CARGO_TARGET_DIR` breaks that lookup.
+- Change only your compositor's source pin; keep its `[snapshot]` name.
+- Most adapters also check the started build's `GET_VERSION` commit
+  (for example sway's `1.12-88869399`). See your adapter's version notes.
+  Sway itself must stay at the captured reference pin; use [pr-check](pr-check.md) for sway PRs.
+
 ## Pick the corpora
 
-Each corpus costs a different amount of CI time. Start with the cheap ones.
+| Corpus | What it catches |
+| --- | --- |
+| State | Tree, workspace and output replies after commands |
+| Events | Event order and payloads |
+| Command fuzz | Crashes, hangs and wrong replies to malformed commands |
+| Wire fuzz | Crashes and hangs on broken IPC framing |
+| Random | Behaviour along 500 captured 20-step command sequences |
+| [i3-derived](results.md#how-to-read-a-block) | 416 window-tree states reached by i3 tests |
+| i3 suite | i3's 242 unchanged test files; [run it separately](reproducing.md) |
 
-| Corpus | Command | What it catches |
-| --- | --- | --- |
-| State | `sway-ipc-run scenarios` | Tree, workspace and output replies after a command sequence |
-| Events | `sway-ipc-run scenarios --corpus events` | Event order and payloads |
-| Command fuzz | `sway-ipc-run command-fuzz` | Crashes, hangs and wrong replies on malformed commands |
-| Wire fuzz | `sway-ipc-run wire-fuzz` | Crashes and hangs on broken IPC framing |
-| Random | `sway-ipc-run random` | Behaviour along 500 captured 20-step command sequences |
-| i3-derived | `sway-ipc-run i3-derived` | 416 window-tree states reached by i3's own tests |
-| i3 suite | `i3-suite-run` | i3's 242 unchanged test files |
+Fuzzing is the cheapest useful start: crashes and hangs matter without a
+baseline. The i3 suite and i3-derived runs take longest; swayward keeps them
+in slower jobs rather than running them on every PR.
 
-The fuzz corpora are the cheapest useful first step: a crash or hang is a bug
-on any compositor, with or without a baseline. The i3 suite and i3-derived
-corpora take the longest. Swayward runs them in a slower job, not on every
-pull request.
-
-To run a few scenarios, pass `--scenario NAME` once for each.
-`contrib/targeted-oracle` in swayward picks scenarios from the paths a pull
-request changes, through a map in `tests/oracle-targets.toml`.
-
-## Run a corpus
-
-Always pass `--out`. Without it, the runner writes to the committed snapshot
-path inside the oracle checkout.
+With the variables above, try these subsets and the wire-fuzz CI budget.
+Each command has a separate output and log; run them one at a time:
 
 ```sh
-oracle=.cache/sway-ipc-oracle
-"$oracle/contrib/sway-ipc-run" command-fuzz --compositor mycompositor \
-  --binary "$PWD/target/release/mycompositor" --out results/command-fuzz.toml
+"$ORACLE/contrib/sway-ipc-run" scenarios --scenario one_window \
+  --compositor "$COMPOSITOR" --binary "$BINARY" --out "$OUT/state.toml" > "$OUT/state.log" 2>&1 &
+PID=$!; wait "$PID"; echo "$?"
+"$ORACLE/contrib/sway-ipc-run" scenarios --corpus events --scenario one_window \
+  --compositor "$COMPOSITOR" --binary "$BINARY" --out "$OUT/events.toml" > "$OUT/events.log" 2>&1 &
+PID=$!; wait "$PID"; echo "$?"
+"$ORACLE/contrib/sway-ipc-run" wire-fuzz --compositor "$COMPOSITOR" \
+  --binary "$BINARY" --out "$OUT/wire-fuzz.toml" > "$OUT/wire-fuzz.log" 2>&1 &
+PID=$!; wait "$PID"; echo "$?"
+"$ORACLE/contrib/sway-ipc-run" random --seeds 306 --compositor "$COMPOSITOR" \
+  --binary "$BINARY" --out "$OUT/random.toml" > "$OUT/random.log" 2>&1 &
+PID=$!; wait "$PID"; echo "$?"
+"$ORACLE/contrib/sway-ipc-run" i3-derived --scenario 97fa75f470ff02bd \
+  --compositor "$COMPOSITOR" --binary "$BINARY" --out "$OUT/i3-derived.toml" > "$OUT/i3-derived.log" 2>&1 &
+PID=$!; wait "$PID"; echo "$?"
 ```
 
-The runner exits 0 when every row matches, 1 when any row mismatches,
-crashes or hangs, and 2 when the harness itself fails. For a compositor with
-known differences, exit 1 is the normal case. Let the result file decide, not
-the exit code.
+Remove `--scenario` or `--seeds` for a full corpus. Repeat `--scenario NAME`
+to select several scenarios. i3-derived input names are bare hashes from
+`scenarios.json`, not the result keys prefixed with `i3-derived/`.
 
-Each run needs:
-
-- Python 3.11 or later. The runners use only the standard library.
-- `foot`, which the scenarios use as the client window.
-- A C compiler, `pkg-config`, `wayland-scanner`, and the `wayland-client` and
-  `wayland-protocols` development packages. Without them, the size-hint and
-  taskbar scenarios report not applicable.
-- A user systemd instance. Outside the oracle container, each compositor runs
-  in a `systemd-run --user --scope` with a 2 GiB memory cap. GitHub's Ubuntu
-  runners have one. In a container without systemd, set `ORACLE_CONTAINER=1`.
+Swayward's `contrib/targeted-oracle` selects scenarios from changed PR paths
+using `tests/oracle-targets.toml`. Its `contrib/fetch-oracle` and
+`.github/workflows/ci.yml` form a [working integration](https://github.com/swayward-wm/swayward).
 
 ## Compare with the baseline
 
-A result file is TOML. Each row has a key and a `verdict`:
+The baseline and current result **must use the same selection**: corpus,
+`--scenario`, `--seeds` and `--budget`. For targeted runs, select the same rows
+from the baseline first.
 
-```toml
-[[result]]
-scenario = "split_toggle_on_empty_workspace"
-request = "tree"
-verdict = "match"
-```
+The check below fails when:
 
-The key is `scenario` and `request` for the state and events corpora, `case`
-for the fuzz corpora, and `seed` for the random corpus. To compare, load both
-files, key each row, and fail on every key whose verdict is `match` in the
-baseline and is anything else now:
+- a row that matched in the baseline no longer matches;
+- any row's verdict becomes `crash` or `hang`, even a known mismatch;
+- the baseline has no rows, or a row is in only one of the two files.
+
+Result rows are TOML `[[result]]` tables. State and events keys are
+`(scenario, request, occurrence)`; fuzz keys are `case`; random keys are
+`seed` (grouped `seeds` are expanded). Save this as `compare-oracle.py`:
 
 ```python
 import sys, tomllib
+from collections import Counter
 
 def verdicts(path):
-    """Map each row's key to its verdict. Random rows group seeds that fail alike."""
-    out = {}
-    for r in tomllib.load(open(path, "rb")).get("result", []):
-        if "seed" in r:
-            for seed in r.get("seeds", [r["seed"]]):
-                out[seed] = r["verdict"]
-        else:
-            out[r.get("case") or (r["scenario"], r["request"])] = r["verdict"]
+    out, occurrences = {}, Counter()
+    with open(path, "rb") as stream:
+        for row in tomllib.load(stream).get("result", []):
+            if "seed" in row:
+                for seed in row.get("seeds", [row["seed"]]):
+                    out[seed] = row["verdict"]
+            elif "case" in row:
+                out[row["case"]] = row["verdict"]
+            else:
+                key = (row["scenario"], row["request"])
+                out[(*key, occurrences[key])] = row["verdict"]
+                occurrences[key] += 1
     return out
 
 before, now = verdicts(sys.argv[1]), verdicts(sys.argv[2])
-new = sorted(str(k) for k, v in now.items() if v != "match" and before.get(k) == "match")
-print("\n".join(f"NEW {k}" for k in new))
-sys.exit(1 if new else 0)
+problems = [] if before else ["EMPTY baseline: no result rows"]
+problems += [f"MISSING {k}" for k in sorted(map(str, before.keys() - now.keys()))]
+problems += [f"EXTRA {k}" for k in sorted(map(str, now.keys() - before.keys()))]
+for k in sorted(before.keys() & now.keys(), key=str):
+    if before[k] != now[k] and (before[k] == "match" or now[k] in ("crash", "hang")):
+        problems.append(f"NEW {k}: {before[k]} -> {now[k]}")
+print("\n".join(problems))
+sys.exit(1 if problems else 0)
 ```
 
-Swayward's `contrib/targeted-oracle` does the same in its `compare()`
-function, and also reports known and fixed rows.
-
-To see why a row differs, read its `differences` list. Each entry names a
-field path and both values, sway's first:
-
-```toml
-differences = ["$tree.layout: 'splith' != 'horizontal'"]
+```sh
+python3 compare-oracle.py tests/oracle-baseline/command-fuzz.toml "$OUT/command-fuzz.toml"
 ```
 
-## Keep the baseline honest
+A missing baseline file is an error (exit 1). A row that improves, such as a
+mismatch that now matches, passes: update the baseline to keep the fix.
 
-- Commit the baseline to your repository, beside `tests/oracle.toml`.
-- Regenerate it only from a clean build of a commit on your main branch.
-- When a pull request fixes rows, update the baseline in the same pull request.
-  The diff then shows exactly which rows it fixed.
-- When you change behaviour on purpose, update the baseline and say why in
-  the commit message.
+Read a differing row's `differences` list for field paths and both values,
+sway's first: `"$tree.layout: 'splith' != 'horizontal'"`. A mismatch is not
+necessarily a bug. Swayward's comparator also reports known and fixed rows.
 
-## Publish a snapshot
+## Update or publish the baseline
 
-CI needs only your own baseline. A published snapshot in this repository is a
-separate step. It is measured in the pinned container, and its non-matches
-are classified with source citations or counted as untriaged. Read [Reproducing the results](reproducing.md) and
-[CONTRIBUTING.md](../CONTRIBUTING.md) for that process.
+- Commit your baseline beside `tests/oracle.toml`, from a clean, committed build.
+- When a PR fixes rows, update the baseline in that PR so the diff shows the fixes.
+- For deliberate behaviour changes, update it and explain why in the commit.
+- Keep normal refreshes tied to your main branch, not an unreviewed PR build.
+
+CI needs only your baseline. To publish a snapshot here, measure it in the
+pinned container and classify its non-matches with source citations, or leave
+them visibly untriaged. Follow [reproduction](reproducing.md) and [CONTRIBUTING.md](../CONTRIBUTING.md).

@@ -6,7 +6,7 @@
 compositor = "swirl"
 version = "1.13-dev"
 commit = "dc6382f2ba80280759de6959b770ccb225d4d673"
-inputs = "1c7b05faf1f6a67dcc4f496fccce72f2269f0b56a877683a11f0af0f94cd618a"
+inputs = "2e062082fd5dc0f8e4137a83ff1e9924227980d3179b96e36e22e060fa4e626d"
 date = "2026-10-10"
 corpus = "command-fuzz"
 seed = 0

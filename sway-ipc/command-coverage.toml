@@ -165,7 +165,7 @@ generators = ["random-v2"]
 [[command]]
 name = "input"
 table = "handlers"
-reason = "Configuration command with no portable observable IPC state in the headless corpus."
+scenarios = ["command_parse_edge_cases"]
 
 [[command]]
 name = "mode"
@@ -195,7 +195,7 @@ generators = ["random-v2"]
 [[command]]
 name = "output"
 table = "handlers"
-scenarios = ["disabled_output_evacuation"]
+scenarios = ["disabled_output_evacuation", "output_toggle", "output_identifier_unknown"]
 generators = ["random-v2"]
 
 [[command]]
@@ -465,7 +465,7 @@ generators = ["random-v2"]
 [[command]]
 name = "title_format"
 table = "command_handlers"
-scenarios = ["command_coverage"]
+scenarios = ["command_coverage", "command_parse_edge_cases"]
 generators = ["random-v2"]
 
 [[command]]

@@ -6,7 +6,7 @@
 compositor = "swayfx"
 version = "0.6-fd71a6bd (Oct 10 2026, branch 'HEAD')"
 commit = "fd71a6bdc061bd633b488ae7b83e8a6981d22f86"
-inputs = "cabe9c4cb6b98e301a412178eb4af336ba9a42654ac2095c968f229c016ed9dd"
+inputs = "9fce1e01674d2ae714bc79ff3fa866bfedb1b2d87e99f79598d012aa4c2bb988"
 date = "2026-10-10"
 corpus = "command-fuzz"
 seed = 0

@@ -6,7 +6,7 @@
 compositor = "miracle-wm"
 version = "0.9.1"
 commit = "2df22b0e959f44e2e8cb91060f7f53c2ae8347a2"
-inputs = "c8cd2cfd4a02385514dd645fbb455e04f4b52a8cedc786c710ad4f5923b52986"
+inputs = "5e57ee73ac241b047be74099c1341fa9bac8edfd5f0f7639e3611cb8169b7833"
 date = "2026-10-10"
 corpus = "wire-fuzz"
 seed = 0

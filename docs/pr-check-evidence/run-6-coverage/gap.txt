@@ -1,0 +1,34 @@
+== gating run 2 (random-v3 only, master/noroot, 600 seeds)
+seeds with observations: 600
+  H hidden scratchpad              seeds   246  steps   3560
+  HS hidden split                  seeds    51  steps    598
+  MC + next move-to-mark           seeds     2  steps      4
+  MC mark on hidden child          seeds    12  steps    110
+  MC+F floating focused            seeds     2  steps      4
+  MT + next move-to-mark           seeds     7  steps      7
+  MT mark on hidden toplevel       seeds    34  steps    281
+  cmd move-to-mark anywhere        seeds   123  steps      0
+
+== run 6 master (with P1, 300 seeds)
+seeds with observations: 300
+  H hidden scratchpad              seeds   133  steps   1667
+  HS hidden split                  seeds    57  steps    387
+  MC + next move-to-mark           seeds    35  steps     35
+  MC mark on hidden child          seeds    42  steps    169
+  MC+F + next move-to-mark         seeds    29  steps     29
+  MC+F floating focused            seeds    32  steps     38
+  MT + next move-to-mark           seeds     1  steps      1
+  MT mark on hidden toplevel       seeds    14  steps    118
+  cmd move-to-mark anywhere        seeds    83  steps      0
+
+== run 6 fixed (with P1, 300 seeds)
+seeds with observations: 300
+  H hidden scratchpad              seeds   134  steps   1902
+  HS hidden split                  seeds    58  steps    613
+  MC + next move-to-mark           seeds    35  steps     42
+  MC mark on hidden child          seeds    42  steps    363
+  MC+F + next move-to-mark         seeds    29  steps     33
+  MC+F floating focused            seeds    33  steps    129
+  MT + next move-to-mark           seeds     1  steps      1
+  MT mark on hidden toplevel       seeds    15  steps    122
+  cmd move-to-mark anywhere        seeds    83  steps      0
